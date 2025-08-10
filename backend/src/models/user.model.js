@@ -215,6 +215,30 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
+    // Notification preferences
+    notificationPreferences: {
+      emailNotifications: {
+        type: Boolean,
+        default: true,
+      },
+      activityMatches: {
+        type: Boolean,
+        default: true,
+      },
+      activityReminders: {
+        type: Boolean,
+        default: true,
+      },
+      timeTracking: {
+        type: Boolean,
+        default: true,
+      },
+      generalUpdates: {
+        type: Boolean,
+        default: true,
+      },
+    },
+
     // Timestamps
     createdAt: {
       type: Date,
@@ -320,6 +344,90 @@ userSchema.methods.generatePasswordResetToken = function () {
   this.passwordResetToken = token;
   this.passwordResetExpires = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
   return token;
+};
+
+// Method to check if user's skills match activity requirements
+userSchema.methods.hasMatchingSkills = function(requiredSkills) {
+  if (!this.skills || this.skills.length === 0) return false;
+  if (!requiredSkills || requiredSkills.length === 0) return false;
+
+  // Check if user has at least one matching skill
+  return this.skills.some(skill => requiredSkills.includes(skill));
+};
+
+// Method to check if user's services match activity requirements
+userSchema.methods.hasMatchingServices = function(requiredServices) {
+  if (!this.services || this.services.length === 0) return false;
+  if (!requiredServices || requiredServices.length === 0) return false;
+
+  // Extract service types from user's services array
+  const userServiceTypes = this.services.map(service => service.type);
+
+  // Check if user has at least one matching service
+  return userServiceTypes.some(serviceType => requiredServices.includes(serviceType));
+};
+
+// Method to check if user is eligible for an activity based on skills and services
+userSchema.methods.isEligibleForActivity = function(requiredSkills, requiredServices) {
+  const hasSkills = this.hasMatchingSkills(requiredSkills);
+  const hasServices = this.hasMatchingServices(requiredServices);
+
+  // User is eligible if they have matching skills OR matching services
+  // This allows flexibility - users can contribute even if they only match one category
+  return hasSkills || hasServices;
+};
+
+// Method to get matching percentage for an activity
+userSchema.methods.getActivityMatchPercentage = function(requiredSkills, requiredServices) {
+  let skillMatch = 0;
+  let serviceMatch = 0;
+
+  if (this.skills && requiredSkills) {
+    const matchingSkills = this.skills.filter(skill => requiredSkills.includes(skill));
+    skillMatch = (matchingSkills.length / requiredSkills.length) * 100;
+  }
+
+  if (this.services && requiredServices) {
+    const userServiceTypes = this.services.map(service => service.type);
+    const matchingServices = userServiceTypes.filter(serviceType => requiredServices.includes(serviceType));
+    serviceMatch = (matchingServices.length / requiredServices.length) * 100;
+  }
+
+  // Return average of skill and service match percentages
+  if (skillMatch > 0 && serviceMatch > 0) {
+    return Math.round((skillMatch + serviceMatch) / 2);
+  } else if (skillMatch > 0) {
+    return Math.round(skillMatch);
+  } else if (serviceMatch > 0) {
+    return Math.round(serviceMatch);
+  }
+
+  return 0;
+};
+
+// Method to update notification preferences
+userSchema.methods.updateNotificationPreferences = function(preferences) {
+  this.notificationPreferences = {
+    ...this.notificationPreferences,
+    ...preferences
+  };
+  return this.save();
+};
+
+// Method to check if user should receive a specific type of notification
+userSchema.methods.shouldReceiveNotification = function(notificationType) {
+  switch (notificationType) {
+    case 'activity_match':
+      return this.notificationPreferences.activityMatches && this.notificationPreferences.emailNotifications;
+    case 'activity_reminder':
+      return this.notificationPreferences.activityReminders && this.notificationPreferences.emailNotifications;
+    case 'time_tracking':
+      return this.notificationPreferences.timeTracking && this.notificationPreferences.emailNotifications;
+    case 'general':
+      return this.notificationPreferences.generalUpdates && this.notificationPreferences.emailNotifications;
+    default:
+      return this.notificationPreferences.emailNotifications;
+  }
 };
 
 const User = mongoose.model("User", userSchema);

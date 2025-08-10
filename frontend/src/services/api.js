@@ -69,4 +69,24 @@ export const api = {
     updateStatus: (id, data) => apiClient.put(`/volunteer-application/admin/${id}/status`, data),
     getStats: () => apiClient.get("/volunteer-application/admin/stats"),
   },
+  activities: {
+    // Public routes
+    getAll: (params) => apiClient.get("/activities", { params }),
+    getById: (id) => apiClient.get(`/activities/${id}`),
+    getMyActivities: (params) => apiClient.get("/activities/my-activities", { params }),
+    getVolunteerActivities: (params) => apiClient.get("/activities/volunteer-activities", { params }),
+    join: (id) => apiClient.post(`/activities/${id}/join`),
+    leave: (id) => apiClient.post(`/activities/${id}/leave`),
+
+    // Admin/Staff routes
+    create: (data) => apiClient.post("/activities", data),
+    update: (id, data) => apiClient.put(`/activities/${id}`, data),
+    delete: (id) => apiClient.delete(`/activities/${id}`),
+    getCreated: (params) => apiClient.get("/activities/created", { params }),
+    updateStatus: (id, data) => apiClient.patch(`/activities/${id}/status`, data),
+
+    // Attendance routes
+    recordAttendance: (id, data) => apiClient.post(`/activities/${id}/attendance`, data),
+    getAttendanceReport: (id) => apiClient.get(`/activities/${id}/attendance`),
+  },
 };

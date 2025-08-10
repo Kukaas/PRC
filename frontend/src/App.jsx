@@ -17,9 +17,12 @@ import PrivateRoute from "./components/PrivateRoute";
 import ProfileSetup from "./pages/private/ProfileSetup.jsx";
 import Profile from "./pages/private/volunteers/Profile.jsx";
 import Dashboard from "./pages/private/admin/dashboard/Dashboard";
-import Activities from "./pages/private/volunteers/activities/Activities";
 import VolunteerApplication from "./pages/private/volunteers/volunteer-application/VolunteerApplication";
 import AdminVolunteers from "./pages/private/admin/volunteers/AdminVolunteers";
+import AdminActivities from "./pages/private/admin/activities/AdminActivities";
+import CreateActivity from "./pages/private/admin/activities/CreateActivity";
+import EditActivity from "./pages/private/admin/activities/EditActivity";
+import Activities from "./pages/private/volunteers/activities/Activities";
 
 
 function App() {
@@ -93,6 +96,33 @@ function App() {
               element={
                 <PrivateRoute>
                   <AdminVolunteers />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/activities/:id"
+              element={
+                <PrivateRoute>
+                  <AdminActivities />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/activities/create"
+              element={
+                <PrivateRoute>
+                  <CreateActivity />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/activities/edit/:activityId"
+              element={
+                <PrivateRoute>
+                  <EditActivity />
                 </PrivateRoute>
               }
             />

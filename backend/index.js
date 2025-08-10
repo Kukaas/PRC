@@ -10,6 +10,7 @@ import testRoute from "./src/routes/test.route.js";
 import authRoute from "./src/routes/auth.route.js";
 import profileRoute from "./src/routes/profile.route.js";
 import volunteerApplicationRoute from "./src/routes/volunteerApplication.route.js";
+import activityRoute from "./src/routes/activity.route.js";
 
 const app = express();
 
@@ -35,5 +36,6 @@ app.use("/api/v1/test", testRoute);
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/profile", profileRoute);
 app.use("/api/v1/volunteer-application", volunteerApplicationRoute);
+app.use("/api/v1/activities", activityRoute);
 
 export default app;

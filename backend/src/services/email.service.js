@@ -275,3 +275,224 @@ export const sendPasswordChangeNotification = async (email, name, timestamp, ipA
     return false;
   }
 };
+
+// Activity match notification email
+export const sendActivityMatchEmail = async (email, name, activityTitle, activityDescription, activityDate, activityLocation, matchPercentage) => {
+  const mailOptions = {
+    from: ENV.EMAIL_USER,
+    to: email,
+    subject: `🎯 New Activity Matches Your Skills! - ${activityTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+        <div style="background: linear-gradient(135deg, #5ce1e6 0%, #4bc0c6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">🎯 Activity Match!</h1>
+          <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Your skills are needed for this activity</p>
+        </div>
+
+        <div style="padding: 30px; background-color: #ffffff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 24px;">Hello ${name}!</h2>
+
+          <div style="background: linear-gradient(135deg, #e8f4f8 0%, #d1f2f6 100%); border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+            <p style="color: #2c3e50; margin: 0; font-size: 18px; font-weight: bold;">🎯 Perfect Match!</p>
+            <p style="color: #34495e; margin: 5px 0 0 0;">This activity matches your skills and services by ${matchPercentage}%</p>
+          </div>
+
+          <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 4px solid #5ce1e6;">
+            <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px;">📋 Activity Details:</h3>
+            <ul style="color: #34495e; margin: 0; padding-left: 20px;">
+              <li><strong>Title:</strong> ${activityTitle}</li>
+              <li><strong>Date:</strong> ${new Date(activityDate).toLocaleDateString()}</li>
+              <li><strong>Location:</strong> ${activityLocation.barangay}, ${activityLocation.municipality}, ${activityLocation.province}</li>
+            </ul>
+          </div>
+
+          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #856404; margin: 0 0 10px 0; font-weight: bold;">📝 Description:</p>
+            <p style="color: #856404; margin: 5px 0 0 0; line-height: 1.6;">${activityDescription}</p>
+          </div>
+
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${ENV.FRONTEND_URL}/activities"
+               style="background: linear-gradient(135deg, #5ce1e6 0%, #4bc0c6 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(92, 225, 230, 0.3); transition: all 0.3s ease;">
+              View Activity Details
+            </a>
+          </div>
+
+          <div style="background-color: #e8f4f8; border: 1px solid #5ce1e6; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #2c3e50; margin: 0 0 10px 0; font-weight: bold;">💡 Why You're a Great Match:</p>
+            <ul style="color: #34495e; margin: 0; padding-left: 20px;">
+              <li>Your skills align with the activity requirements</li>
+              <li>Your preferred services match the activity type</li>
+              <li>You have the experience needed for this role</li>
+              <li>Your location is convenient for this activity</li>
+            </ul>
+          </div>
+
+          <p style="color: #7f8c8d; line-height: 1.6; margin-bottom: 20px;">Don't miss this opportunity to make a difference in your community! Click the button above to learn more and register for this activity.</p>
+
+          <hr style="margin: 30px 0; border: none; border-top: 2px solid #ecf0f1;">
+
+          <div style="text-align: center;">
+            <p style="color: #7f8c8d; font-size: 14px; margin: 0;">
+              Best regards,<br>
+              <strong style="color: #5ce1e6;">PRC Volunteer System Team</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Activity match email error:", error);
+    return false;
+  }
+};
+
+// Activity reminder notification email
+export const sendActivityReminderEmail = async (email, name, activityTitle, activityDate, timeFrom, timeTo, activityLocation) => {
+  const mailOptions = {
+    from: ENV.EMAIL_USER,
+    to: email,
+    subject: `⏰ Reminder: Upcoming Activity - ${activityTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+        <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">⏰ Activity Reminder</h1>
+          <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Don't forget your upcoming volunteer activity</p>
+        </div>
+
+        <div style="padding: 30px; background-color: #ffffff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 24px;">Hello ${name}!</h2>
+
+          <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+            <p style="color: #856404; margin: 0; font-size: 18px; font-weight: bold;">⏰ Reminder!</p>
+            <p style="color: #856404; margin: 5px 0 0 0;">You have an upcoming volunteer activity tomorrow</p>
+          </div>
+
+          <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 4px solid #f39c12;">
+            <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px;">📋 Activity Details:</h3>
+            <ul style="color: #34495e; margin: 0; padding-left: 20px;">
+              <li><strong>Title:</strong> ${activityTitle}</li>
+              <li><strong>Date:</strong> ${new Date(activityDate).toLocaleDateString()}</li>
+              <li><strong>Time:</strong> ${timeFrom} - ${timeTo}</li>
+              <li><strong>Location:</strong> ${activityLocation.barangay}, ${activityLocation.municipality}, ${activityLocation.province}</li>
+            </ul>
+          </div>
+
+          <div style="background-color: #e8f4f8; border: 1px solid #5ce1e6; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #2c3e50; margin: 0 0 10px 0; font-weight: bold;">📝 Preparation Checklist:</p>
+            <ul style="color: #34495e; margin: 0; padding-left: 20px;">
+              <li>Review the activity details and requirements</li>
+              <li>Prepare any necessary equipment or materials</li>
+              <li>Plan your route and arrival time</li>
+              <li>Bring your volunteer ID and necessary documents</li>
+              <li>Dress appropriately for the activity</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${ENV.FRONTEND_URL}/activities"
+               style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); transition: all 0.3s ease;">
+              View Activity Details
+            </a>
+          </div>
+
+          <div style="background-color: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #c53030; margin: 0 0 10px 0; font-weight: bold;">⚠️ Important Notes:</p>
+            <ul style="color: #c53030; margin: 0; padding-left: 20px;">
+              <li>Please arrive 15 minutes before the scheduled start time</li>
+              <li>Contact the activity coordinator if you need to cancel</li>
+              <li>Bring water and snacks if the activity is long</li>
+              <li>Follow all safety guidelines and instructions</li>
+            </ul>
+          </div>
+
+          <p style="color: #7f8c8d; line-height: 1.6; margin-bottom: 20px;">Thank you for your commitment to volunteering! We look forward to seeing you at the activity.</p>
+
+          <hr style="margin: 30px 0; border: none; border-top: 2px solid #ecf0f1;">
+
+          <div style="text-align: center;">
+            <p style="color: #7f8c8d; font-size: 14px; margin: 0;">
+              Best regards,<br>
+              <strong style="color: #5ce1e6;">PRC Volunteer System Team</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Activity reminder email error:", error);
+    return false;
+  }
+};
+
+// General notification email
+export const sendGeneralNotificationEmail = async (email, name, title, message, activityTitle) => {
+  const mailOptions = {
+    from: ENV.EMAIL_USER,
+    to: email,
+    subject: `📢 ${title} - PRC Volunteer System`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+        <div style="background: linear-gradient(135deg, #5ce1e6 0%, #4bc0c6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">📢 Notification</h1>
+          <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Important update from PRC Volunteer System</p>
+        </div>
+
+        <div style="padding: 30px; background-color: #ffffff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 24px;">Hello ${name}!</h2>
+
+          <div style="background: linear-gradient(135deg, #e8f4f8 0%, #d1f2f6 100%); border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+            <p style="color: #2c3e50; margin: 0; font-size: 18px; font-weight: bold;">📢 ${title}</p>
+          </div>
+
+          <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 4px solid #5ce1e6;">
+            <p style="color: #34495e; line-height: 1.6; margin: 0;">${message}</p>
+          </div>
+
+          ${activityTitle ? `
+          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #856404; margin: 0 0 10px 0; font-weight: bold;">📋 Related Activity:</p>
+            <p style="color: #856404; margin: 5px 0 0 0; font-weight: bold;">${activityTitle}</p>
+          </div>
+          ` : ''}
+
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${ENV.FRONTEND_URL}/activities"
+               style="background: linear-gradient(135deg, #5ce1e6 0%, #4bc0c6 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(92, 225, 230, 0.3); transition: all 0.3s ease;">
+              View Activities
+            </a>
+          </div>
+
+          <p style="color: #7f8c8d; line-height: 1.6; margin-bottom: 20px;">Thank you for being part of our volunteer community!</p>
+
+          <hr style="margin: 30px 0; border: none; border-top: 2px solid #ecf0f1;">
+
+          <div style="text-align: center;">
+            <p style="color: #7f8c8d; font-size: 14px; margin: 0;">
+              Best regards,<br>
+              <strong style="color: #5ce1e6;">PRC Volunteer System Team</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("General notification email error:", error);
+    return false;
+  }
+};
