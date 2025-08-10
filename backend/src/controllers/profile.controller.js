@@ -652,3 +652,71 @@ export const getNextRecommendedSection = (sections) => {
 
   return lowestSection;
 };
+
+export const updatePhoto = async (req, res) => {
+  try {
+    const { photo } = req.body;
+    const userId = req.user.userId; // Changed from req.user.id to req.user.userId
+
+    // Validate photo data
+    if (!photo) {
+      return res.status(400).json({
+        success: false,
+        message: "Photo data is required",
+      });
+    }
+
+    // Validate base64 format (basic check)
+    if (!photo.startsWith('data:image/')) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid photo format. Please provide a valid base64 image.",
+      });
+    }
+
+    // Check file size (limit to 5MB)
+    const base64Size = Buffer.byteLength(photo, 'utf8');
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (base64Size > maxSize) {
+      return res.status(400).json({
+        success: false,
+        message: "Photo size too large. Maximum size is 5MB.",
+      });
+    }
+
+    // Update user photo
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        photo,
+        updatedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    ).select('-password -emailVerificationToken -emailVerificationExpires');
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Photo updated successfully",
+      data: {
+        photo: updatedUser.photo,
+        updatedAt: updatedUser.updatedAt
+      }
+    });
+
+  } catch (error) {
+    console.error("Error updating photo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};

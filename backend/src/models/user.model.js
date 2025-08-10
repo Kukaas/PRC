@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    photo: {
+      type: String, // Base64 encoded image
+      default: null,
+    },
 
     // Email verification
     isEmailVerified: {

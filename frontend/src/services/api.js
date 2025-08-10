@@ -46,5 +46,6 @@ export const api = {
     update: (data) => apiClient.put("/profile/update", data),
     getCompletionStatus: () => apiClient.get("/profile/completion-status"),
     getSetupStatus: () => apiClient.get("/profile/setup-status"),
+    updatePhoto: (photoData) => apiClient.put("/profile/photo", photoData),
   },
 };

@@ -126,6 +126,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (userData) => {
+    setUser((prev) => ({ ...prev, ...userData }));
+  };
+
   const resendVerification = async (email) => {
     try {
       const response = await api.auth.resendVerification({ email });
@@ -155,6 +159,7 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     updateProfile,
+    updateUser,
     resendVerification,
     verifyEmail,
     checkAuthStatus,

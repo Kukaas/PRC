@@ -4,7 +4,6 @@ import { useAuth } from '../../../components/AuthContext';
 import PrivateLayout from '../../../layout/PrivateLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import ProfileHeader from './components/profile/ProfileHeader';
 import TabRenderer from './components/profile/TabRenderer';
 
 // Custom CSS for hiding scrollbar
@@ -60,8 +59,6 @@ const Profile = () => {
     <PrivateLayout>
       <style>{scrollbarHideStyles}</style>
       <div className="space-y-6">
-        {/* Header Section */}
-        <ProfileHeader user={user} />
 
         {/* Tabs Section */}
         <Card>

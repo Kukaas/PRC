@@ -4,6 +4,7 @@ import {
   updateProfile,
   getProfileCompletionStatus,
   getProfileSetupStatus,
+  updatePhoto,
 } from "../controllers/profile.controller.js";
 
 const router = express.Router();
@@ -13,6 +14,7 @@ router.use(authenticateToken);
 
 // Profile routes
 router.put("/update", updateProfile);
+router.put("/photo", updatePhoto);
 router.get("/completion-status", getProfileCompletionStatus);
 router.get("/setup-status", getProfileSetupStatus);
 
