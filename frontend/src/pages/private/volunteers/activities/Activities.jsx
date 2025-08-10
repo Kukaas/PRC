@@ -1,21 +1,24 @@
 import PrivateLayout from '@/layout/PrivateLayout'
-import React, { useState, useEffect } from 'react'
-// import { useAuth } from '@/components/AuthContext'
+import React, { useState, useEffect, useMemo } from 'react'
+import { useAuth } from '@/components/AuthContext'
 import { api } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { FileText, QrCode, Calendar, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import QRCode from 'react-qr-code'
 
 const Activities = () => {
-  // const { user } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [hasApplication, setHasApplication] = useState(false)
   const [applicationStatus, setApplicationStatus] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState(null)
 
   useEffect(() => {
     checkVolunteerApplication()
+    loadProfile()
   }, [])
 
   const checkVolunteerApplication = async () => {
@@ -32,6 +35,20 @@ const Activities = () => {
     }
   }
 
+  const loadProfile = async () => {
+    try {
+      // Prefer context if already loaded; otherwise, fetch
+      if (user) {
+        setProfile(user)
+        return
+      }
+      const res = await api.auth.getProfile()
+      if (res?.success && res?.data) setProfile(res.data)
+    } catch (err) {
+      // noop: QR will just not render
+    }
+  }
+
   const handleApplyNow = () => {
     navigate('/volunteer-application')
   }
@@ -39,6 +56,29 @@ const Activities = () => {
   const handleViewApplication = () => {
     navigate('/volunteer-application')
   }
+
+  // Construct deterministic QR payload for attendance
+  const qrValue = useMemo(() => {
+    if (!profile) return ''
+    const given = profile.givenName || ''
+    const middle = profile.middleName || ''
+    const family = profile.familyName || ''
+    const fullName = [given, middle, family].filter(Boolean).join(' ')
+    const contact = profile.personalInfo?.mobileNumber || profile.personalInfo?.contactNumber || ''
+    const email = profile.email || ''
+    const signature = fullName.toUpperCase()
+
+    // Single lifetime QR: payload is purely derived from immutable identity fields
+    // Consumers can parse JSON for attendance scanning
+    return JSON.stringify({
+      name: fullName,
+      contactNumber: contact,
+      email,
+      signature,
+      userId: profile._id,
+      version: 1,
+    })
+  }, [profile])
 
   if (loading) {
     return (
@@ -187,8 +227,29 @@ const Activities = () => {
 
             {/* Current Event Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* JOIN NOW Card */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              {/* QR Code Card - First on small screens, second on large screens */}
+              <div className="order-1 lg:order-2 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-center h-80">
+                  <div className="text-center">
+                    {qrValue ? (
+                      <div className="flex flex-col items-center gap-4">
+                        <QRCode value={qrValue} size={240} level="M" />
+                        <p className="text-sm text-gray-500 break-all max-w-xs">
+                          Attendance QR (lifetime)
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-4">
+                        <QrCode className="w-20 h-20 text-gray-300" />
+                        <p className="text-sm text-gray-500">Loading QR…</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* JOIN NOW Card - Second on small screens, first on large screens */}
+              <div className="order-2 lg:order-1 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-8 text-center overflow-hidden">
                   {/* Background pattern */}
                   <div className="absolute inset-0 opacity-10">
@@ -207,16 +268,6 @@ const Activities = () => {
                   >
                     See Details
                   </Button>
-                </div>
-              </div>
-
-              {/* QR Code Card */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <QrCode className="w-32 h-32 text-gray-400 mx-auto mb-4" />
-                    <p className="text-sm text-gray-500">QR Code</p>
-                  </div>
                 </div>
               </div>
             </div>
