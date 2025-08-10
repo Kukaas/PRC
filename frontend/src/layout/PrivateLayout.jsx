@@ -4,9 +4,11 @@ import { Button } from "../components/ui/button";
 import { Menu, X } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import logo from "../assets/logo.png";
+import { useAuth } from "@/components/AuthContext";
 
 const PrivateLayout = ({ children }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -48,7 +50,9 @@ const PrivateLayout = ({ children }) => {
               />
               <div>
                 <h1 className="text-sm font-bold text-gray-800">Red Cross</h1>
-                <p className="text-xs text-gray-500">Admin Portal</p>
+                <p className="text-xs text-gray-500">
+                  {user?.role === 'admin' ? 'Admin Portal' : 'Volunteer Portal'}
+                </p>
               </div>
             </div>
           </div>
