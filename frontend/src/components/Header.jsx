@@ -4,17 +4,18 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Menu, LogOut, User } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import logo from "../assets/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
+  const location = useLocation();
 
   const navigationLinks = [
-    { href: "/", label: "Home" },
-    { href: "#", label: "Volunteer" },
-    { href: "#", label: "Services" },
-    { href: "#", label: "About us" },
+    { href: "/", label: "Home", active: location.pathname === "/" },
+    { href: "#", label: "Volunteer", active: location.pathname === "/volunteer" },
+    { href: "#", label: "Services", active: location.pathname === "/services" },
+    { href: "#", label: "About us", active: location.pathname === "/about" },
   ];
 
   const closeMobileMenu = () => {
@@ -27,7 +28,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-cyan-300 px-6 py-4 shadow-md">
+    <header className="sticky top-0 z-50 bg-cyan-300 px-6 py-2 md:py-4 shadow-md">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-4">
@@ -44,7 +45,11 @@ const Header = () => {
             <Link
               key={link.href}
               to={link.href}
-              className="text-black hover:text-blue-800 font-medium transition-colors"
+              className={`font-medium transition-colors ${
+                link.active
+                  ? "text-blue-800 border-b-2 border-blue-800 pb-1"
+                  : "text-black hover:text-blue-800"
+              }`}
             >
               {link.label}
             </Link>
@@ -112,12 +117,16 @@ const Header = () => {
                 </div>
 
                 {/* Mobile Navigation Links */}
-                <nav className="flex flex-col space-y-4 mb-8">
+                <nav className="flex flex-col space-y-3 mb-8">
                   {navigationLinks.map((link) => (
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="text-gray-700 hover:text-blue-800 font-medium transition-colors py-3 px-4 rounded-lg hover:bg-cyan-100"
+                      className={`font-medium transition-colors py-3 px-4 rounded-lg ${
+                        link.active
+                          ? "text-blue-800 bg-blue-100 border-l-4 border-blue-800"
+                          : "text-gray-700 hover:text-blue-800 hover:bg-cyan-100"
+                      }`}
                       onClick={closeMobileMenu}
                     >
                       {link.label}
@@ -126,7 +135,7 @@ const Header = () => {
                 </nav>
 
                 {/* Mobile Action Buttons */}
-                <div className="flex flex-col space-y-3 mt-auto">
+                <div className="flex flex-col space-y-3 mt-auto m-5">
                   {isAuthenticated ? (
                     <>
                       <div className="flex items-center space-x-3 p-4 bg-cyan-100 rounded-lg">

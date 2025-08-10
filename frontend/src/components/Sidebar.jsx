@@ -9,6 +9,10 @@ import {
   LogOut,
   Settings,
   Camera,
+  LayoutDashboard,
+  BarChart3,
+  Target,
+  FileText,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { api } from '../services/api';
@@ -25,7 +29,42 @@ const Sidebar = ({ isMobile = false, onClose }) => {
   // Get user ID - handle both id and _id properties
   const userId = user?.id || user?._id || '';
 
-  const navigationLinks = [
+  // Admin navigation links
+  const adminNavigationLinks = [
+    {
+      href: `/admin/dashboard/${userId}`,
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      active: location.pathname.includes('/admin/dashboard')
+    },
+    {
+      href: `/admin/volunteers/${userId}`,
+      label: "Volunteers",
+      icon: Users,
+      active: location.pathname.includes('/admin/volunteers')
+    },
+    {
+      href: `/admin/activities/${userId}`,
+      label: "Activities",
+      icon: BarChart3,
+      active: location.pathname.includes('/admin/activities')
+    },
+    {
+      href: `/admin/members-status/${userId}`,
+      label: "Members Status",
+      icon: Target,
+      active: location.pathname.includes('/admin/members-status')
+    },
+    {
+      href: `/admin/reports/${userId}`,
+      label: "Reports",
+      icon: FileText,
+      active: location.pathname.includes('/admin/reports')
+    },
+  ];
+
+  // Volunteer navigation links
+  const volunteerNavigationLinks = [
     {
       href: `/profile/${userId}`,
       label: "My Information",
@@ -51,6 +90,9 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       active: location.pathname.includes('/notifications/')
     },
   ];
+
+  // Choose navigation links based on user role
+  const navigationLinks = user?.role === 'admin' ? adminNavigationLinks : volunteerNavigationLinks;
 
   const handleLogout = async () => {
     await logout();
@@ -141,7 +183,7 @@ const Sidebar = ({ isMobile = false, onClose }) => {
   return (
     <div className={`bg-white shadow-lg ${isMobile ? 'w-full' : 'w-72'} h-full flex flex-col`}>
       {/* Logo Section */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <img
             src={logo}
@@ -150,7 +192,9 @@ const Sidebar = ({ isMobile = false, onClose }) => {
           />
           <div>
             <h1 className="text-lg font-bold text-gray-800">Red Cross</h1>
-            <p className="text-xs text-gray-500">Volunteer Portal</p>
+            <p className="text-xs text-gray-500">
+              {user?.role === 'admin' ? 'Admin Portal' : 'Volunteer Portal'}
+            </p>
           </div>
         </div>
       </div>

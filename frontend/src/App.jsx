@@ -16,6 +16,7 @@ import ResetPassword from "./pages/public/ResetPassword.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 import ProfileSetup from "./pages/private/ProfileSetup.jsx";
 import Profile from "./pages/private/volunteers/Profile.jsx";
+import Dashboard from "./pages/private/admin/dashboard/Dashboard";
 
 function App() {
   return (
@@ -60,7 +61,7 @@ function App() {
               path="/admin/dashboard/:id"
               element={
                 <PrivateRoute>
-                  <div>Admin Dashboard (Coming Soon)</div>
+                  <Dashboard />
                 </PrivateRoute>
               }
             />
