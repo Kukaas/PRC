@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const corsOptions = {
-  origin: [ENV.FRONTEND_URL, "http://localhost:5173"],
+  origin: [ENV.FRONTEND_URL, "http://localhost:5173", "https://prc-phi-lake.vercel.app"],
   credentials: true,
 };
 

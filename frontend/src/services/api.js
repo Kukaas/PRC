@@ -25,12 +25,25 @@ apiClient.interceptors.response.use(
         return errorData;
       }
 
+      // Don't throw errors for 401/403 during auth check to prevent automatic logout
+      if (error.response.status === 401 || error.response.status === 403) {
+        // Create a custom error that can be handled by the calling code
+        const customError = new Error(
+          errorData.message || `HTTP error! status: ${error.response.status}`
+        );
+        customError.status = error.response.status;
+        customError.response = error.response;
+        throw customError;
+      }
+
       throw new Error(
         errorData.message || `HTTP error! status: ${error.response.status}`
       );
     } else if (error.request) {
       // Request was made but no response received
-      throw new Error("No response received from server");
+      const networkError = new Error("No response received from server");
+      networkError.isNetworkError = true;
+      throw networkError;
     } else {
       // Something else happened
       throw new Error(error.message || "Request failed");
