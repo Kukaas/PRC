@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
 export const PSGC_API_URL = import.meta.env.VITE_PSGC_API || "https://psgc.gitlab.io/api";
 
 // Create axios instance with default configuration

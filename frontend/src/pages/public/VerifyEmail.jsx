@@ -1,43 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import PublicLayout from "../../layout/PublicLayout";
-import { useAuth } from "../../components/AuthContext";
+import { api } from "../../services/api";
 import logo from "../../assets/logo.png";
 import bgImage from "../../assets/bg.png";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { verifyEmail } = useAuth();
   const [status, setStatus] = useState("verifying"); // verifying, success, error
   const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const hasVerified = useRef(false);
 
   const token = searchParams.get("token");
 
   useEffect(() => {
-    if (token) {
+    if (token && !hasVerified.current) {
+      hasVerified.current = true;
       verifyEmailToken();
-    } else {
+    } else if (!token) {
       setStatus("error");
       setMessage("No verification token provided");
-      setIsLoading(false);
     }
   }, [token]);
 
   const verifyEmailToken = async () => {
     try {
-      setIsLoading(true);
-      const result = await verifyEmail(token);
+      if (hasVerified.current === false) {
+        hasVerified.current = true;
+      }
+
+      setStatus("verifying");
+
+      const result = await api.auth.verifyEmail(token);
 
       if (result.success) {
         setStatus("success");
-        setMessage(result.data.message || "Email verified successfully!");
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate("/login");
-        }, 3000);
+        setMessage(result.data?.message || "Email verified successfully!");
       } else {
         setStatus("error");
         setMessage(result.error || "Verification failed");
@@ -45,12 +45,14 @@ const VerifyEmail = () => {
     } catch (error) {
       setStatus("error");
       setMessage(error.message || "Verification failed. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleResendVerification = () => {
+    navigate("/login");
+  };
+
+  const handleManualRedirect = () => {
     navigate("/login");
   };
 
@@ -91,9 +93,12 @@ const VerifyEmail = () => {
               Email Verified Successfully!
             </h2>
             <p className="text-gray-600 mb-6">{message}</p>
-            <p className="text-sm text-gray-500">
-              Redirecting to login page in 3 seconds...
-            </p>
+            <Button
+              onClick={handleManualRedirect}
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+            >
+              Go to Login
+            </Button>
           </div>
         );
 
