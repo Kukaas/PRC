@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Menu, LogOut, User } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import logo from "../assets/logo.png";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -40,13 +41,13 @@ const Header = () => {
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center space-x-8">
           {navigationLinks.map((link) => (
-            <a
+            <Link
               key={link.href}
-              href={link.href}
+              to={link.href}
               className="text-black hover:text-blue-800 font-medium transition-colors"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -76,13 +77,13 @@ const Header = () => {
                 className="bg-white text-red-600 border-red-600 hover:bg-red-50 px-6 py-2"
                 asChild
               >
-                <a href="/login">Login</a>
+                <Link to="/login">Login</Link>
               </Button>
               <Button
                 className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
                 asChild
               >
-                <a href="/signup">Sign up</a>
+                <Link to="/signup">Sign up</Link>
               </Button>
             </>
           )}
@@ -113,14 +114,14 @@ const Header = () => {
                 {/* Mobile Navigation Links */}
                 <nav className="flex flex-col space-y-4 mb-8">
                   {navigationLinks.map((link) => (
-                    <a
+                    <Link
                       key={link.href}
-                      href={link.href}
+                      to={link.href}
                       className="text-gray-700 hover:text-blue-800 font-medium transition-colors py-3 px-4 rounded-lg hover:bg-cyan-100"
                       onClick={closeMobileMenu}
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   ))}
                 </nav>
 
@@ -153,17 +154,17 @@ const Header = () => {
                         className="bg-white text-red-600 border-red-600 hover:bg-red-50 w-full py-3 px-6"
                         asChild
                       >
-                        <a href="/login" onClick={closeMobileMenu}>
+                        <Link to="/login" onClick={closeMobileMenu}>
                           Login
-                        </a>
+                        </Link>
                       </Button>
                       <Button
                         className="bg-red-600 hover:bg-red-700 text-white w-full py-3 px-6"
                         asChild
                       >
-                        <a href="/signup" onClick={closeMobileMenu}>
+                        <Link to="/signup" onClick={closeMobileMenu}>
                           Sign up
-                        </a>
+                        </Link>
                       </Button>
                     </>
                   )}
