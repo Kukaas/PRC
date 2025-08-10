@@ -40,4 +40,46 @@ function RadioGroupItem({
   );
 }
 
-export { RadioGroup, RadioGroupItem }
+// New component specifically for yes/no questions
+function YesNoRadioGroup({
+  value,
+  onValueChange,
+  label,
+  className,
+  error,
+  required = false
+}) {
+  return (
+    <div className={cn("space-y-3", className)}>
+      {label && (
+        <label className="text-sm font-medium text-gray-700">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
+      <RadioGroup
+        value={value}
+        onValueChange={onValueChange}
+        className="flex flex-col sm:flex-row gap-4"
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="yes" id={`${label?.toLowerCase().replace(/\s+/g, '-')}-yes`} />
+          <label htmlFor={`${label?.toLowerCase().replace(/\s+/g, '-')}-yes`} className="text-sm text-gray-700 cursor-pointer">
+            Yes
+          </label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="no" id={`${label?.toLowerCase().replace(/\s+/g, '-')}-no`} />
+          <label htmlFor={`${label?.toLowerCase().replace(/\s+/g, '-')}-no`} className="text-sm text-gray-700 cursor-pointer">
+            No
+          </label>
+        </div>
+      </RadioGroup>
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
+      )}
+    </div>
+  );
+}
+
+export { RadioGroup, RadioGroupItem, YesNoRadioGroup }

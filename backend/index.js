@@ -9,6 +9,7 @@ import { ENV } from "./src/connections/env.js";
 import testRoute from "./src/routes/test.route.js";
 import authRoute from "./src/routes/auth.route.js";
 import profileRoute from "./src/routes/profile.route.js";
+import volunteerApplicationRoute from "./src/routes/volunteerApplication.route.js";
 
 const app = express();
 
@@ -33,5 +34,6 @@ app.listen(ENV.PORT, () => {
 app.use("/api/v1/test", testRoute);
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/profile", profileRoute);
+app.use("/api/v1/volunteer-application", volunteerApplicationRoute);
 
 export default app;

@@ -56,4 +56,17 @@ export const api = {
     getSetupStatus: () => apiClient.get("/profile/setup-status"),
     updatePhoto: (photoData) => apiClient.put("/profile/photo", photoData),
   },
+  volunteerApplication: {
+    submit: (data) => apiClient.post("/volunteer-application/submit", data),
+    resubmit: (data) => apiClient.post("/volunteer-application/resubmit", data),
+    canResubmit: () => apiClient.get("/volunteer-application/can-resubmit"),
+    getMyApplication: () => apiClient.get("/volunteer-application/my-application"),
+    update: (data) => apiClient.put("/volunteer-application/update", data),
+    delete: (id) => apiClient.delete(`/volunteer-application/delete/${id}`),
+    // Admin routes
+    getAll: (params) => apiClient.get("/volunteer-application/admin/all", { params }),
+    getById: (id) => apiClient.get(`/volunteer-application/admin/${id}`),
+    updateStatus: (id, data) => apiClient.put(`/volunteer-application/admin/${id}/status`, data),
+    getStats: () => apiClient.get("/volunteer-application/admin/stats"),
+  },
 };

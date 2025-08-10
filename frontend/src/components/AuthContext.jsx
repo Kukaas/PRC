@@ -26,10 +26,16 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
+      console.log("Checking authentication status...");
+
       const response = await api.auth.getProfile();
+      console.log("Auth check response:", response);
+
       if (response.success) {
         setUser(response.data);
         setIsAuthenticated(true);
+        console.log("User authenticated successfully:", response.data);
+
         // Get profile completion status
         try {
           const completionResponse = await api.profile.getCompletionStatus();
@@ -38,13 +44,53 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error("Error fetching profile completion:", error);
+          // Don't fail authentication if profile completion check fails
         }
+      } else {
+        console.log("Auth check failed with response:", response);
+        // Only clear user data if the response explicitly indicates authentication failure
+        if (response.message && (
+          response.message.includes('Access token is required') ||
+          response.message.includes('Token has expired') ||
+          response.message.includes('Invalid token') ||
+          response.message.includes('User no longer exists')
+        )) {
+          console.log("Clearing user data due to authentication failure");
+          setUser(null);
+          setIsAuthenticated(false);
+          setProfileCompletion(null);
+        }
+        // For other types of failures, keep the current user state
       }
     } catch (error) {
-      console.error("Auth check failed:", error);
-      setUser(null);
-      setIsAuthenticated(false);
-      setProfileCompletion(null);
+      console.error("Auth check failed with error:", error);
+
+      // Check if it's an axios error with response data
+      if (error.response && error.response.data && error.response.data.message) {
+        const errorMessage = error.response.data.message;
+        if (
+          errorMessage.includes('Access token is required') ||
+          errorMessage.includes('Token has expired') ||
+          errorMessage.includes('Invalid token') ||
+          errorMessage.includes('User no longer exists')
+        ) {
+          console.log("Clearing user data due to authentication error");
+          setUser(null);
+          setIsAuthenticated(false);
+          setProfileCompletion(null);
+        }
+      } else if (error.message && (
+        error.message.includes('401') ||
+        error.message.includes('Unauthorized')
+      )) {
+        console.log("Clearing user data due to authentication error");
+        setUser(null);
+        setIsAuthenticated(false);
+        setProfileCompletion(null);
+      }
+
+      // For network errors or other issues, keep the current user state
+      // This prevents logout on page refresh due to temporary network issues
     } finally {
       setLoading(false);
     }

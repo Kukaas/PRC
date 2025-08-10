@@ -17,7 +17,9 @@ import PrivateRoute from "./components/PrivateRoute";
 import ProfileSetup from "./pages/private/ProfileSetup.jsx";
 import Profile from "./pages/private/volunteers/Profile.jsx";
 import Dashboard from "./pages/private/admin/dashboard/Dashboard";
-import Activities from "./pages/private/volunteers/activities/activities";
+import Activities from "./pages/private/volunteers/activities/Activities";
+import VolunteerApplication from "./pages/private/volunteers/volunteer-application/VolunteerApplication";
+import AdminVolunteers from "./pages/private/admin/volunteers/AdminVolunteers";
 
 
 function App() {
@@ -67,6 +69,14 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/volunteer-application"
+              element={
+                <PrivateRoute>
+                  <VolunteerApplication />
+                </PrivateRoute>
+              }
+            />
 
             {/* Admin routes */}
             <Route
@@ -74,6 +84,15 @@ function App() {
               element={
                 <PrivateRoute>
                   <Dashboard />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/volunteers/:id"
+              element={
+                <PrivateRoute>
+                  <AdminVolunteers />
                 </PrivateRoute>
               }
             />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import CustomForm from "../../components/CustomForm";
 import CustomInput from "../../components/CustomInput";
@@ -21,7 +21,7 @@ import {
 
 const Login = () => {
   const { login, isAuthenticated, user } = useAuth();
-  const location = useLocation();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -104,19 +104,19 @@ const Login = () => {
     switch (userData.role) {
       case 'volunteer':
         if (userData.isProfileComplete) {
-          window.location.href = `/profile/${userId}`;
+          navigate(`/profile/${userId}`);
         } else {
-          window.location.href = "/profile-setup";
+          navigate("/profile-setup");
         }
         break;
       case 'admin':
-        window.location.href = `/admin/dashboard/${userId}`;
+        navigate(`/admin/dashboard/${userId}`);
         break;
       case 'staff':
-        window.location.href = `/staff/dashboard/${userId}`;
+        navigate(`/staff/dashboard/${userId}`);
         break;
       default:
-        window.location.href = `/profile/${userId}`;
+        navigate(`/profile/${userId}`);
     }
   };
 
@@ -165,7 +165,6 @@ const Login = () => {
       if (result.success) {
         // Redirect based on user role and profile completion
         const userData = result.data.user;
-        console.log("Login successful, user data:", userData);
         handleRedirect(userData);
       } else {
         setErrors({ general: result.error });
