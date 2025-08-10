@@ -17,6 +17,8 @@ import PrivateRoute from "./components/PrivateRoute";
 import ProfileSetup from "./pages/private/ProfileSetup.jsx";
 import Profile from "./pages/private/volunteers/Profile.jsx";
 import Dashboard from "./pages/private/admin/dashboard/Dashboard";
+import Activities from "./pages/private/volunteers/activities/activities";
+
 
 function App() {
   return (
@@ -52,6 +54,16 @@ function App() {
               element={
                 <PrivateRoute>
                   <ProfileSetup />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Volunteer routes */}
+            <Route
+              path="/activities/:id"
+              element={
+                <PrivateRoute>
+                  <Activities />
                 </PrivateRoute>
               }
             />
