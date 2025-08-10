@@ -1,9 +1,22 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import CustomInput from "../../../../components/CustomInput";
 import { useAuth } from "@/components/AuthContext";
+import { PSGC_API_URL } from "@/services/api";
 
 const PersonalInfoStep = ({ formData, handleChange, errors }) => {
   const { user } = useAuth();
+
+  // PSGC API state
+  const [provinces, setProvinces] = useState([]);
+  const [municipalities, setMunicipalities] = useState([]);
+  const [barangays, setBarangays] = useState([]);
+  const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedMunicipality, setSelectedMunicipality] = useState("");
+  const [selectedBarangay, setSelectedBarangay] = useState("");
+  const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
+  const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
+  const [isLoadingBarangays, setIsLoadingBarangays] = useState(false);
 
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth) => {
@@ -29,6 +42,109 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
 
   const userAge = calculateAge(formData.dateOfBirth || user?.dateOfBirth);
   const defaultDateOfBirth = formatDateForInput(formData.dateOfBirth || user?.dateOfBirth);
+
+  // PSGC API functions
+  const fetchProvinces = async () => {
+    setIsLoadingProvinces(true);
+    try {
+      const response = await axios.get(`${PSGC_API_URL}/provinces/`);
+      setProvinces(response.data);
+    } catch (error) {
+      console.error('Error fetching provinces:', error);
+    } finally {
+      setIsLoadingProvinces(false);
+    }
+  };
+
+  const fetchMunicipalities = async (provinceCode) => {
+    if (!provinceCode) return;
+    setIsLoadingMunicipalities(true);
+    try {
+      const response = await axios.get(`${PSGC_API_URL}/provinces/${provinceCode}/municipalities/`);
+      setMunicipalities(response.data);
+    } catch (error) {
+      console.error('Error fetching municipalities:', error);
+    } finally {
+      setIsLoadingMunicipalities(false);
+    }
+  };
+
+  const fetchBarangays = async (municipalityCode) => {
+    if (!municipalityCode) return;
+    setIsLoadingBarangays(true);
+    try {
+      const response = await axios.get(`${PSGC_API_URL}/municipalities/${municipalityCode}/barangays/`);
+      setBarangays(response.data);
+    } catch (error) {
+      console.error('Error fetching barangays:', error);
+    } finally {
+      setIsLoadingBarangays(false);
+    }
+  };
+
+  // Handle province selection
+  const handleProvinceChange = (e) => {
+    const provinceCode = e.target.value;
+    setSelectedProvince(provinceCode);
+    setSelectedMunicipality("");
+    setSelectedBarangay("");
+    setMunicipalities([]);
+    setBarangays([]);
+
+    // Update form data
+    const event = {
+      target: {
+        name: "address.province",
+        value: provinces.find(p => p.code === provinceCode)?.name || ""
+      }
+    };
+    handleChange(event);
+
+    if (provinceCode) {
+      fetchMunicipalities(provinceCode);
+    }
+  };
+
+  // Handle municipality selection
+  const handleMunicipalityChange = (e) => {
+    const municipalityCode = e.target.value;
+    setSelectedMunicipality(municipalityCode);
+    setSelectedBarangay("");
+    setBarangays([]);
+
+    // Update form data
+    const event = {
+      target: {
+        name: "address.municipalityCity",
+        value: municipalities.find(m => m.code === municipalityCode)?.name || ""
+      }
+    };
+    handleChange(event);
+
+    if (municipalityCode) {
+      fetchBarangays(municipalityCode);
+    }
+  };
+
+  // Handle barangay selection
+  const handleBarangayChange = (e) => {
+    const barangayCode = e.target.value;
+    setSelectedBarangay(barangayCode);
+
+    // Update form data
+    const event = {
+      target: {
+        name: "address.districtBarangayVillage",
+        value: barangays.find(b => b.code === barangayCode)?.name || ""
+      }
+    };
+    handleChange(event);
+  };
+
+  // Load provinces on component mount
+  useEffect(() => {
+    fetchProvinces();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -129,16 +245,6 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <CustomInput
-          label="Birth Place"
-          name="birthPlace"
-          type="text"
-          placeholder="Enter your birth place"
-          value={formData.birthPlace}
-          onChange={handleChange}
-          required
-          error={errors.birthPlace}
-        />
-        <CustomInput
           label="Civil Status"
           name="civilStatus"
           type="select"
@@ -231,12 +337,82 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         <h4 className="font-medium text-gray-700">Address</h4>
         <p className="text-sm text-gray-500 mb-4">
-          For optional fields like house number or street, you can enter
-          "N/A" if not applicable.
+          Select your location from the dropdowns below, then enter additional details.
         </p>
+
+        {/* PSGC Location Dropdowns */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <CustomInput
+            label="Province"
+            name="province"
+            type="select"
+            value={selectedProvince}
+            onChange={handleProvinceChange}
+            required
+            error={errors.province}
+          >
+            <option value="">Province</option>
+            {provinces.map((province) => (
+              <option key={province.code} value={province.code}>
+                {province.name}
+              </option>
+            ))}
+          </CustomInput>
+
+          <CustomInput
+            label="Municipality/City"
+            name="municipality"
+            type="select"
+            value={selectedMunicipality}
+            onChange={handleMunicipalityChange}
+            required
+            error={errors.municipality}
+            disabled={!selectedProvince}
+          >
+            <option value="">Municipality/City</option>
+            {municipalities.map((municipality) => (
+              <option key={municipality.code} value={municipality.code}>
+                {municipality.name}
+              </option>
+            ))}
+          </CustomInput>
+
+          <CustomInput
+            label="Barangay"
+            name="barangay"
+            type="select"
+            value={selectedBarangay}
+            onChange={handleBarangayChange}
+            required
+            error={errors.barangay}
+            disabled={!selectedMunicipality}
+          >
+            <option value="">Barangay</option>
+            {barangays.map((barangay) => (
+              <option key={barangay.code} value={barangay.code}>
+                {barangay.name}
+              </option>
+            ))}
+          </CustomInput>
+        </div>
+
+        {/* Loading States */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {isLoadingProvinces && (
+            <p className="text-xs text-gray-500">Loading provinces...</p>
+          )}
+          {isLoadingMunicipalities && (
+            <p className="text-xs text-gray-500">Loading municipalities...</p>
+          )}
+          {isLoadingBarangays && (
+            <p className="text-xs text-gray-500">Loading barangays...</p>
+          )}
+        </div>
+
+        {/* Additional Address Details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <CustomInput
             label="House No."
@@ -257,39 +433,8 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
             error={errors["address.streetBlockLot"]}
           />
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <CustomInput
-            label="District/Barangay/Village"
-            name="address.districtBarangayVillage"
-            type="text"
-            placeholder="Enter district/barangay/village"
-            value={formData.address.districtBarangayVillage}
-            onChange={handleChange}
-            required
-            error={errors["address.districtBarangayVillage"]}
-          />
-          <CustomInput
-            label="Municipality/City"
-            name="address.municipalityCity"
-            type="text"
-            placeholder="Enter municipality/city"
-            value={formData.address.municipalityCity}
-            onChange={handleChange}
-            required
-            error={errors["address.municipalityCity"]}
-          />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <CustomInput
-            label="Province"
-            name="address.province"
-            type="text"
-            placeholder="Enter province"
-            value={formData.address.province}
-            onChange={handleChange}
-            required
-            error={errors["address.province"]}
-          />
           <CustomInput
             label="Zip Code"
             name="address.zipcode"
