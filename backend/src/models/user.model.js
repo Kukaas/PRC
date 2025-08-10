@@ -47,6 +47,10 @@ const userSchema = new mongoose.Schema(
     emailVerificationToken: String,
     emailVerificationExpires: Date,
 
+    // Password reset
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+
     // Role and status
     role: {
       type: String,
@@ -307,6 +311,14 @@ userSchema.methods.generateEmailVerificationToken = function () {
   const token = crypto.randomBytes(32).toString("hex");
   this.emailVerificationToken = token;
   this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  return token;
+};
+
+// Method to generate password reset token
+userSchema.methods.generatePasswordResetToken = function () {
+  const token = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = token;
+  this.passwordResetExpires = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
   return token;
 };
 

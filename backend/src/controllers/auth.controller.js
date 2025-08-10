@@ -3,6 +3,8 @@ import User from "../models/user.model.js";
 import {
   sendVerificationEmail,
   sendWelcomeEmail,
+  sendPasswordResetEmail,
+  sendPasswordChangeNotification,
 } from "../services/email.service.js";
 import { ENV } from "../connections/env.js";
 import {
@@ -342,6 +344,132 @@ export const getProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Get profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Forgot password
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "No account found with this email address",
+      });
+    }
+
+    // Generate password reset token
+    const resetToken = user.generatePasswordResetToken();
+    await user.save();
+
+    // Send password reset email
+    const emailSent = await sendPasswordResetEmail(
+      email,
+      resetToken,
+      `${user.givenName} ${user.familyName}`
+    );
+
+    if (!emailSent) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send password reset email. Please try again later.",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Password reset link sent to your email",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Reset password
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    // Update password and clear reset token
+    user.password = newPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save();
+
+    // Get client IP address and user agent
+    const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const timestamp = new Date();
+
+    // Format IP address for better display
+    let displayIpAddress = ipAddress;
+    if (ipAddress === '::1' || ipAddress === '127.0.0.1') {
+      displayIpAddress = 'Localhost (Development)';
+    } else if (ipAddress === 'Unknown') {
+      displayIpAddress = 'Unknown Location';
+    } else if (ipAddress.includes('::ffff:')) {
+      // Handle IPv4-mapped IPv6 addresses
+      displayIpAddress = ipAddress.replace('::ffff:', '');
+    }
+
+    // Format user agent for better display
+    let displayUserAgent = 'Unknown Device';
+    if (userAgent !== 'Unknown') {
+      // Extract browser and OS information
+      const browserMatch = userAgent.match(/(chrome|safari|firefox|edge|opera|ie)\/?\s*(\d+)/i);
+      const osMatch = userAgent.match(/\((.*?)\)/);
+
+      if (browserMatch && osMatch) {
+        displayUserAgent = `${browserMatch[1].charAt(0).toUpperCase() + browserMatch[1].slice(1)} on ${osMatch[1]}`;
+      } else if (browserMatch) {
+        displayUserAgent = browserMatch[1].charAt(0).toUpperCase() + browserMatch[1].slice(1);
+      } else {
+        displayUserAgent = 'Unknown Browser';
+      }
+    }
+
+    // Send password change notification email
+    await sendPasswordChangeNotification(
+      user.email,
+      `${user.givenName} ${user.familyName}`,
+      timestamp,
+      displayIpAddress,
+      displayUserAgent
+    );
+
+    res.json({
+      success: true,
+      message: "Password reset successfully. You can now log in with your new password.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",

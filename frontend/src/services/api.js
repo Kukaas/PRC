@@ -19,6 +19,12 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       const errorData = error.response.data;
+
+      // For forgot password, return the response data even for 404
+      if (error.response.status === 404 && error.config.url?.includes('/forgot-password')) {
+        return errorData;
+      }
+
       throw new Error(
         errorData.message || `HTTP error! status: ${error.response.status}`
       );
@@ -41,6 +47,8 @@ export const api = {
       apiClient.post("/auth/resend-verification", data),
     verifyEmail: (token) => apiClient.get(`/auth/verify-email/${token}`),
     getProfile: () => apiClient.get("/auth/profile"),
+    forgotPassword: (data) => apiClient.post("/auth/forgot-password", data),
+    resetPassword: (data) => apiClient.post("/auth/reset-password", data),
   },
   profile: {
     update: (data) => apiClient.put("/profile/update", data),

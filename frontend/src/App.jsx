@@ -12,6 +12,7 @@ import Home from "./pages/public/Home.jsx";
 import Login from "./pages/public/Login.jsx";
 import Signup from "./pages/public/Signup.jsx";
 import VerifyEmail from "./pages/public/VerifyEmail.jsx";
+import ResetPassword from "./pages/public/ResetPassword.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 import ProfileSetup from "./pages/private/ProfileSetup.jsx";
 import Profile from "./pages/private/volunteers/Profile.jsx";
@@ -34,6 +35,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected routes */}
             <Route
