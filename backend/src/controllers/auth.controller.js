@@ -10,7 +10,7 @@ import {
   calculateMedicalHistoryCompletion,
   calculateFamilyBackgroundCompletion,
   calculateEducationalBackgroundCompletion,
-  calculateTalentsAndSkillsCompletion,
+  calculateSkillsCompletion,
   calculateServicesCompletion,
   getNextRecommendedSection,
 } from "./profile.controller.js";
@@ -198,8 +198,8 @@ export const login = async (req, res) => {
         educationalBackground: calculateEducationalBackgroundCompletion(
           user.educationalBackground
         ),
-        talentsAndSkills: calculateTalentsAndSkillsCompletion(
-          user.talentsAndSkills
+        skills: calculateSkillsCompletion(
+          user.skills
         ),
         services: calculateServicesCompletion(user.services),
       },

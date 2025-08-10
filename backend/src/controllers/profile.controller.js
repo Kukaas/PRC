@@ -227,17 +227,9 @@ export const updateProfile = async (req, res) => {
       }
     }
 
-    // Talents and Skills
-    if (req.body.talentsAndSkills) {
-      const { talentsAndSkills } = req.body;
-      setNestedField(
-        "talentsAndSkills.primaryTalent",
-        talentsAndSkills.primaryTalent
-      );
-      setNestedField(
-        "talentsAndSkills.additionalSkills",
-        talentsAndSkills.additionalSkills
-      );
+    // Skills
+    if (req.body.skills !== undefined) {
+      updateData.skills = req.body.skills;
     }
 
     // Socio-Civic Involvements (replace entire array)
@@ -252,7 +244,12 @@ export const updateProfile = async (req, res) => {
 
     // Services (replace entire array)
     if (req.body.services !== undefined) {
-      updateData.services = req.body.services;
+      // Convert string array to object array if needed
+      if (Array.isArray(req.body.services) && req.body.services.length > 0 && typeof req.body.services[0] === 'string') {
+        updateData.services = req.body.services.map(service => ({ type: service }));
+      } else {
+        updateData.services = req.body.services;
+      }
     }
 
     // Check if any fields were provided for update
@@ -309,7 +306,7 @@ export const getProfileCompletionStatus = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId).select(
-      "isProfileComplete personalInfo medicalHistory familyBackground educationalBackground talentsAndSkills services"
+      "isProfileComplete personalInfo medicalHistory familyBackground educationalBackground skills services"
     );
 
     if (!user) {
@@ -329,8 +326,8 @@ export const getProfileCompletionStatus = async (req, res) => {
       educationalBackground: calculateEducationalBackgroundCompletion(
         user.educationalBackground
       ),
-      talentsAndSkills: calculateTalentsAndSkillsCompletion(
-        user.talentsAndSkills
+      skills: calculateSkillsCompletion(
+        user.skills
       ),
       services: calculateServicesCompletion(user.services),
     };
@@ -363,7 +360,7 @@ export const getProfileSetupStatus = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId).select(
-      "isProfileComplete personalInfo medicalHistory familyBackground educationalBackground talentsAndSkills services"
+      "isProfileComplete personalInfo medicalHistory familyBackground educationalBackground skills services"
     );
 
     if (!user) {
@@ -381,7 +378,7 @@ export const getProfileSetupStatus = async (req, res) => {
       educationalBackground: getMissingEducationalBackgroundFields(
         user.educationalBackground
       ),
-      talentsAndSkills: getMissingTalentsAndSkillsFields(user.talentsAndSkills),
+      skills: getMissingSkillsFields(user.skills),
       services: getMissingServicesFields(user.services),
     };
 
@@ -395,8 +392,8 @@ export const getProfileSetupStatus = async (req, res) => {
       educationalBackground: calculateEducationalBackgroundCompletion(
         user.educationalBackground
       ),
-      talentsAndSkills: calculateTalentsAndSkillsCompletion(
-        user.talentsAndSkills
+      skills: calculateSkillsCompletion(
+        user.skills
       ),
       services: calculateServicesCompletion(user.services),
     };
@@ -427,7 +424,7 @@ export const getProfileSetupStatus = async (req, res) => {
           familyBackground: "Share information about your family members",
           educationalBackground:
             "List your educational achievements and qualifications",
-          talentsAndSkills: "Select your primary talent and additional skills",
+          skills: "Select your skills from the available options",
           services: "Choose which services you'd like to join",
         },
       },
@@ -519,8 +516,8 @@ export const calculateEducationalBackgroundCompletion = (
   return Math.round((completed / fields.length) * 100);
 };
 
-export const calculateTalentsAndSkillsCompletion = (talentsAndSkills) => {
-  return talentsAndSkills.primaryTalent ? 100 : 0;
+export const calculateSkillsCompletion = (skills) => {
+  return skills && skills.length > 0 ? 100 : 0;
 };
 
 export const calculateServicesCompletion = (services) => {
@@ -627,12 +624,11 @@ const getMissingEducationalBackgroundFields = (educationalBackground) => {
     .map((field) => field.label);
 };
 
-const getMissingTalentsAndSkillsFields = (talentsAndSkills) => {
-  const requiredFields = [{ field: "primaryTalent", label: "Primary Talent" }];
-
-  return requiredFields
-    .filter((field) => !talentsAndSkills[field.field])
-    .map((field) => field.label);
+const getMissingSkillsFields = (skills) => {
+  if (!skills || skills.length === 0) {
+    return ["Skills Selection"];
+  }
+  return [];
 };
 
 const getMissingServicesFields = (services) => {

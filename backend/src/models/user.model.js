@@ -155,25 +155,22 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-    // Talents and Skills
-    talentsAndSkills: {
-      primaryTalent: {
-        type: String,
-        enum: [
-          "Strong Communication skills",
-          "First Aid and CPR/BLS Certification",
-          "Swimming and Lifesaving Skills",
-          "Fire Safety Knowledge",
-          "Disaster Preparedness Training",
-          "Public Speaking and Teaching Skills",
-          "Physical Fitness",
-          "Leadership and Organizing",
-          "First Aid and Disaster Preparedness",
-          "Communication and Advocacy",
-          "Creativity and Event Planning",
-        ],
-      },
-      additionalSkills: [String],
+    // Skills
+    skills: {
+      type: [String],
+      enum: [
+        "Strong Communication skills",
+        "First Aid and CPR/BLS Certification",
+        "Swimming and Lifesaving Skills",
+        "Fire Safety Knowledge",
+        "Disaster Preparedness Training",
+        "Public Speaking and Teaching Skills",
+        "Physical Fitness",
+        "Leadership and Organizing",
+        "First Aid and Disaster Preparedness",
+        "Communication and Advocacy",
+        "Creativity and Event Planning"
+      ]
     },
 
     // Socio-Civic & Cultural Religious Involvements
@@ -197,15 +194,17 @@ const userSchema = new mongoose.Schema(
     // Services
     services: [
       {
-        type: String,
-        enum: [
-          "Welfare Services",
-          "Safety Services",
-          "Health Services",
-          "Youth Services",
-          "Blood Services",
-          "Wash Services",
-        ],
+        type: {
+          type: String,
+          enum: [
+            "Welfare Services",
+            "Safety Services",
+            "Health Services",
+            "Youth Services",
+            "Blood Services",
+            "Wash Services",
+          ],
+        },
       },
     ],
 
@@ -288,8 +287,11 @@ userSchema.methods.checkProfileCompleteness = function () {
   // Check if services are selected
   const hasServices = !!(this.services && this.services.length > 0);
 
-  // Profile is complete if user has provided basic info, address, medical history, and services
-  return hasBasicInfo && hasAddress && hasMedicalHistory && hasServices;
+  // Check if skills are selected
+  const hasSkills = !!(this.skills && this.skills.length > 0);
+
+  // Profile is complete if user has provided basic info, address, medical history, services, and skills
+  return hasBasicInfo && hasAddress && hasMedicalHistory && hasServices && hasSkills;
 };
 
 // Method to compare password

@@ -43,9 +43,7 @@ const Signup = () => {
     if (!formData.givenName.trim()) {
       newErrors.givenName = "Given name is required";
     }
-    if (!formData.middleName.trim()) {
-      newErrors.middleName = "Middle name is required";
-    }
+    // Middle name is not required
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = "Date of birth is required";
     }
@@ -172,10 +170,10 @@ const Signup = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <CustomInput
-                    label="Given Name"
+                    label="First name"
                     name="givenName"
                     type="text"
-                    placeholder="Enter your given name"
+                    placeholder="Enter your first name"
                     value={formData.givenName}
                     onChange={handleChange}
                     required
@@ -183,10 +181,10 @@ const Signup = () => {
                   />
 
                   <CustomInput
-                    label="Family Name"
+                    label="Last name"
                     name="familyName"
                     type="text"
-                    placeholder="Enter your family name"
+                    placeholder="Enter your last name"
                     value={formData.familyName}
                     onChange={handleChange}
                     required
@@ -198,10 +196,9 @@ const Signup = () => {
                   label="Middle Name"
                   name="middleName"
                   type="text"
-                  placeholder="Enter your middle name"
+                  placeholder="Enter your middle name (optional)"
                   value={formData.middleName}
                   onChange={handleChange}
-                  required
                   error={errors.middleName}
                 />
 

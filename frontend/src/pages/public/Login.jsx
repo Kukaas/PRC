@@ -18,14 +18,39 @@ const Login = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.isProfileComplete) {
-        window.location.href = "/dashboard";
-      } else {
-        window.location.href = "/profile-setup";
-      }
+    if (isAuthenticated && user && (user._id || user.id)) {
+      handleRedirect(user);
     }
   }, [isAuthenticated, user]);
+
+  const handleRedirect = (userData) => {
+    // Handle both _id and id properties from the user object
+    const userId = userData._id || userData.id;
+
+    if (!userId) {
+      console.error("No user ID found:", userData);
+      return;
+    }
+
+
+    switch (userData.role) {
+      case 'volunteer':
+        if (userData.isProfileComplete) {
+          window.location.href = `/profile/${userId}`;
+        } else {
+          window.location.href = "/profile-setup";
+        }
+        break;
+      case 'admin':
+        window.location.href = `/admin/dashboard/${userId}`;
+        break;
+      case 'staff':
+        window.location.href = `/staff/dashboard/${userId}`;
+        break;
+      default:
+        window.location.href = `/profile/${userId}`;
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -70,12 +95,10 @@ const Login = () => {
       });
 
       if (result.success) {
-        // Redirect based on profile completion
-        if (result.data.setupRequired) {
-          window.location.href = "/profile-setup";
-        } else {
-          window.location.href = "/dashboard";
-        }
+        // Redirect based on user role and profile completion
+        const userData = result.data.user;
+        console.log("Login successful, user data:", userData);
+        handleRedirect(userData);
       } else {
         setErrors({ general: result.error });
       }

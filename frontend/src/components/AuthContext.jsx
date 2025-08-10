@@ -60,6 +60,8 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         setProfileCompletion(response.data.profileCompletion);
         return { success: true, data: response.data };
+      } else {
+        return { success: false, error: response.message || "Login failed" };
       }
     } catch (error) {
       console.error("Login failed:", error);
@@ -110,9 +112,9 @@ export const AuthProvider = ({ children }) => {
         console.error("Error fetching completion status:", completionError);
       }
 
-      // Update user data if profile is now complete
-      if (response.data && response.data.isProfileComplete) {
-        setUser((prev) => ({ ...prev, isProfileComplete: true }));
+      // Update user data with the new profile data
+      if (response.data) {
+        setUser((prev) => ({ ...prev, ...response.data }));
       }
 
       return { success: true, data: response.data };

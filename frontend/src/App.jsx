@@ -14,6 +14,7 @@ import Signup from "./pages/public/Signup.jsx";
 import VerifyEmail from "./pages/public/VerifyEmail.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 import ProfileSetup from "./pages/private/ProfileSetup.jsx";
+import Profile from "./pages/private/volunteers/Profile.jsx";
 
 function App() {
   return (
@@ -36,10 +37,10 @@ function App() {
 
             {/* Protected routes */}
             <Route
-              path="/dashboard"
+              path="/profile/:id"
               element={
-                <PrivateRoute requireProfileComplete={true}>
-                  <div>Dashboard (Profile Complete)</div>
+                <PrivateRoute>
+                  <Profile />
                 </PrivateRoute>
               }
             />
@@ -48,6 +49,26 @@ function App() {
               element={
                 <PrivateRoute>
                   <ProfileSetup />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Admin routes */}
+            <Route
+              path="/admin/dashboard/:id"
+              element={
+                <PrivateRoute>
+                  <div>Admin Dashboard (Coming Soon)</div>
+                </PrivateRoute>
+              }
+            />
+
+            {/* Staff routes */}
+            <Route
+              path="/staff/dashboard/:id"
+              element={
+                <PrivateRoute>
+                  <div>Staff Dashboard (Coming Soon)</div>
                 </PrivateRoute>
               }
             />

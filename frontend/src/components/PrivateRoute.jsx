@@ -1,10 +1,11 @@
 import React from "react";
 import { useAuth } from "./AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const PrivateRoute = ({ children, requireProfileComplete = false }) => {
-  const { isAuthenticated, loading, user, profileCompletion } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -22,8 +23,35 @@ const PrivateRoute = ({ children, requireProfileComplete = false }) => {
     return null;
   }
 
-  if (requireProfileComplete && !user?.isProfileComplete) {
-    navigate("/profile-setup");
+  // Get user ID - handle both _id and id properties
+  const userId = user?.id || user?._id;
+
+  // Handle role-based routing
+  if (user && location.pathname.includes('/profile/')) {
+    const pathId = location.pathname.split('/profile/')[1];
+
+    // If user is trying to access their own profile but profile is not complete
+    if (pathId === userId && !user.isProfileComplete && !location.pathname.includes('/profile-setup')) {
+      navigate("/profile-setup");
+      return null;
+    }
+
+    // If user is trying to access someone else's profile, redirect to their own
+    if (pathId !== userId && pathId !== 'setup') {
+      navigate(`/profile/${userId}`);
+      return null;
+    }
+  }
+
+  // Handle admin routes
+  if (user && location.pathname.includes('/admin/') && user.role !== 'admin') {
+    navigate(`/profile/${userId}`);
+    return null;
+  }
+
+  // Handle staff routes
+  if (user && location.pathname.includes('/staff/') && user.role !== 'staff') {
+    navigate(`/profile/${userId}`);
     return null;
   }
 
