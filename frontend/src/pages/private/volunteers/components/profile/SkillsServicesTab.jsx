@@ -37,38 +37,38 @@ const SkillsServicesTab = ({ user }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <Award className="w-5 h-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-base sm:text-lg flex items-center space-x-2">
+            <Award className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Skills & Services</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 sm:space-y-4">
           <div>
-            <h4 className="font-medium mb-2">Skills</h4>
-            <div className="flex flex-wrap gap-2">
+            <h4 className="font-medium mb-2 text-sm sm:text-base">Skills</h4>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {user?.skills && user.skills.length > 0 ? (
                 user.skills.map((skill, index) => (
-                  <Badge key={index} variant="outline">{skill}</Badge>
+                  <Badge key={index} variant="outline" className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5">{skill}</Badge>
                 ))
               ) : (
-                <p className="text-gray-500">No skills selected</p>
+                <p className="text-gray-500 text-sm sm:text-base">No skills selected</p>
               )}
             </div>
           </div>
           <div>
-            <h4 className="font-medium mb-2">Services</h4>
-            <div className="flex flex-wrap gap-2 items-start">
+            <h4 className="font-medium mb-2 text-sm sm:text-base">Services</h4>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 items-start">
               {user?.services && user.services.length > 0 ? (
                 user.services.map((service, index) => (
-                  <span key={index} className="inline-block bg-cyan-100 text-cyan-800 text-sm px-3 py-1 rounded-md font-medium">
+                  <span key={index} className="inline-block bg-cyan-100 text-cyan-800 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-md font-medium">
                     {getServiceDisplayName(service)}
                   </span>
                 ))
               ) : (
-                <p className="text-gray-500">No services selected</p>
+                <p className="text-gray-500 text-sm sm:text-base">No services selected</p>
               )}
             </div>
           </div>
@@ -77,25 +77,25 @@ const SkillsServicesTab = ({ user }) => {
 
       {/* Socio-Civic Involvements */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <Building className="w-5 h-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-base sm:text-lg flex items-center space-x-2">
+            <Building className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Socio-Civic & Cultural Religious Involvements</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {user?.socioCivicInvolvements && user.socioCivicInvolvements.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {user.socioCivicInvolvements.map((involvement, index) => (
-                <div key={index} className="border rounded-lg p-3">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <p className="text-gray-600">
+                <div key={index} className="border rounded-lg p-3 sm:p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                    <p className="text-gray-600 text-sm sm:text-base">
                       <span className="font-medium">Organization:</span> {involvement.organization}
                     </p>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm sm:text-base">
                       <span className="font-medium">Position:</span> {involvement.position}
                     </p>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm sm:text-base">
                       <span className="font-medium">Year:</span> {involvement.year}
                     </p>
                   </div>
@@ -103,32 +103,32 @@ const SkillsServicesTab = ({ user }) => {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No socio-civic involvements recorded</p>
+            <p className="text-gray-500 text-sm sm:text-base">No socio-civic involvements recorded</p>
           )}
         </CardContent>
       </Card>
 
       {/* Work Experience */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center space-x-2">
-            <Briefcase className="w-5 h-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-base sm:text-lg flex items-center space-x-2">
+            <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>Work Experience</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {user?.workExperience && user.workExperience.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {user.workExperience.map((work, index) => (
-                <div key={index} className="border rounded-lg p-3">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <p className="text-gray-600">
+                <div key={index} className="border rounded-lg p-3 sm:p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                    <p className="text-gray-600 text-sm sm:text-base">
                       <span className="font-medium">Organization:</span> {work.organization}
                     </p>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm sm:text-base">
                       <span className="font-medium">Position:</span> {work.position}
                     </p>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm sm:text-base">
                       <span className="font-medium">Year:</span> {work.year}
                     </p>
                   </div>
@@ -136,7 +136,7 @@ const SkillsServicesTab = ({ user }) => {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">No work experience recorded</p>
+            <p className="text-gray-500 text-sm sm:text-base">No work experience recorded</p>
           )}
         </CardContent>
       </Card>
