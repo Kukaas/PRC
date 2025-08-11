@@ -657,6 +657,14 @@ export const updateActivityStatus = async (req, res) => {
     });
   }
 
+  // Disallow transitioning from ongoing to cancelled
+  if (activity.status === 'ongoing' && status === 'cancelled') {
+    return res.status(400).json({
+      success: false,
+      message: "Cannot cancel an ongoing activity",
+    });
+  }
+
   const updatedActivity = await Activity.findByIdAndUpdate(
     id,
     { status },

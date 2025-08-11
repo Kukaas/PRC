@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Users, Calendar, MapPin, Clock, Edit, Trash2 } from 'lucide-react'
+import { Users, Calendar, MapPin, Clock, Edit, Trash2, Loader2 } from 'lucide-react'
 
 const EventDisplay = ({
   activity,
@@ -12,6 +12,8 @@ const EventDisplay = ({
   formatTime
 }) => {
   if (!activity) return null
+
+  const [isStatusUpdating, setIsStatusUpdating] = React.useState(false)
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-4">
@@ -58,20 +60,33 @@ const EventDisplay = ({
               {(() => {
                 const STATUS_ORDER = ['draft', 'published', 'ongoing', 'completed', 'cancelled']
                 const currentIndex = STATUS_ORDER.indexOf(activity.status)
-                const allowed = STATUS_ORDER.slice(Math.max(0, currentIndex))
+                let allowed = STATUS_ORDER.slice(Math.max(0, currentIndex))
+                // When ongoing, disallow cancelling from the UI
+                if (activity.status === 'ongoing') {
+                  allowed = allowed.filter((s) => s !== 'cancelled')
+                }
+                const handleStatusChange = async (value) => {
+                  if (isStatusUpdating) return
+                  try {
+                    setIsStatusUpdating(true)
+                    await onStatusChange(activity._id, value)
+                  } finally {
+                    setIsStatusUpdating(false)
+                  }
+                }
                 return (
                   <Select
                     value={activity.status}
-                    onValueChange={(value) => onStatusChange(activity._id, value)}
+                    onValueChange={handleStatusChange}
                   >
-                    <SelectTrigger className={`w-auto h-7 px-3 py-1 text-xs font-medium rounded-full border-0 ${
+                    <SelectTrigger disabled={isStatusUpdating} className={`w-auto h-7 px-3 py-1 text-xs font-medium rounded-full border-0 ${
                       activity.status === 'published' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
                       activity.status === 'draft' ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' :
                       activity.status === 'ongoing' ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' :
                       activity.status === 'completed' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' :
                       activity.status === 'cancelled' ? 'bg-red-100 text-red-800 hover:bg-red-200' :
                       'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }`}>
+                    } ${isStatusUpdating ? 'opacity-70 cursor-not-allowed' : ''}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -84,18 +99,25 @@ const EventDisplay = ({
                   </Select>
                 )
               })()}
-              <Button
-                onClick={() => onEdit(activity._id)}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-2 py-1 rounded-md text-xs"
-              >
-                <Edit className="w-3 h-3" />
-              </Button>
-              <Button
-                onClick={() => onDelete(activity._id)}
-                className="bg-red-200 hover:bg-red-300 text-red-800 px-2 py-1 rounded-md text-xs"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
+              {isStatusUpdating && (
+                <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+              )}
+              {activity.status !== 'ongoing' && (
+                <>
+                  <Button
+                    onClick={() => onEdit(activity._id)}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-2 py-1 rounded-md text-xs"
+                  >
+                    <Edit className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    onClick={() => onDelete(activity._id)}
+                    className="bg-red-200 hover:bg-red-300 text-red-800 px-2 py-1 rounded-md text-xs"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </>
+              )}
             </div>
           )}
 

@@ -11,7 +11,11 @@ import {
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
 } from '@/components/ui/alert-dialog'
+import { buttonVariants } from '@/components/ui/button'
 import QRScanner from '@/components/QRScanner'
 import EventSelector from './components/EventSelector'
 import EventDisplay from './components/EventDisplay'
@@ -28,6 +32,9 @@ const AdminActivities = () => {
   const [attendanceData, setAttendanceData] = useState([])
   const [showQRScanner, setShowQRScanner] = useState(false)
   const [scanningAction, setScanningAction] = useState('timeIn') // 'timeIn' or 'timeOut'
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [activityIdToDelete, setActivityIdToDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     loadActivities()
@@ -95,16 +102,25 @@ const AdminActivities = () => {
     navigate(`/admin/activities/edit/${activityId}`)
   }
 
-  const handleDeleteActivity = async (activityId) => {
-    if (window.confirm('Are you sure you want to delete this activity? This action cannot be undone.')) {
-      try {
-        await api.activities.delete(activityId)
-        toast.success('Activity deleted successfully!')
-        loadActivities() // Reload the activities list
-      } catch (error) {
-        toast.error(error.message || 'Failed to delete activity')
-        console.error('Error deleting activity:', error)
-      }
+  const handleDeleteActivity = (activityId) => {
+    setActivityIdToDelete(activityId)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteActivity = async () => {
+    if (!activityIdToDelete) return
+    try {
+      setIsDeleting(true)
+      await api.activities.delete(activityIdToDelete)
+      toast.success('Activity deleted successfully!')
+      setDeleteDialogOpen(false)
+      setActivityIdToDelete(null)
+      await loadActivities()
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete activity')
+      console.error('Error deleting activity:', error)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -350,6 +366,28 @@ const AdminActivities = () => {
               scanningAction={scanningAction}
             />
           </AlertDialogDescription>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => { if (!isDeleting) setDeleteDialogOpen(open) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete activity?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the activity and its attendance records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: 'destructive' })}
+              disabled={isDeleting}
+              onClick={confirmDeleteActivity}
+            >
+              {isDeleting ? 'Deleting…' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </PrivateLayout>
