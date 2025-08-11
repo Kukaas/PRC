@@ -13,6 +13,7 @@ import {
   recordAttendance,
   getAttendanceReport,
   getVolunteerActivities,
+  getMyStatusSummary,
 } from "../controllers/activity.controller.js";
 import { authenticateToken, requireRole } from "../middleware/auth.middleware.js";
 
@@ -28,6 +29,9 @@ router.route("/my-activities")
 
 router.route("/volunteer-activities")
   .get(authenticateToken, requireRole(["volunteer"]), getVolunteerActivities); // Get activities for volunteers with skill matching
+
+router.route("/my-status")
+  .get(authenticateToken, requireRole(["volunteer"]), getMyStatusSummary); // Get member status summary
 
 router.route("/created")
   .get(authenticateToken, requireRole(["admin", "staff"]), getActivitiesByCreator); // Get activities created by user (admin/staff only)

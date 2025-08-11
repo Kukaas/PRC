@@ -84,10 +84,10 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       active: location.pathname.includes('/activities/')
     },
     {
-      href: `/members/${userId}`,
+      href: `/member-status/${userId}`,
       label: "Members Status",
       icon: Users,
-      active: location.pathname.includes('/members/')
+      active: location.pathname.includes('/member-status/')
     },
     {
       href: `/notifications/${userId}`,

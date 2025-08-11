@@ -1,6 +1,7 @@
 import Activity from "../models/activity.model.js";
 import Notification from "../models/notification.model.js";
 import User from "../models/user.model.js";
+import VolunteerApplication from "../models/volunteerApplication.model.js";
 import { notifyUsersForNewActivity, notifyActivityParticipants } from "../services/notification.service.js";
 
 // Create a new activity (Admin/Staff only)
@@ -584,6 +585,96 @@ export const getMyActivities = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getMyActivities:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get member status summary (Volunteers only)
+export const getMyStatusSummary = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+
+    // Find activities the user attended
+    const attendedActivities = await Activity.find({
+      participants: { $elemMatch: { userId, status: "attended" } },
+      date: { $lte: now },
+    }).select("date requiredServices participants");
+
+    let lastAttendedDate = null;
+    let hoursServedThisYear = 0;
+    const servicesJoinedSet = new Set();
+
+    attendedActivities.forEach((activity) => {
+      const participant = activity.participants.find(
+        (p) => p.userId && p.userId.toString() === userId.toString()
+      );
+      if (!participant || participant.status !== "attended") return;
+
+      // Track last attended date based on activity date
+      if (!lastAttendedDate || activity.date > lastAttendedDate) {
+        lastAttendedDate = new Date(activity.date);
+      }
+
+      // Sum hours within current year
+      if (new Date(activity.date) >= startOfYear) {
+        hoursServedThisYear += Number(participant.totalHours || 0);
+      }
+
+      // Aggregate services from attended activities
+      if (Array.isArray(activity.requiredServices)) {
+        activity.requiredServices.forEach((s) => servicesJoinedSet.add(s));
+      }
+    });
+
+    // Determine active/inactive based on last attendance within 6 months (≈180 days)
+    const SIX_MONTHS_MS = 180 * 24 * 60 * 60 * 1000;
+    const isActive = !!lastAttendedDate && now - lastAttendedDate <= SIX_MONTHS_MS;
+
+    // Get user contact info
+    const user = await User.findById(userId).select(
+      "personalInfo.mobileNumber personalInfo.contactNumber givenName familyName"
+    );
+    const contactNumber =
+      user?.personalInfo?.mobileNumber || user?.personalInfo?.contactNumber || null;
+
+    // Determine training status from latest volunteer application
+    let trainedStatus = "Not Trained";
+    try {
+      const latestApplication = await VolunteerApplication.getLatestByApplicant(
+        userId
+      );
+      if (latestApplication) {
+        const yes = (val) =>
+          val === "yes" || val === true || val === "yes_i_agree";
+        const trained =
+          yes(latestApplication.underwentBasicVolunteerOrientation) ||
+          yes(latestApplication.underwentBasicRC143OrientationTraining);
+        trainedStatus = trained ? "Trained" : "Not Trained";
+      }
+    } catch (e) {
+      // Ignore application lookup errors for status computation
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Member status summary retrieved successfully",
+      data: {
+        trainedStatus,
+        lastActivityDate: lastAttendedDate,
+        activeStatus: isActive ? "Active" : "Inactive",
+        hoursServedThisYear: Math.round(hoursServedThisYear * 100) / 100,
+        services: Array.from(servicesJoinedSet),
+        contactNumber,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getMyStatusSummary:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
