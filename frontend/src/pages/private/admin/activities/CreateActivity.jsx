@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import CustomInput from '@/components/CustomInput'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+// removed status selector imports
 import { ArrowLeft, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import axios from 'axios'
@@ -70,7 +70,7 @@ const CreateActivity = () => {
     isUrgent: false,
     tags: [],
     notes: '',
-    status: 'draft'
+    // status removed; backend defaults to published
   })
 
   const [newTag, setNewTag] = useState('')
@@ -458,20 +458,6 @@ const CreateActivity = () => {
                   onChange={(e) => handleInputChange('maxParticipants', e.target.value)}
                   placeholder="50"
                 />
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </div>
 

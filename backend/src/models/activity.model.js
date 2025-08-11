@@ -97,7 +97,7 @@ const activitySchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["draft", "published", "ongoing", "completed", "cancelled"],
-      default: "draft",
+      default: "published",
     },
 
     // Capacity and participants
@@ -220,11 +220,11 @@ activitySchema.methods.updateParticipantStatus = function(userId, status) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
-  
+
   if (!participant) {
     throw new Error('User is not registered for this activity');
   }
-  
+
   participant.status = status;
   return this.save();
 };
@@ -234,15 +234,15 @@ activitySchema.methods.recordTimeIn = function(userId) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
-  
+
   if (!participant) {
     throw new Error('User is not registered for this activity');
   }
-  
+
   if (participant.timeIn) {
     throw new Error('Time in already recorded for this participant');
   }
-  
+
   participant.timeIn = new Date();
   participant.status = 'attended';
   return this.save();
@@ -253,28 +253,28 @@ activitySchema.methods.recordTimeOut = function(userId) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
-  
+
   if (!participant) {
     throw new Error('User is not registered for this activity');
   }
-  
+
   if (!participant.timeIn) {
     throw new Error('Time in must be recorded before time out');
   }
-  
+
   if (participant.timeOut) {
     throw new Error('Time out already recorded for this participant');
   }
-  
+
   participant.timeOut = new Date();
-  
+
   // Calculate total hours
   const timeIn = new Date(participant.timeIn);
   const timeOut = new Date(participant.timeOut);
   const diffMs = timeOut - timeIn;
   const diffHours = diffMs / (1000 * 60 * 60);
   participant.totalHours = Math.round(diffHours * 100) / 100; // Round to 2 decimal places
-  
+
   return this.save();
 };
 
@@ -283,11 +283,11 @@ activitySchema.methods.getParticipantTimeInfo = function(userId) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
-  
+
   if (!participant) {
     throw new Error('User is not registered for this activity');
   }
-  
+
   return {
     timeIn: participant.timeIn,
     timeOut: participant.timeOut,

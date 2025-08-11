@@ -260,6 +260,10 @@ export const updateActivity = async (req, res) => {
   delete updateData.createdBy;
   delete updateData.participants;
   delete updateData.currentParticipants;
+  // Prevent status changes here; must use dedicated endpoint with transition rules
+  if (typeof updateData.status !== 'undefined') {
+    delete updateData.status;
+  }
 
   const updatedActivity = await Activity.findByIdAndUpdate(
     id,
@@ -632,6 +636,27 @@ export const updateActivityStatus = async (req, res) => {
     });
   }
 
+  // Enforce forward-only transitions and lock terminal states
+  const STATUS_ORDER = ["draft", "published", "ongoing", "completed", "cancelled"]; // index increases forward
+  const currentIndex = STATUS_ORDER.indexOf(activity.status);
+  const nextIndex = STATUS_ORDER.indexOf(status);
+
+  // If current is completed or cancelled, disallow any further changes
+  if (["completed", "cancelled"].includes(activity.status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Cannot change status after completion or cancellation",
+    });
+  }
+
+  // Disallow moving backwards
+  if (nextIndex < currentIndex) {
+    return res.status(400).json({
+      success: false,
+      message: "Status cannot be reverted to a previous state",
+    });
+  }
+
   const updatedActivity = await Activity.findByIdAndUpdate(
     id,
     { status },
@@ -640,7 +665,7 @@ export const updateActivityStatus = async (req, res) => {
    .populate("participants.userId", "givenName familyName email");
 
   // Send notifications when activity is published (made available for joining)
-  if (status === "published") {
+  if (status === "published" && activity.status !== "published") {
     try {
       await notifyUsersForNewActivity(id);
     } catch (notificationError) {

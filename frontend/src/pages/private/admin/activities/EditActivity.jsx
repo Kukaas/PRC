@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import CustomInput from '@/components/CustomInput'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+// removed status selector imports
 import { ArrowLeft, Plus, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import axios from 'axios'
@@ -71,8 +71,7 @@ const EditActivity = () => {
     maxParticipants: 50,
     isUrgent: false,
     tags: [],
-    notes: '',
-    status: 'draft'
+     notes: ''
   })
 
   const [newTag, setNewTag] = useState('')
@@ -107,7 +106,7 @@ const EditActivity = () => {
         isUrgent: activity.isUrgent || false,
         tags: activity.tags || [],
         notes: activity.notes || '',
-        status: activity.status || 'draft'
+         // status is controlled by backend; do not edit here
       })
 
       // Set location dropdowns
@@ -531,23 +530,6 @@ const EditActivity = () => {
                   onChange={(e) => handleInputChange('maxParticipants', e.target.value)}
                   placeholder="50"
                 />
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
-                      <SelectItem value="ongoing">Ongoing</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </div>
 
