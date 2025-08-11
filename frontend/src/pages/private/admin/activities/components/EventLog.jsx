@@ -273,18 +273,6 @@ const EventLog = ({
                     >
                       Select
                     </Button>
-                    <Button
-                      onClick={() => onEdit(activity._id)}
-                      className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-2 py-1 rounded-md text-xs"
-                    >
-                      <Edit className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      onClick={() => onDelete(activity._id)}
-                      className="bg-red-200 hover:bg-red-300 text-red-800 px-2 py-1 rounded-md text-xs"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
                   </div>
                 </div>
               </div>
