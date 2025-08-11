@@ -16,6 +16,20 @@ const VolunteerApplication = () => {
   const [loading, setLoading] = useState(false)
   const [isResubmission, setIsResubmission] = useState(false)
   const [canResubmit, setCanResubmit] = useState(false)
+
+  // Function to get current date and place
+  const getCurrentDateAndPlace = () => {
+    const now = new Date()
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }
+    const formattedDate = now.toLocaleDateString('en-US', options)
+    const city = user.personalInfo?.address?.municipalityCity || 'N/A'
+    const province = user.personalInfo?.address?.province || 'N/A'
+    return `${formattedDate}, ${city}, ${province}`
+  }
   const [formData, setFormData] = useState({
     applicant: userId,
     isRedCrossVolunteer: '',
@@ -32,15 +46,15 @@ const VolunteerApplication = () => {
     references: [{ completeName: '', contactNumber: '', companyInstitution: '', position: '' }],
     signupAgreement: '',
     signupAgreementReason: '',
-    volunteerWaiver: {
-      completeName: `${user.firstName} ${user.lastName}`,
-      signature: `${user.firstName} ${user.lastName}`.toUpperCase(),
-      dateAndPlace: `${user.city || 'N/A'}, ${user.province || 'N/A'}`
-    },
-    certificationAndConfidentiality: {
-      signature: `${user.firstName} ${user.lastName}`.toUpperCase(),
-      dateAndPlace: `${user.city || 'N/A'}, ${user.province || 'N/A'}`
-    }
+          volunteerWaiver: {
+        completeName: `${user.givenName} ${user.familyName}`,
+        signature: `${user.givenName} ${user.familyName}`.toUpperCase(),
+        dateAndPlace: getCurrentDateAndPlace()
+      },
+      certificationAndConfidentiality: {
+        signature: `${user.givenName} ${user.familyName}`.toUpperCase(),
+        dateAndPlace: getCurrentDateAndPlace()
+      }
   })
 
   // Check for existing application and load data on component mount
@@ -82,13 +96,13 @@ const VolunteerApplication = () => {
               signupAgreement: existingApp.signupAgreement || '',
               signupAgreementReason: existingApp.signupAgreementReason || '',
               volunteerWaiver: {
-                completeName: existingApp.volunteerWaiver?.completeName || `${user.firstName} ${user.lastName}`,
-                signature: existingApp.volunteerWaiver?.signature || `${user.firstName} ${user.lastName}`.toUpperCase(),
-                dateAndPlace: existingApp.volunteerWaiver?.dateAndPlace || `${user.city || 'N/A'}, ${user.province || 'N/A'}`
+                completeName: existingApp.volunteerWaiver?.completeName || `${user?.givenName || ''} ${user?.familyName || ''}`.trim() || 'N/A',
+                signature: existingApp.volunteerWaiver?.signature || `${user?.givenName || ''} ${user?.familyName || ''}`.trim().toUpperCase() || 'N/A',
+                dateAndPlace: existingApp.volunteerWaiver?.dateAndPlace || getCurrentDateAndPlace()
               },
               certificationAndConfidentiality: {
-                signature: existingApp.volunteerWaiver?.signature || `${user.firstName} ${user.lastName}`.toUpperCase(),
-                dateAndPlace: existingApp.volunteerWaiver?.dateAndPlace || `${user.city || 'N/A'}, ${user.province || 'N/A'}`
+                signature: existingApp.volunteerWaiver?.signature || `${user?.givenName || ''} ${user?.familyName || ''}`.trim().toUpperCase() || 'N/A',
+                dateAndPlace: existingApp.volunteerWaiver?.dateAndPlace || getCurrentDateAndPlace()
               }
             }))
           } else if (existingApp.status === 'pending') {
@@ -103,7 +117,7 @@ const VolunteerApplication = () => {
     }
 
     loadExistingApplication()
-  }, [navigate, user.firstName, user.lastName, user.city, user.province])
+  }, [navigate, user?.givenName, user?.familyName, user?.personalInfo?.address?.municipalityCity, user?.personalInfo?.address?.province])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
