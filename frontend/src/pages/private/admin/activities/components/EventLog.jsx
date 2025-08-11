@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Edit, Trash2, Search, Calendar, MapPin, Filter } from 'lucide-react'
+import { Edit, Trash2, Search, Calendar, MapPin, Filter, Printer } from 'lucide-react'
+import { printAttendanceReport } from '../utils/printAttendance'
 
 const EventLog = ({
   activities,
   onSelectArchivedEvent,
   onEdit,
   onDelete,
+  onPrint,
   formatDate,
   formatTime
 }) => {
@@ -267,12 +269,23 @@ const EventLog = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => onSelectArchivedEvent(activity._id)}
-                      className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 text-xs"
-                    >
-                      Select
-                    </Button>
+                    {activity.status !== 'cancelled' && (
+                      <Button
+                        onClick={() => onSelectArchivedEvent(activity._id)}
+                        className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 text-xs"
+                      >
+                        Select
+                      </Button>
+                    )}
+                    {activity.status === 'completed' && (
+                      <Button
+                        onClick={() => onPrint?.(activity)}
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs"
+                      >
+                        <Printer className="w-3 h-3 mr-1" />
+                        Print
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

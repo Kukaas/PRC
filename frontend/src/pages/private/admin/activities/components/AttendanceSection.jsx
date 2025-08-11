@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Users, Scan } from 'lucide-react'
+import { Users, Scan, Printer } from 'lucide-react'
+import { printAttendanceReport } from '../utils/printAttendance'
 
 const AttendanceSection = ({
   selectedActivity,
@@ -8,6 +9,29 @@ const AttendanceSection = ({
   onOpenQRScanner,
   activity
 }) => {
+  const isCompleted = activity?.status === 'completed'
+  const isCancelled = activity?.status === 'cancelled'
+
+  const hasEndedByTime = useMemo(() => {
+    if (!activity?.date) return false
+    try {
+      const end = new Date(activity.date)
+      if (activity?.timeTo) {
+        const [h, m] = String(activity.timeTo).split(':').map(Number)
+        if (!Number.isNaN(h)) end.setHours(h, Number.isNaN(m) ? 0 : m, 0, 0)
+      } else {
+        // If no end time, assume the event ends at end of the day
+        end.setHours(23, 59, 59, 999)
+      }
+      return Date.now() > end.getTime()
+    } catch {
+      return false
+    }
+  }, [activity])
+
+  const handlePrint = () => {
+    printAttendanceReport(activity, attendanceData)
+  }
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -21,20 +45,32 @@ const AttendanceSection = ({
         </div>
         {selectedActivity && (
           <div className="flex gap-2">
-            <Button
-              onClick={() => onOpenQRScanner('timeIn')}
-              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 text-sm"
-            >
-              <Scan className="w-4 h-4 mr-1" />
-              Time In
-            </Button>
-            <Button
-              onClick={() => onOpenQRScanner('timeOut')}
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm"
-            >
-              <Scan className="w-4 h-4 mr-1" />
-              Time Out
-            </Button>
+            {isCompleted ? (
+              <Button
+                onClick={handlePrint}
+                className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-sm"
+              >
+                <Printer className="w-4 h-4 mr-1" />
+                Print
+              </Button>
+            ) : isCancelled || hasEndedByTime ? null : (
+              <>
+                <Button
+                  onClick={() => onOpenQRScanner('timeIn')}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 text-sm"
+                >
+                  <Scan className="w-4 h-4 mr-1" />
+                  Time In
+                </Button>
+                <Button
+                  onClick={() => onOpenQRScanner('timeOut')}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm"
+                >
+                  <Scan className="w-4 h-4 mr-1" />
+                  Time Out
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>

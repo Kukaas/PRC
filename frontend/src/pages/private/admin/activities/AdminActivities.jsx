@@ -18,6 +18,7 @@ import EventDisplay from './components/EventDisplay'
 import AttendanceSection from './components/AttendanceSection'
 import EventLog from './components/EventLog'
 import EmptyStates from './components/EmptyStates'
+import { printAttendanceReport } from './utils/printAttendance'
 
 const AdminActivities = () => {
   const navigate = useNavigate()
@@ -192,6 +193,23 @@ const AdminActivities = () => {
     }
   }
 
+  const handlePrint = async (activity) => {
+    try {
+      let attendance = []
+      try {
+        const res = await api.activities.getAttendanceReport(activity._id)
+        attendance = res.data?.attendance || []
+      } catch (err) {
+        // If fetching fails, proceed with empty attendance
+        attendance = []
+      }
+      printAttendanceReport(activity, attendance)
+    } catch (error) {
+      console.error('Error printing attendance:', error)
+      toast.error('Failed to open print view')
+    }
+  }
+
   const openQRScanner = (action) => {
     setScanningAction(action)
     setShowQRScanner(true)
@@ -315,6 +333,7 @@ const AdminActivities = () => {
             onSelectArchivedEvent={handleSelectArchivedEvent}
             onEdit={handleEditActivity}
             onDelete={handleDeleteActivity}
+            onPrint={handlePrint}
             formatDate={formatDate}
             formatTime={formatTime}
           />
