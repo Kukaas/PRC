@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import Notification from "../models/notification.model.js"; // Added import for Notification model
 import {
   getUserNotifications,
   markNotificationAsRead,
@@ -11,15 +12,21 @@ import {
 export const getNotifications = async (req, res) => {
   try {
     const { limit = 50 } = req.query;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
-    const result = await getUserNotifications(userId, parseInt(limit));
+    // Fetch notifications for this user
+    const notifications = await Notification.find({ recipient: userId })
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+    const unreadCount = await Notification.countDocuments({ recipient: userId, isRead: false });
 
     res.status(200).json({
       success: true,
-      data: result
+      data: {
+        notifications,
+        unreadCount
+      }
     });
-
   } catch (error) {
     console.error('Error getting notifications:', error);
     res.status(500).json({
@@ -34,7 +41,7 @@ export const getNotifications = async (req, res) => {
 export const markAsRead = async (req, res) => {
   try {
     const { notificationId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const result = await markNotificationAsRead(notificationId, userId);
 
@@ -56,7 +63,7 @@ export const markAsRead = async (req, res) => {
 // Mark all notifications as read
 export const markAllAsRead = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const result = await markAllNotificationsAsRead(userId);
 

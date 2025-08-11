@@ -23,6 +23,7 @@ import AdminActivities from "./pages/private/admin/activities/AdminActivities";
 import CreateActivity from "./pages/private/admin/activities/CreateActivity";
 import EditActivity from "./pages/private/admin/activities/EditActivity";
 import Activities from "./pages/private/volunteers/activities/Activities";
+import Notifications from "./pages/private/volunteers/notifications/Notifications";
 
 
 function App() {
@@ -77,6 +78,15 @@ function App() {
               element={
                 <PrivateRoute>
                   <VolunteerApplication />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/notifications/:id"
+              element={
+                <PrivateRoute>
+                  <Notifications />
                 </PrivateRoute>
               }
             />

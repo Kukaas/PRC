@@ -61,6 +61,12 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       icon: FileText,
       active: location.pathname.includes('/admin/reports')
     },
+    {
+      href: `/notifications/${userId}`,
+      label: "Notifications",
+      icon: Bell,
+      active: location.pathname.includes('/notifications/')
+    },
   ];
 
   // Volunteer navigation links

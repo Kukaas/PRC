@@ -1,11 +1,14 @@
 import React from 'react'
 import { Users } from 'lucide-react'
+import { useAuth } from '@/components/AuthContext'
 
 const DashboardOverview = () => {
+  const { user } = useAuth()
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
-      
+      <p className="text-gray-600 mb-6">Welcome back, {user.role}!</p>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Applicants Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -15,14 +18,14 @@ const DashboardOverview = () => {
               <Users className="h-5 w-5 text-blue-600" />
             </div>
           </div>
-          
+
           <div className="mb-4">
             <div className="flex items-center space-x-2">
               <span className="text-3xl font-bold text-gray-800">100</span>
               <span className="text-sm text-green-600 font-medium">+ 2%</span>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-blue-50 rounded-lg p-3">
               <div className="text-sm text-gray-600 mb-1">Approved</div>
@@ -47,14 +50,14 @@ const DashboardOverview = () => {
               <Users className="h-5 w-5 text-blue-600" />
             </div>
           </div>
-          
+
           <div className="mb-4">
             <div className="flex items-center space-x-2">
               <span className="text-3xl font-bold text-gray-800">100</span>
               <span className="text-sm text-green-600 font-medium">+ 2%</span>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-green-50 rounded-lg p-3">
               <div className="text-sm text-gray-600 mb-1">Active</div>

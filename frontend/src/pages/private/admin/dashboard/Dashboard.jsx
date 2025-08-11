@@ -10,7 +10,7 @@ const Dashboard = () => {
     <PrivateLayout>
       <div className="min-h-screen bg-blue-50">
         {/* Top Bar */}
-        <TopBar />
+        {/* <TopBar /> */}
 
         {/* Main Content */}
         <div className="p-6 space-y-6">

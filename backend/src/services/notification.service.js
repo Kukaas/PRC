@@ -188,6 +188,12 @@ export const markNotificationAsRead = async (notificationId, userId) => {
     if (!notification) {
       throw new Error('Notification not found');
     }
+    if (!notification.recipient) {
+      throw new Error('Notification recipient not found');
+    }
+    if (!userId) {
+      throw new Error('User ID not provided');
+    }
 
     if (notification.recipient.toString() !== userId.toString()) {
       throw new Error('Unauthorized to modify this notification');
