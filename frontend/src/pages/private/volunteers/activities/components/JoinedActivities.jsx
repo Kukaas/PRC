@@ -540,12 +540,28 @@ const JoinedActivities = ({ onActivityLeave }) => {
                 <div className="text-center">
                   <h4 className="text-sm sm:text-md font-medium mb-3">Attendance QR Code</h4>
                   <div className="flex justify-center">
-                    <QRCode
-                      value={selectedActivity ? generateActivityQR(selectedActivity) : ''}
-                      size={160}
-                      level="M"
-                      className="w-40 h-40 sm:w-48 sm:h-48"
-                    />
+                    <div className="relative inline-block">
+                      {(() => {
+                        const expired = selectedActivity && (['completed', 'cancelled'].includes(selectedActivity.status) || isEventEnded(selectedActivity))
+                        return (
+                          <>
+                            <QRCode
+                              value={selectedActivity ? generateActivityQR(selectedActivity) : ''}
+                              size={160}
+                              level="M"
+                              className={`w-40 h-40 sm:w-48 sm:h-48 ${expired ? 'opacity-40' : ''}`}
+                            />
+                            {expired && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="bg-cyan-500 text-white px-3 py-1 rounded-md text-xs sm:text-sm shadow-md">
+                                  EXPIRED
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        )
+                      })()}
+                    </div>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-500 mt-3">
                     Show this QR code for attendance tracking at this specific activity
