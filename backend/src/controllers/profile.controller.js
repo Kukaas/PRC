@@ -13,6 +13,32 @@ export const updateProfile = async (req, res) => {
       }
     };
 
+    // Top-level basic identity fields
+    if (req.body.givenName !== undefined) {
+      updateData.givenName = req.body.givenName;
+    }
+    if (req.body.familyName !== undefined) {
+      updateData.familyName = req.body.familyName;
+    }
+    if (req.body.middleName !== undefined) {
+      updateData.middleName = req.body.middleName;
+    }
+    if (req.body.dateOfBirth !== undefined) {
+      updateData.dateOfBirth = req.body.dateOfBirth;
+
+      // Compute and set age since findByIdAndUpdate bypasses pre-save middleware
+      const birthDate = new Date(req.body.dateOfBirth);
+      if (!isNaN(birthDate.getTime())) {
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        setNestedField("personalInfo.age", age);
+      }
+    }
+
     // Personal Information
     if (req.body.personalInfo) {
       const { personalInfo } = req.body;
@@ -94,23 +120,23 @@ export const updateProfile = async (req, res) => {
           );
         }
 
-        if (emergencyContact.otherFamily) {
-          const { otherFamily } = emergencyContact;
+        if (emergencyContact.other) {
+          const { other } = emergencyContact;
           setNestedField(
-            "medicalHistory.emergencyContact.otherFamily.name",
-            otherFamily.name
+            "medicalHistory.emergencyContact.other.name",
+            other.name
           );
           setNestedField(
-            "medicalHistory.emergencyContact.otherFamily.relationship",
-            otherFamily.relationship
+            "medicalHistory.emergencyContact.other.relationship",
+            other.relationship
           );
           setNestedField(
-            "medicalHistory.emergencyContact.otherFamily.landlineNumber",
-            otherFamily.landlineNumber
+            "medicalHistory.emergencyContact.other.landlineNumber",
+            other.landlineNumber
           );
           setNestedField(
-            "medicalHistory.emergencyContact.otherFamily.mobileNumber",
-            otherFamily.mobileNumber
+            "medicalHistory.emergencyContact.other.mobileNumber",
+            other.mobileNumber
           );
         }
       }

@@ -1,8 +1,9 @@
 import React from 'react';
 import { GraduationCap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import CustomInput from '@/components/CustomInput';
 
-const EducationTab = ({ user }) => {
+const EducationTab = ({ user, isEditing = false, formData, handleChange }) => {
   return (
     <div className="space-y-3 sm:space-y-4">
       <Card>
@@ -13,29 +14,47 @@ const EducationTab = ({ user }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 sm:space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-            {user?.educationalBackground && Object.entries(user.educationalBackground).map(([level, data]) => (
-              <div key={level} className="border rounded-lg p-3 sm:p-4">
-                <h4 className="font-medium capitalize mb-2 text-sm sm:text-base">{level}</h4>
-                <div className="space-y-1.5 sm:space-y-2">
-                  <p className="text-gray-600 text-sm sm:text-base">
-                    <span className="font-medium">School:</span> {data?.school || 'Not provided'}
-                  </p>
-                  {level === 'college' && data?.course && (
-                    <p className="text-gray-600 text-sm sm:text-base">
-                      <span className="font-medium">Course:</span> {data.course}
-                    </p>
-                  )}
-                  <p className="text-gray-600 text-sm sm:text-base">
-                    <span className="font-medium">Year Graduated:</span> {data?.yearGraduated || 'Not provided'}
-                  </p>
-                  <p className="text-gray-600 text-sm sm:text-base">
-                    <span className="font-medium">Honors/Awards:</span> {data?.honorsAwards || 'None'}
-                  </p>
+          {isEditing ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+              {['elementary', 'highSchool', 'vocational', 'higherStudies', 'college'].map((level) => (
+                <div key={level} className="border rounded-lg p-3 sm:p-4">
+                  <h4 className="font-medium capitalize mb-2 text-sm sm:text-base">{level}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <CustomInput label="School" name={`educationalBackground.${level}.school`} type="text" value={formData?.educationalBackground?.[level]?.school || ''} onChange={handleChange} />
+                    {level === 'college' && (
+                      <CustomInput label="Course" name={`educationalBackground.${level}.course`} type="text" value={formData?.educationalBackground?.[level]?.course || ''} onChange={handleChange} />
+                    )}
+                    <CustomInput label="Year Graduated" name={`educationalBackground.${level}.yearGraduated`} type="number" value={formData?.educationalBackground?.[level]?.yearGraduated ?? ''} onChange={handleChange} />
+                    <CustomInput label="Honors/Awards" name={`educationalBackground.${level}.honorsAwards`} type="text" value={formData?.educationalBackground?.[level]?.honorsAwards || ''} onChange={handleChange} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+              {user?.educationalBackground && Object.entries(user.educationalBackground).map(([level, data]) => (
+                <div key={level} className="border rounded-lg p-3 sm:p-4">
+                  <h4 className="font-medium capitalize mb-2 text-sm sm:text-base">{level}</h4>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <p className="text-gray-600 text-sm sm:text-base">
+                      <span className="font-medium">School:</span> {data?.school || 'Not provided'}
+                    </p>
+                    {level === 'college' && data?.course && (
+                      <p className="text-gray-600 text-sm sm:text-base">
+                        <span className="font-medium">Course:</span> {data.course}
+                      </p>
+                    )}
+                    <p className="text-gray-600 text-sm sm:text-base">
+                      <span className="font-medium">Year Graduated:</span> {data?.yearGraduated || 'Not provided'}
+                    </p>
+                    <p className="text-gray-600 text-sm sm:text-base">
+                      <span className="font-medium">Honors/Awards:</span> {data?.honorsAwards || 'None'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
