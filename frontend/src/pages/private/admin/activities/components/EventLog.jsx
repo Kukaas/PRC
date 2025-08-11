@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Edit, Trash2, Search, Calendar, MapPin, Filter, Printer } from 'lucide-react'
-import { printAttendanceReport } from '../utils/printAttendance'
 
 const EventLog = ({
   activities,

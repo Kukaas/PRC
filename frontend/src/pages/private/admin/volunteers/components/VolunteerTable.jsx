@@ -10,6 +10,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import VolunteerProfileDialog from '@/pages/private/admin/volunteers/components/VolunteerProfileDialog'
 
 const VolunteerTable = ({ onDataChange }) => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -22,6 +24,9 @@ const VolunteerTable = ({ onDataChange }) => {
   // Dialog states
   const [approveDialog, setApproveDialog] = useState({ open: false, volunteer: null })
   const [rejectDialog, setRejectDialog] = useState({ open: false, volunteer: null })
+  // Add state for profile modal
+  const [profileDialog, setProfileDialog] = useState({ open: false, volunteer: null })
+  // Profile dialog UI is handled by separate component
 
   // Loading states for operations
   const [approveLoading, setApproveLoading] = useState(false)
@@ -143,9 +148,7 @@ const VolunteerTable = ({ onDataChange }) => {
     try {
       const response = await api.volunteerApplication.getById(id)
       if (response.success) {
-        // You can implement a modal or navigate to a detail page
-        console.log('Volunteer details:', response.data)
-        alert('View feature coming soon!')
+        setProfileDialog({ open: true, volunteer: response.data })
       } else {
         alert('Failed to fetch volunteer details: ' + response.message)
       }
@@ -336,36 +339,38 @@ const VolunteerTable = ({ onDataChange }) => {
                     <div className="text-gray-700 truncate" title={skills}>{skills}</div>
                     <div className="text-gray-700">{barangay}</div>
                     <div className="flex flex-wrap gap-2">
-                      <button
+                      <Button
                         onClick={() => handleView(volunteer._id || volunteer.id)}
-                        className="text-cyan-600 hover:text-cyan-700 text-xs font-medium underline"
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs rounded font-medium transition-colors"
+                        size="sm"
                       >
-                        [view]
-                      </button>
-
+                        View
+                      </Button>
                       {status === 'pending' && (
                         <>
-                          <button
+                          <Button
                             onClick={() => openApproveDialog(volunteer)}
-                            className="bg-teal-600 hover:bg-teal-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                            className="bg-teal-600 hover:bg-teal-700 text-white px-2 py-1 text-xs rounded font-medium transition-colors"
+                            size="sm"
                           >
                             approve
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => openRejectDialog(volunteer)}
-                            className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                            className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 text-xs rounded font-medium transition-colors"
+                            size="sm"
                           >
                             reject
-                          </button>
+                          </Button>
                         </>
                       )}
-
-                      <button
+                      <Button
                         onClick={() => handleNotify(volunteer._id || volunteer.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-xs rounded font-medium transition-colors"
+                        size="sm"
                       >
                         Notify
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -472,6 +477,12 @@ const VolunteerTable = ({ onDataChange }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <VolunteerProfileDialog
+        open={profileDialog.open}
+        volunteer={profileDialog.volunteer}
+        onClose={() => setProfileDialog({ open: false, volunteer: null })}
+      />
     </div>
   )
 }
