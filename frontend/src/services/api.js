@@ -113,4 +113,7 @@ export const api = {
   dashboard: {
     getOverview: () => apiClient.get('/dashboard/overview'),
   },
+  reports: {
+    getVolunteerHours: (year) => apiClient.get('/reports/volunteer-hours', { params: { year } }),
+  },
 };

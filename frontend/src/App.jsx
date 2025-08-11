@@ -26,6 +26,7 @@ import Activities from "./pages/private/volunteers/activities/Activities";
 import Notifications from "./pages/private/volunteers/notifications/Notifications";
 import MemberStatus from "./pages/private/volunteers/members-status/MemberStatus";
 import AdminMemberStatus from "./pages/private/admin/members-status/AdminMemberStatus";
+import Reports from "./pages/private/admin/reports/Reports";
 
 
 function App() {
@@ -154,6 +155,15 @@ function App() {
               element={
                 <PrivateRoute>
                   <AdminMemberStatus />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/reports/:id"
+              element={
+                <PrivateRoute>
+                  <Reports />
                 </PrivateRoute>
               }
             />

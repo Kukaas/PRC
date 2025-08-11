@@ -1,62 +1,44 @@
 import logo from '../../../../../assets/logo.png'
 
-const formatDate = (dateString) => {
-  if (!dateString) return ''
+const resolveLogo = () => {
   try {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    if (typeof logo === 'string') {
+      return (logo.startsWith('http') || logo.startsWith('/')) ? logo : `${window.location.origin}${logo}`
+    }
+    return ''
   } catch {
-    return String(dateString)
+    return ''
   }
 }
 
-const formatTime = (timeString) => {
-  if (!timeString) return ''
-  try {
-    const [hours, minutes] = String(timeString).split(':').map(Number)
-    const period = hours >= 12 ? 'PM' : 'AM'
-    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
-    const displayMinutes = Number.isNaN(minutes) ? '00' : String(minutes).padStart(2, '0')
-    return `${displayHours}:${displayMinutes} ${period}`
-  } catch {
-    return String(timeString)
-  }
-}
+const escapeHtml = (str) => String(str || '').replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))
 
-export const printAttendanceReport = (activity, attendanceData = []) => {
-  if (!activity) return
-  const title = activity.title || 'Event'
-  const dateText = formatDate(activity.date)
-  const timeText = [formatTime(activity.timeFrom), formatTime(activity.timeTo)].filter(Boolean).join(' - ')
-  const resolvedLogo = typeof logo === 'string'
-    ? (logo.startsWith('http') || logo.startsWith('/') ? logo : `${window.location.origin}${logo}`)
-    : ''
+export const printVolunteerHoursReport = ({ year, rows = [], filters = {} }) => {
+  const resolvedLogo = resolveLogo()
+  const generatedOn = new Date().toLocaleString()
 
-  const locationText = (() => {
-    const loc = activity?.location || {}
-    const parts = [loc.exactLocation, loc.barangay, loc.municipality, loc.province].filter(Boolean)
-    if (parts.length === 0) return ''
-    return parts.join(', ')
+  const filterChips = (() => {
+    const chips = []
+    if (filters.search) chips.push(`Search: ${escapeHtml(filters.search)}`)
+    if (filters.barangay) chips.push(`Barangay: ${escapeHtml(filters.barangay)}`)
+    if (filters.municipality) chips.push(`Municipality: ${escapeHtml(filters.municipality)}`)
+    if (filters.service) chips.push(`Service: ${escapeHtml(filters.service)}`)
+    if (filters.status) chips.push(`Status: ${escapeHtml(filters.status)}`)
+    chips.push(`Year: ${year}`)
+    return chips.join(' • ')
   })()
 
-  const rowsHtml = attendanceData.map((p, index) => {
-    const timeIn = p.timeIn ? new Date(p.timeIn).toLocaleTimeString() : ''
-    const timeOut = p.timeOut ? new Date(p.timeOut).toLocaleTimeString() : ''
-    return `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${p.name || ''}</td>
-        <td>${p.contactNumber || ''}</td>
-        <td>${timeIn}</td>
-        <td>${timeOut}</td>
-        <td>${p.status || ''}</td>
-      </tr>
-    `
-  }).join('')
+  const rowsHtml = rows.map((r, idx) => `
+    <tr>
+      <td>${idx + 1}</td>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${escapeHtml([r.address?.barangay, r.address?.municipality].filter(Boolean).join(', '))}</td>
+      <td>${escapeHtml((Array.isArray(r.services) ? r.services : []).join(', '))}</td>
+      <td style="text-align:right;">${Math.round(Number(r.hours || 0))}</td>
+      <td>${escapeHtml(r.contactNumber || '')}</td>
+      <td>${escapeHtml(r.status || '')}</td>
+    </tr>
+  `).join('')
 
   const styles = `
     <style>
@@ -68,19 +50,13 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
       .org-name { font-size: 20px; font-weight: 800; color: #0b2e59; letter-spacing: 0.5px; }
       .chapter { font-size: 15px; font-weight: 700; margin-top: 2px; }
       .contact { font-size: 11px; color: #374151; margin-top: 2px; }
-      .event-header { text-align: center; margin: 10px 0 16px; }
-      .event-header .att { font-size: 18px; font-weight: 800; text-decoration: underline; }
-      .event-header .evt-title { font-size: 16px; font-weight: 700; margin-top: 4px; }
-      .event-header .evt-meta { font-size: 12px; color: #374151; margin-top: 2px; }
-      .event-header .evt-where { font-size: 12px; color: #111827; margin-top: 2px; }
+      .title { text-align: center; margin: 14px 0; font-size: 18px; font-weight: 800; text-decoration: underline; }
+      .meta { text-align: center; font-size: 12px; color: #374151; margin-top: 4px; }
       table { width: 100%; border-collapse: collapse; margin-top: 16px; }
       th, td { border: 1px solid #e5e7eb; padding: 8px; font-size: 12px; }
       th { background: #f3f4f6; text-align: left; }
       tfoot td { border: none; padding-top: 12px; font-size: 12px; color: #6b7280; }
-      @media print {
-        .no-print { display: none !important; }
-        body { padding: 0; }
-      }
+      @media print { .no-print { display: none !important; } body { padding: 0; } }
     </style>
   `
 
@@ -91,7 +67,7 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <base href="${window.location.origin}">
-        <title>${title} - Attendance Report</title>
+        <title>Volunteer Hours Report - ${year}</title>
         ${styles}
       </head>
       <body>
@@ -106,26 +82,22 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
             <div class="contact">Email: marinduque@redcross.org.ph</div>
           </div>
         </div>
-
-        <div class="event-header">
-          <div class="att">ATTENDANCE</div>
-          <div class="evt-title">${title}</div>
-          <div class="evt-meta">${dateText}${timeText ? ' • ' + timeText : ''}</div>
-          ${locationText ? `<div class="evt-where">${locationText}</div>` : ''}
-        </div>
+        <div class="title">VOLUNTEER HOURS REPORT (${year})</div>
+        <div class="meta">${escapeHtml(filterChips)} • Generated: ${escapeHtml(generatedOn)}</div>
         <table>
           <thead>
             <tr>
               <th style="width: 48px;">#</th>
               <th>Name</th>
+              <th>Address</th>
+              <th>Services</th>
+              <th style="width: 100px; text-align:right;">Hours</th>
               <th>Contact</th>
-              <th>Time In</th>
-              <th>Time Out</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            ${rowsHtml || '<tr><td colspan="6" style="text-align:center; color:#6b7280;">No attendance records</td></tr>'}
+            ${rowsHtml || '<tr><td colspan="7" style="text-align:center; color:#6b7280;">No records</td></tr>'}
           </tbody>
         </table>
         <div class="no-print" style="margin-top:16px;">
@@ -133,18 +105,12 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
         </div>
         <script>
           (function(){
-            function imagesLoaded() {
+            function imagesLoaded(){
               var imgs = Array.from(document.images || []);
-              if (imgs.length === 0) return Promise.resolve();
-              return Promise.all(imgs.map(function(img){
-                return img.complete ? Promise.resolve() : new Promise(function(res){ img.onload = img.onerror = res; });
-              }));
+              if(imgs.length === 0) return Promise.resolve();
+              return Promise.all(imgs.map(function(img){return img.complete?Promise.resolve():new Promise(function(res){img.onload=img.onerror=res;});}));
             }
-            window.addEventListener('load', function(){
-              imagesLoaded().then(function(){
-                setTimeout(function(){ window.focus(); window.print(); }, 200);
-              });
-            });
+            window.addEventListener('load', function(){ imagesLoaded().then(function(){ setTimeout(function(){ window.focus(); window.print(); }, 200); }); });
           })();
         </script>
       </body>
@@ -157,8 +123,8 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
     opened.document.open()
     opened.document.write(html)
     opened.document.close()
-    opened.focus();
-    setTimeout(() =>  { opened.print();  }, 150)
+    opened.focus()
+    setTimeout(() => {  opened.print() }, 150)
     return
   }
   // Fallback: try blob URL
@@ -184,12 +150,12 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
       doc.write(html)
       doc.close()
       setTimeout(() => {
-          iframe.contentWindow?.focus(); iframe.contentWindow?.print();  { /* ignore */ }
-          document.body.removeChild(iframe)
+       iframe.contentWindow?.focus(); iframe.contentWindow?.print();
+       document.body.removeChild(iframe);
       }, 200)
   }
 }
 
-export default printAttendanceReport
+export default printVolunteerHoursReport
 
 
