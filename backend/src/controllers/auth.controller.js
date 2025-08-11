@@ -183,9 +183,11 @@ export const login = async (req, res) => {
     // Set HTTP-only cookie
     res.cookie("authToken", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Use secure in production
-      sameSite: "lax", // Changed from "strict" to "lax" for better compatibility
+      secure: true, // Always secure for cross-subdomain cookies
+      sameSite: "none", // Required for cross-subdomain cookies
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/", // Ensure cookie is available across the entire domain
+      domain: ENV.NODE_ENV === "production" ? ".vercel.app" : undefined, // Set domain for cross-subdomain
     });
 
     // Get profile completion status for immediate feedback
@@ -306,8 +308,10 @@ export const logout = async (req, res) => {
     // Clear the authentication cookie
     res.clearCookie("authToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // Changed from "strict" to "lax" for consistency
+      secure: true, // Always secure for cross-subdomain cookies
+      sameSite: "none", // Required for cross-subdomain cookies
+      path: "/", // Ensure cookie is cleared from the same path it was set
+      domain: ENV.NODE_ENV === "production" ? ".vercel.app" : undefined, // Set domain for cross-subdomain
     });
 
     res.json({
@@ -338,9 +342,45 @@ export const getProfile = async (req, res) => {
       });
     }
 
+    // Get profile completion status for consistent response
+    const profileCompletion = {
+      isProfileComplete: user.isProfileComplete,
+      sections: {
+        personalInfo: calculatePersonalInfoCompletion(user.personalInfo),
+        medicalHistory: calculateMedicalHistoryCompletion(user.medicalHistory),
+        familyBackground: calculateFamilyBackgroundCompletion(
+          user.familyBackground
+        ),
+        educationalBackground: calculateEducationalBackgroundCompletion(
+          user.educationalBackground
+        ),
+        skills: calculateSkillsCompletion(
+          user.skills
+        ),
+        services: calculateServicesCompletion(user.services),
+      },
+    };
+
+    // Calculate overall completion percentage
+    const overallCompletion = Math.round(
+      Object.values(profileCompletion.sections).reduce(
+        (sum, val) => sum + val,
+        0
+      ) / Object.keys(profileCompletion.sections).length
+    );
+
+    profileCompletion.overallCompletion = overallCompletion;
+
     res.json({
       success: true,
-      data: user,
+      data: {
+        user,
+        profileCompletion,
+        setupRequired: !user.isProfileComplete,
+        nextRecommendedSection: getNextRecommendedSection(
+          profileCompletion.sections
+        ),
+      },
     });
   } catch (error) {
     console.error("Get profile error:", error);

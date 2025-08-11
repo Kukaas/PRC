@@ -3,17 +3,30 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '@/services/api'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Users, Calendar, MapPin, Clock, Tag, Edit, Trash2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import QRScanner from '@/components/QRScanner'
+import EventSelector from './components/EventSelector'
+import EventDisplay from './components/EventDisplay'
+import AttendanceSection from './components/AttendanceSection'
+import EventLog from './components/EventLog'
+import EmptyStates from './components/EmptyStates'
 
 const AdminActivities = () => {
   const navigate = useNavigate()
-  const [activities, setActivities] = useState([])
+  const [activities, setActivities] = useState({ active: [], archived: [] })
   const [selectedActivity, setSelectedActivity] = useState(null)
   const [loading, setLoading] = useState(true)
   const [attendanceData, setAttendanceData] = useState([])
+  const [showQRScanner, setShowQRScanner] = useState(false)
+  const [scanningAction, setScanningAction] = useState('timeIn') // 'timeIn' or 'timeOut'
 
   useEffect(() => {
     loadActivities()
@@ -29,10 +42,30 @@ const AdminActivities = () => {
     try {
       setLoading(true)
       const response = await api.activities.getCreated()
-      setActivities(response.data || [])
-      if (response.data && response.data.length > 0) {
-        setSelectedActivity(response.data[0]._id)
+      const allActivities = response.data || []
+
+      // Separate active and archived activities
+      const activeActivities = allActivities.filter(activity =>
+        !['completed', 'cancelled'].includes(activity.status)
+      )
+      const archivedActivities = allActivities.filter(activity =>
+        ['completed', 'cancelled'].includes(activity.status)
+      )
+
+      setActivities({
+        active: activeActivities,
+        archived: archivedActivities
+      })
+
+      // Check if currently selected activity is now archived
+      if (selectedActivity) {
+        const isSelectedActivityArchived = archivedActivities.some(a => a._id === selectedActivity)
+        if (isSelectedActivityArchived) {
+          setSelectedActivity(null)
+        }
       }
+
+      // Don't auto-select any event - let user choose
     } catch (error) {
       toast.error('Failed to load activities')
       console.error('Error loading activities:', error)
@@ -43,7 +76,9 @@ const AdminActivities = () => {
 
   const loadAttendanceReport = async (activityId) => {
     try {
+      console.log('Loading attendance report for activity:', activityId)
       const response = await api.activities.getAttendanceReport(activityId)
+      console.log('Attendance report response:', response)
       setAttendanceData(response.data?.attendance || [])
     } catch (error) {
       console.error('Error loading attendance report:', error)
@@ -81,6 +116,91 @@ const AdminActivities = () => {
       toast.error(error.message || 'Failed to update activity status')
       console.error('Error updating activity status:', error)
     }
+  }
+
+  const handleRecordAttendance = async (qrData, action) => {
+    try {
+      console.log('Recording attendance:', { activityId: selectedActivity, qrData, action })
+
+      const response = await api.activities.recordAttendance(selectedActivity, {
+        activityId: selectedActivity,
+        qrData: qrData,
+        action: action
+      })
+
+      console.log('Attendance recorded successfully:', response)
+
+      // Reload attendance data to show the update
+      await loadAttendanceReport(selectedActivity)
+
+      return response
+    } catch (error) {
+      console.error('Error recording attendance:', error)
+      toast.error(error.message || `Failed to record ${action === 'timeIn' ? 'time in' : 'time out'}`)
+      return null
+    }
+  }
+
+  const handleQRScan = async (qrData) => {
+    try {
+      console.log('QR Data received:', qrData)
+      console.log('Selected activity:', selectedActivity)
+      console.log('Scanning action:', scanningAction)
+
+      // Parse QR data to validate it
+      let parsedData
+      try {
+        parsedData = JSON.parse(qrData)
+        console.log('Parsed QR data:', parsedData)
+      } catch (parseError) {
+        console.error('QR parse error:', parseError)
+        toast.error('Invalid QR code format. Please try again.')
+        return
+      }
+
+      // Check if it's the format from JoinedActivities (has name, contactNumber, etc.)
+      if (!parsedData.userId || !parsedData.activityId) {
+        console.error('Missing required fields:', { userId: parsedData.userId, activityId: parsedData.activityId })
+        toast.error('Invalid QR code format. Expected userId and activityId.')
+        return
+      }
+
+      if (parsedData.activityId !== selectedActivity) {
+        console.error('Activity ID mismatch:', { qrActivityId: parsedData.activityId, selectedActivity })
+        toast.error('QR code is for a different activity')
+        return
+      }
+
+      console.log('QR validation passed, recording attendance...')
+
+      // Show processing toast
+      const processingToast = toast.loading(`Recording ${scanningAction === 'timeIn' ? 'Time In' : 'Time Out'}...`)
+
+      // Record attendance
+      const response = await handleRecordAttendance(qrData, scanningAction)
+
+      // Dismiss processing toast and show success
+      toast.dismiss(processingToast)
+
+      if (response) {
+        toast.success(`${scanningAction === 'timeIn' ? 'Time In' : 'Time Out'} recorded successfully for ${parsedData.name}!`)
+        setShowQRScanner(false)
+      }
+    } catch (error) {
+      console.error('Error in handleQRScan:', error)
+      toast.error('Invalid QR code data format. Please try again.')
+    }
+  }
+
+  const openQRScanner = (action) => {
+    setScanningAction(action)
+    setShowQRScanner(true)
+  }
+
+  const handleSelectArchivedEvent = (activityId) => {
+    setSelectedActivity(activityId)
+    // Scroll to top to show the selected event
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const formatDate = (dateString) => {
@@ -146,192 +266,78 @@ const AdminActivities = () => {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Current Event</h3>
 
-              {activities.length === 0 ? (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-                  <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h4 className="text-lg font-semibold text-gray-600 mb-2">No Events Created</h4>
-                  <p className="text-sm text-gray-500 mb-4">Create your first event to get started</p>
-                  <Button
-                    onClick={handleCreateEvent}
-                    className="bg-cyan-500 hover:bg-cyan-600 text-white"
-                  >
-                    Create Event
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Event Selector */}
-                  <Select value={selectedActivity} onValueChange={setSelectedActivity}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select an event" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {activities.map((activity) => (
-                        <SelectItem key={activity._id} value={activity._id}>
-                          {activity.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {/* Event Selector */}
+              <EventSelector
+                selectedActivity={selectedActivity}
+                onActivityChange={setSelectedActivity}
+                activities={activities}
+              />
 
-                  {/* Selected Event Display */}
-                  {selectedActivity && (() => {
-                    const activity = activities.find(a => a._id === selectedActivity)
-                    if (!activity) return null
+              {/* Selected Event Display */}
+              {selectedActivity && (() => {
+                const activity = activities.active.find(a => a._id === selectedActivity) || activities.archived.find(a => a._id === selectedActivity)
+                if (!activity) return null
 
-                    return (
-                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-center overflow-hidden">
-                          {/* Background pattern */}
-                          <div className="absolute inset-0 opacity-10">
-                            <div className="absolute top-0 left-0 w-full h-full bg-white transform rotate-12 scale-150"></div>
-                          </div>
+                return (
+                  <EventDisplay
+                    activity={activity}
+                    onStatusChange={handleStatusChange}
+                    onEdit={handleEditActivity}
+                    onDelete={handleDeleteActivity}
+                    formatDate={formatDate}
+                    formatTime={formatTime}
+                  />
+                )
+              })()}
 
-                          {/* Main content */}
-                          <div className="relative z-10">
-                            <h4 className="text-xl font-bold text-white mb-2">{activity.title}</h4>
-                            <p className="text-blue-100 text-sm mb-4">{activity.description}</p>
-
-                            {/* Event Details */}
-                            <div className="grid grid-cols-2 gap-4 text-left text-white text-sm">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                <span>{formatDate(activity.date)}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4" />
-                                <span>{formatTime(activity.timeFrom)} - {formatTime(activity.timeTo)}</span>
-                              </div>
-                              <div className="flex items-center gap-2 col-span-2">
-                                <MapPin className="w-4 h-4" />
-                                <span>{activity.location?.barangay}, {activity.location?.municipality}, {activity.location?.province}</span>
-                              </div>
-                            </div>
-
-                            {/* Status Badge */}
-                            <div className="mt-4 flex items-center gap-2">
-                              <Select
-                                value={activity.status}
-                                onValueChange={(value) => handleStatusChange(activity._id, value)}
-                              >
-                                <SelectTrigger className={`w-auto h-7 px-3 py-1 text-xs font-medium rounded-full border-0 ${
-                                  activity.status === 'published' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
-                                  activity.status === 'draft' ? 'bg-gray-100 text-gray-800 hover:bg-gray-200' :
-                                  activity.status === 'ongoing' ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' :
-                                  activity.status === 'completed' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' :
-                                  activity.status === 'cancelled' ? 'bg-red-100 text-red-800 hover:bg-red-200' :
-                                  'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                }`}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="draft">Draft</SelectItem>
-                                  <SelectItem value="published">Published</SelectItem>
-                                  <SelectItem value="ongoing">Ongoing</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                onClick={() => handleEditActivity(activity._id)}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-2 py-1 rounded-md text-xs"
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                onClick={() => handleDeleteActivity(activity._id)}
-                                className="bg-red-200 hover:bg-red-300 text-red-800 px-2 py-1 rounded-md text-xs"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-
-                            {/* Participants Count */}
-                            <div className="mt-4 flex items-center justify-center gap-2 text-blue-100">
-                              <Users className="w-4 h-4" />
-                              <span>{activity.currentParticipants || 0} / {activity.maxParticipants} participants</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </div>
-              )}
+              {/* Empty States */}
+              <EmptyStates
+                selectedActivity={selectedActivity}
+                activities={activities}
+                onCreateEvent={handleCreateEvent}
+              />
             </div>
 
             {/* Attendance Section */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Attendance</h3>
-
-              {!selectedActivity ? (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-                  <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-sm text-gray-500">Select an event to view attendance</p>
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                  {/* Table Header */}
-                  <div className="bg-cyan-500 text-white px-4 py-3 rounded-t-lg">
-                    <div className="grid grid-cols-4 gap-4 font-medium text-sm">
-                      <div>Name</div>
-                      <div>Time In</div>
-                      <div>Time Out</div>
-                      <div>Status</div>
-                    </div>
-                  </div>
-
-                  {/* Table Body */}
-                  <div className="divide-y divide-gray-200">
-                    {attendanceData.length === 0 ? (
-                      <div className="px-4 py-8 text-center text-gray-500">
-                        <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                        <p className="text-sm">No participants registered yet</p>
-                      </div>
-                    ) : (
-                      attendanceData.map((participant) => (
-                        <div key={participant.userId} className="px-4 py-3">
-                          <div className="grid grid-cols-4 gap-4 text-sm">
-                            <div className="font-medium text-gray-900">
-                              {participant.name}
-                            </div>
-                            <div className="text-gray-600">
-                              {participant.timeIn ? new Date(participant.timeIn).toLocaleTimeString() : '-'}
-                            </div>
-                            <div className="text-gray-600">
-                              {participant.timeOut ? new Date(participant.timeOut).toLocaleTimeString() : '-'}
-                            </div>
-                            <div>
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                                participant.status === 'attended' ? 'bg-green-100 text-green-800' :
-                                participant.status === 'absent' ? 'bg-red-100 text-red-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {participant.status || 'registered'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
+              <AttendanceSection
+                selectedActivity={selectedActivity}
+                attendanceData={attendanceData}
+                onOpenQRScanner={openQRScanner}
+                activity={selectedActivity ? (activities.active.find(a => a._id === selectedActivity) || activities.archived.find(a => a._id === selectedActivity)) : null}
+              />
             </div>
           </div>
 
           {/* Event Log Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Event logged</h3>
-            <div className="bg-cyan-500 rounded-lg p-6">
-              <div className="text-center text-white">
-                <p className="text-lg font-medium">Event logging and monitoring system</p>
-                <p className="text-cyan-100 text-sm mt-2">Track events, manage participants, and monitor attendance</p>
-              </div>
-            </div>
-          </div>
+          <EventLog
+            activities={activities}
+            onSelectArchivedEvent={handleSelectArchivedEvent}
+            onEdit={handleEditActivity}
+            onDelete={handleDeleteActivity}
+            formatDate={formatDate}
+            formatTime={formatTime}
+          />
         </div>
       </div>
+
+      {/* QR Scanner Dialog */}
+      <AlertDialog open={showQRScanner} onOpenChange={setShowQRScanner}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center">
+              Scan QR Code for {scanningAction === 'timeIn' ? 'Time In' : 'Time Out'}
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription asChild>
+            <QRScanner
+              onScan={handleQRScan}
+              onClose={() => setShowQRScanner(false)}
+              scanningAction={scanningAction}
+            />
+          </AlertDialogDescription>
+        </AlertDialogContent>
+      </AlertDialog>
     </PrivateLayout>
   )
 }

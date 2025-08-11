@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import Activity from "../models/activity.model.js";
 import Notification from "../models/notification.model.js";
-import { sendActivityMatchEmail, sendActivityReminderEmail } from "./email.service.js";
+import { sendActivityMatchEmail, sendActivityReminderEmail, sendGeneralNotificationEmail } from "./email.service.js";
 
 // Service to notify users about new activities that match their skills/services
 export const notifyUsersForNewActivity = async (activityId) => {

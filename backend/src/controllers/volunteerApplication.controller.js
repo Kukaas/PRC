@@ -316,15 +316,7 @@ export const updateApplicationStatus = async (req, res) => {
 // Admin: Get application statistics
 export const getApplicationStats = async (req, res) => {
   try {
-    const stats = await VolunteerApplication.aggregate([
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
+    // Get basic counts
     const totalApplications = await VolunteerApplication.countDocuments();
     const pendingApplications = await VolunteerApplication.countDocuments({
       status: "pending",
@@ -336,12 +328,41 @@ export const getApplicationStats = async (req, res) => {
       status: "rejected",
     });
 
+    // Get applications from this month
+    const thisMonth = new Date();
+    thisMonth.setDate(1);
+    thisMonth.setHours(0, 0, 0, 0);
+
+    const thisMonthApplications = await VolunteerApplication.countDocuments({
+      submittedAt: { $gte: thisMonth }
+    });
+
+    // Get applications from last month
+    const lastMonth = new Date(thisMonth);
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+    const lastMonthApplications = await VolunteerApplication.countDocuments({
+      submittedAt: { $gte: lastMonth, $lt: thisMonth }
+    });
+
+    // Calculate month-over-month change
+    const monthOverMonthChange = lastMonthApplications > 0
+      ? ((thisMonthApplications - lastMonthApplications) / lastMonthApplications * 100).toFixed(1)
+      : 0;
+
     const formattedStats = {
       total: totalApplications,
       pending: pendingApplications,
       accepted: acceptedApplications,
       rejected: rejectedApplications,
       underReview: totalApplications - pendingApplications - acceptedApplications - rejectedApplications,
+      thisMonth: thisMonthApplications,
+      lastMonth: lastMonthApplications,
+      monthOverMonthChange: monthOverMonthChange,
+      // Calculate percentages
+      pendingPercentage: totalApplications > 0 ? ((pendingApplications / totalApplications) * 100).toFixed(1) : 0,
+      acceptedPercentage: totalApplications > 0 ? ((acceptedApplications / totalApplications) * 100).toFixed(1) : 0,
+      rejectedPercentage: totalApplications > 0 ? ((rejectedApplications / totalApplications) * 100).toFixed(1) : 0
     };
 
     res.status(200).json({

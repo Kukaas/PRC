@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-const VolunteerTable = () => {
+const VolunteerTable = ({ onDataChange }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedBarangay, setSelectedBarangay] = useState('')
   const [selectedService, setSelectedService] = useState('')
@@ -85,7 +85,11 @@ const VolunteerTable = () => {
       const response = await api.volunteerApplication.updateStatus(id, { status: 'accepted' })
       if (response.success) {
         // Refresh data
-        fetchVolunteerData()
+        await fetchVolunteerData()
+        // Notify parent component to refresh stats
+        if (onDataChange) {
+          onDataChange()
+        }
         setApproveDialog({ open: false, volunteer: null })
       } else {
         alert('Failed to approve volunteer: ' + response.message)
@@ -104,7 +108,11 @@ const VolunteerTable = () => {
       const response = await api.volunteerApplication.updateStatus(id, { status: 'rejected' })
       if (response.success) {
         // Refresh data
-        fetchVolunteerData()
+        await fetchVolunteerData()
+        // Notify parent component to refresh stats
+        if (onDataChange) {
+          onDataChange()
+        }
         setRejectDialog({ open: false, volunteer: null })
       } else {
         alert('Failed to reject volunteer: ' + response.message)
@@ -167,7 +175,7 @@ const VolunteerTable = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading volunteer data...</p>
           </div>
         </div>
@@ -183,7 +191,7 @@ const VolunteerTable = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchVolunteerData}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+            className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md transition-colors"
           >
             Retry
           </button>
@@ -200,7 +208,7 @@ const VolunteerTable = () => {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="mb-6 bg-blue-50 rounded-lg p-4">
+      <div className="mb-6 bg-cyan-50 rounded-lg p-4 border border-cyan-200">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search Input */}
           <div>
@@ -211,7 +219,7 @@ const VolunteerTable = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             />
           </div>
 
@@ -221,7 +229,7 @@ const VolunteerTable = () => {
             <select
               value={selectedBarangay}
               onChange={(e) => setSelectedBarangay(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             >
               <option value="">All Barangays</option>
               {uniqueBarangays.map(barangay => (
@@ -236,7 +244,7 @@ const VolunteerTable = () => {
             <select
               value={selectedService}
               onChange={(e) => setSelectedService(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             >
               <option value="">All Services</option>
               {uniqueServices.map(service => (
@@ -249,7 +257,7 @@ const VolunteerTable = () => {
           <div className="flex items-end gap-2">
             <button
               onClick={handleSearch}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+              className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md transition-colors"
             >
               Search
             </button>
@@ -261,13 +269,27 @@ const VolunteerTable = () => {
             </button>
           </div>
         </div>
+
+        {/* Filter Summary */}
+        <div className="mt-3 pt-3 border-t border-cyan-200">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-cyan-700">
+              Showing {filteredVolunteers.length} of {volunteerData.length} volunteers
+            </span>
+            <div className="flex gap-2 text-xs">
+              {searchTerm && <span className="bg-cyan-100 text-cyan-800 px-2 py-1 rounded">Search: {searchTerm}</span>}
+              {selectedBarangay && <span className="bg-cyan-100 text-cyan-800 px-2 py-1 rounded">Barangay: {selectedBarangay}</span>}
+              {selectedService && <span className="bg-cyan-100 text-cyan-800 px-2 py-1 rounded">Service: {selectedService}</span>}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
       <div className="overflow-hidden rounded-lg border border-gray-200">
         {/* Table Header */}
-        <div className="bg-blue-50 px-4 py-3 border-b border-gray-200">
-          <div className="grid grid-cols-6 gap-4 text-sm font-semibold text-gray-700">
+        <div className="bg-cyan-500 px-4 py-3 border-b border-gray-200">
+          <div className="grid grid-cols-6 gap-4 text-sm font-semibold text-white">
             <div>Name</div>
             <div>Date Applied</div>
             <div>Status</div>
@@ -316,7 +338,7 @@ const VolunteerTable = () => {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => handleView(volunteer._id || volunteer.id)}
-                        className="text-blue-600 hover:text-blue-700 text-xs font-medium underline"
+                        className="text-cyan-600 hover:text-cyan-700 text-xs font-medium underline"
                       >
                         [view]
                       </button>
@@ -361,11 +383,11 @@ const VolunteerTable = () => {
         <div className="flex gap-2">
           <button
             onClick={() => window.print()}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-cyan-600 hover:text-cyan-700 font-medium"
           >
             Export Data
           </button>
-          <button className="text-blue-600 hover:text-blue-700 font-medium">
+          <button className="text-cyan-600 hover:text-cyan-700 font-medium">
             Bulk Actions
           </button>
         </div>
@@ -389,7 +411,7 @@ const VolunteerTable = () => {
           <AlertDialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4">
             <AlertDialogCancel
               disabled={approveLoading}
-              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </AlertDialogCancel>
@@ -429,7 +451,7 @@ const VolunteerTable = () => {
           <AlertDialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4">
             <AlertDialogCancel
               disabled={rejectLoading}
-              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </AlertDialogCancel>

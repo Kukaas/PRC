@@ -32,20 +32,26 @@ export const AuthProvider = ({ children }) => {
       console.log("Auth check response:", response);
 
       if (response.success) {
-        setUser(response.data);
+        // Handle new response format with profile completion included
+        if (response.data.user && response.data.profileCompletion) {
+          setUser(response.data.user);
+          setProfileCompletion(response.data.profileCompletion);
+        } else {
+          // Fallback for old format
+          setUser(response.data);
+          // Get profile completion status separately
+          try {
+            const completionResponse = await api.profile.getCompletionStatus();
+            if (completionResponse.success) {
+              setProfileCompletion(completionResponse.data);
+            }
+          } catch (error) {
+            console.error("Error fetching profile completion:", error);
+            // Don't fail authentication if profile completion check fails
+          }
+        }
         setIsAuthenticated(true);
         console.log("User authenticated successfully:", response.data);
-
-        // Get profile completion status
-        try {
-          const completionResponse = await api.profile.getCompletionStatus();
-          if (completionResponse.success) {
-            setProfileCompletion(completionResponse.data);
-          }
-        } catch (error) {
-          console.error("Error fetching profile completion:", error);
-          // Don't fail authentication if profile completion check fails
-        }
       } else {
         console.log("Auth check failed with response:", response);
         // Only clear user data if the response explicitly indicates authentication failure

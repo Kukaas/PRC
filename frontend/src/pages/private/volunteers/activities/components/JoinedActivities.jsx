@@ -131,12 +131,31 @@ const JoinedActivities = ({ onActivityLeave }) => {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-2">
                   <CardTitle className="text-lg line-clamp-2">{activity.title}</CardTitle>
-                  <Badge
-                    variant={activity.status === 'ongoing' ? 'default' : 'secondary'}
-                    className="ml-2 flex-shrink-0"
-                  >
-                    {activity.status}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge
+                      variant={activity.status === 'ongoing' ? 'default' : 'secondary'}
+                      className="flex-shrink-0"
+                    >
+                      {activity.status}
+                    </Badge>
+                    {/* Attendance Status Badge */}
+                    {activity.userParticipant && (
+                      <Badge
+                        variant={activity.userParticipant.status === 'attended' ? 'default' : 'outline'}
+                        className={`text-xs ${
+                          activity.userParticipant.status === 'attended'
+                            ? 'bg-green-100 text-green-800 border-green-200'
+                            : activity.userParticipant.status === 'registered'
+                            ? 'bg-blue-100 text-blue-800 border-blue-200'
+                            : 'bg-gray-100 text-gray-800 border-gray-200'
+                        }`}
+                      >
+                        {activity.userParticipant.status === 'attended' ? '✓ Attended' :
+                         activity.userParticipant.status === 'registered' ? '📝 Registered' :
+                         activity.userParticipant.status}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 {/* Skills and Services */}
@@ -197,6 +216,59 @@ const JoinedActivities = ({ onActivityLeave }) => {
                   </span>
                 </div>
 
+                {/* Time Tracking Information */}
+                {activity.userParticipant && (
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                    <h4 className="text-xs font-medium text-gray-700">Your Attendance</h4>
+                    <div className="space-y-1">
+                      {activity.userParticipant.timeIn ? (
+                        <div className="flex items-center gap-2 text-xs text-green-600">
+                          <Clock className="w-3 h-3" />
+                          <span>Time In: {new Date(activity.userParticipant.timeIn).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Clock className="w-3 h-3" />
+                          <span>Time In: Not recorded</span>
+                        </div>
+                      )}
+
+                      {activity.userParticipant.timeOut ? (
+                        <div className="flex items-center gap-2 text-xs text-blue-600">
+                          <Clock className="w-3 h-3" />
+                          <span>Time Out: {new Date(activity.userParticipant.timeOut).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Clock className="w-3 h-3" />
+                          <span>Time Out: Not recorded</span>
+                        </div>
+                      )}
+
+                      {activity.userParticipant.totalHours > 0 && (
+                        <div className="flex items-center gap-2 text-xs text-purple-600 font-medium">
+                          <Clock className="w-3 h-3" />
+                          <span>Total Hours: {activity.userParticipant.totalHours} hours</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          activity.userParticipant.status === 'attended'
+                            ? 'bg-green-100 text-green-800'
+                            : activity.userParticipant.status === 'registered'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {activity.userParticipant.status === 'attended' ? 'Attended' :
+                           activity.userParticipant.status === 'registered' ? 'Registered' :
+                           activity.userParticipant.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Description */}
                 {activity.description && (
                   <p className="text-sm text-gray-600 line-clamp-3">{activity.description}</p>
@@ -214,7 +286,12 @@ const JoinedActivities = ({ onActivityLeave }) => {
                   <Button
                     variant="outline"
                     onClick={() => handleLeaveActivity(activity._id)}
-                    className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                    disabled={['ongoing', 'completed', 'cancelled'].includes(activity.status)}
+                    className={`w-full ${
+                      ['ongoing', 'completed', 'cancelled'].includes(activity.status)
+                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'border-red-200 text-red-600 hover:bg-red-50'
+                    }`}
                   >
                     Leave Activity
                   </Button>
@@ -250,6 +327,46 @@ const JoinedActivities = ({ onActivityLeave }) => {
                   <p className="text-sm text-gray-600">
                     <strong>Status:</strong> {selectedActivity?.status}
                   </p>
+
+                  {/* Time Tracking Details */}
+                  {selectedActivity?.userParticipant && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Your Attendance Record:</p>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600">
+                          <strong>Time In:</strong> {selectedActivity.userParticipant.timeIn
+                            ? new Date(selectedActivity.userParticipant.timeIn).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                            : 'Not recorded yet'
+                          }
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <strong>Time Out:</strong> {selectedActivity.userParticipant.timeOut
+                            ? new Date(selectedActivity.userParticipant.timeOut).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                            : 'Not recorded yet'
+                          }
+                        </p>
+                        {selectedActivity.userParticipant.totalHours > 0 && (
+                          <p className="text-sm text-gray-600">
+                            <strong>Total Hours:</strong> {selectedActivity.userParticipant.totalHours} hours
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600">
+                          <strong>Status:</strong>
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                            selectedActivity.userParticipant.status === 'attended'
+                              ? 'bg-green-100 text-green-800'
+                              : selectedActivity.userParticipant.status === 'registered'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {selectedActivity.userParticipant.status === 'attended' ? 'Attended' :
+                             selectedActivity.userParticipant.status === 'registered' ? 'Registered' :
+                             selectedActivity.userParticipant.status}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* QR Code */}

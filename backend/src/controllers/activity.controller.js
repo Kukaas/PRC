@@ -363,10 +363,33 @@ export const joinActivity = async (req, res) => {
   }
 
   // Check if activity is in the past
-  if (new Date() > activity.date) {
+  const now = new Date();
+  const activityDate = new Date(activity.date);
+
+  // Set the activity start and end times for the date
+  const [startHours, startMinutes] = activity.timeFrom.split(':').map(Number);
+  const [endHours, endMinutes] = activity.timeTo.split(':').map(Number);
+
+  const activityStartTime = new Date(activityDate);
+  activityStartTime.setHours(startHours, startMinutes, 0, 0);
+
+  const activityEndTime = new Date(activityDate);
+  activityEndTime.setHours(endHours, endMinutes, 0, 0);
+
+  // Check if current time is after the activity end time
+  if (now > activityEndTime) {
     return res.status(400).json({
       success: false,
-      message: "Cannot join past activities",
+      message: "Cannot join activities that have already ended",
+    });
+  }
+
+  // Check if activity is starting very soon (within the next hour)
+  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+  if (now > activityStartTime && now < oneHourFromNow) {
+    return res.status(400).json({
+      success: false,
+      message: "Activity is starting soon. Please contact the organizer for late registration.",
     });
   }
 
@@ -491,9 +514,10 @@ export const leaveActivity = async (req, res) => {
 export const getMyActivities = async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
+    const userId = req.user.userId;
 
     const query = {
-      "participants.userId": req.user.userId,
+      "participants.userId": userId,
     };
 
     if (status && status !== "all") {
@@ -516,6 +540,24 @@ export const getMyActivities = async (req, res) => {
         { path: "participants.userId", select: "givenName familyName email" },
       ]);
 
+    // Add current user's participant data to each activity
+    const activitiesWithUserData = activities.map(activity => {
+      const userParticipant = activity.participants.find(
+        p => p.userId._id.toString() === userId.toString()
+      );
+
+      return {
+        ...activity.toObject(),
+        userParticipant: userParticipant ? {
+          timeIn: userParticipant.timeIn,
+          timeOut: userParticipant.timeOut,
+          totalHours: userParticipant.totalHours,
+          status: userParticipant.status,
+          joinedAt: userParticipant.joinedAt
+        } : null
+      };
+    });
+
     // Calculate pagination info
     const totalPages = Math.ceil(total / parseInt(limit));
     const hasNextPage = parseInt(page) < totalPages;
@@ -533,7 +575,7 @@ export const getMyActivities = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Your activities retrieved successfully",
-      data: activities,
+      data: activitiesWithUserData,
       pagination: paginationInfo
     });
   } catch (error) {
@@ -695,7 +737,8 @@ export const getActivitiesByCreator = async (req, res) => {
 // QR Code Attendance Tracking (Admin/Staff only)
 export const recordAttendance = async (req, res) => {
   try {
-    const { activityId, qrData, action } = req.body;
+    const { id } = req.params;
+    const { qrData, action } = req.body;
 
     // Check if user has permission
     if (!["admin", "staff"].includes(req.user.role)) {
@@ -705,10 +748,10 @@ export const recordAttendance = async (req, res) => {
       });
     }
 
-    if (!activityId || !qrData || !action) {
+    if (!qrData || !action) {
       return res.status(400).json({
         success: false,
-        message: "Activity ID, QR data, and action are required",
+        message: "QR data and action are required",
       });
     }
 
@@ -730,7 +773,7 @@ export const recordAttendance = async (req, res) => {
       });
     }
 
-    const { userId } = parsedQRData;
+    const { userId, activityId } = parsedQRData;
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -738,8 +781,16 @@ export const recordAttendance = async (req, res) => {
       });
     }
 
+    // Validate that the QR code is for the correct activity
+    if (activityId && activityId !== id) {
+      return res.status(400).json({
+        success: false,
+        message: "QR code is for a different activity",
+      });
+    }
+
     // Find the activity
-    const activity = await Activity.findById(activityId);
+    const activity = await Activity.findById(id);
     if (!activity) {
       return res.status(404).json({
         success: false,
@@ -780,7 +831,7 @@ export const recordAttendance = async (req, res) => {
       if (user && user.shouldReceiveNotification('time_tracking')) {
         await Notification.createTimeTrackingNotification(
           userId,
-          activityId,
+          id,
           activity.title,
           action
         );
@@ -790,22 +841,40 @@ export const recordAttendance = async (req, res) => {
       // Don't fail the attendance recording if notifications fail
     }
 
-    const updatedActivity = await Activity.findById(activityId)
+    const updatedActivity = await Activity.findById(id)
       .populate("createdBy", "givenName familyName email")
       .populate("participants.userId", "givenName familyName email");
 
-    return res.status(200).json(
-      {success: true,
-      message: `Attendance ${action} recorded successfully`,}
-    );
+    return res.status(200).json({
+      success: true,
+      message: `Attendance ${action} recorded successfully`,
+      data: {
+        participant: {
+          userId: participant.userId,
+          name: `${parsedQRData.name || 'Unknown'}`,
+          action: action,
+          timestamp: action === 'timeIn' ? participant.timeIn : participant.timeOut
+        }
+      }
+    });
   } catch (error) {
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({
+    console.error('Error recording attendance:', error);
+
+    // Handle specific activity model errors
+    if (error.message.includes('already recorded')) {
+      return res.status(400).json({
         success: false,
         message: error.message,
-        errors: error.errors,
       });
     }
+
+    if (error.message.includes('must be recorded before')) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -816,7 +885,7 @@ export const recordAttendance = async (req, res) => {
 // Get attendance report for an activity (Admin/Staff only)
 export const getAttendanceReport = async (req, res) => {
   try {
-    const { activityId } = req.params;
+    const { id } = req.params;
 
     // Check if user has permission
     if (!["admin", "staff"].includes(req.user.role)) {
@@ -826,7 +895,7 @@ export const getAttendanceReport = async (req, res) => {
       });
     }
 
-    const activity = await Activity.findById(activityId)
+    const activity = await Activity.findById(id)
       .populate("participants.userId", "givenName familyName email personalInfo")
       .populate("createdBy", "givenName familyName email");
 
@@ -885,13 +954,7 @@ export const getAttendanceReport = async (req, res) => {
       data: report
     });
   } catch (error) {
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({
-        success: false,
-        message: error.message,
-        errors: error.errors,
-      });
-    }
+    console.error('Error getting attendance report:', error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

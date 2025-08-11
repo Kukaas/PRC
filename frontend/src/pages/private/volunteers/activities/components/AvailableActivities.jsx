@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Users, MapPin, Clock, Star, Search, Filter } from 'lucide-react'
+import { toast } from 'sonner'
 
 const AvailableActivities = ({ onActivityJoin }) => {
   const { user } = useAuth()
@@ -23,23 +24,38 @@ const AvailableActivities = ({ onActivityJoin }) => {
   const loadActivities = async () => {
     setLoadingActivities(true)
     try {
-      console.log('Loading available activities for user:', user?.email)
       const response = await api.activities.getVolunteerActivities({
         page: currentPage,
         limit: 12,
         status: statusFilter,
         search: searchTerm
       })
-      console.log('Available activities response:', response)
 
       if (response?.data) {
-        // Filter out activities that user has already joined
-        const availableActivities = response.data.filter(activity => !activity.isJoined)
+        // Filter activities based on status and join eligibility
+        const availableActivities = response.data.filter(activity => {
+          // Handle different status filters
+          if (statusFilter === 'published') {
+            // Only show published activities that can be joined
+            return activity.status === 'published' && !activity.isJoined
+          } else if (statusFilter === 'ongoing') {
+            // Show ongoing activities (view only)
+            return activity.status === 'ongoing'
+          } else if (statusFilter === 'completed') {
+            // Show completed activities (view only)
+            return activity.status === 'completed'
+          } else if (statusFilter === 'cancelled') {
+            // Show cancelled activities (view only)
+            return activity.status === 'cancelled'
+          } else {
+            // Default: show all available activities (published and not joined)
+            return activity.status === 'published' && !activity.isJoined
+          }
+        })
+
         setActivities(availableActivities)
         setTotalPages(response.pagination?.totalPages || 1)
-        console.log('Available activities filtered:', availableActivities.length)
       } else {
-        console.error('Invalid response format:', response)
         setActivities([])
         setTotalPages(1)
       }
@@ -61,8 +77,123 @@ const AvailableActivities = ({ onActivityJoin }) => {
       if (onActivityJoin) {
         onActivityJoin()
       }
+      toast.success('Successfully joined the activity!')
     } catch (error) {
       console.error('Error joining activity:', error)
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Unknown error occurred'
+      toast.error(`Failed to join activity: ${errorMessage}`)
+    }
+  }
+
+  const getActivityTimingInfo = (activity) => {
+    const now = new Date()
+    const activityDate = new Date(activity.date)
+    const [startHours, startMinutes] = activity.timeFrom.split(':').map(Number)
+    const [endHours, endMinutes] = activity.timeTo.split(':').map(Number)
+
+    const activityStartTime = new Date(activityDate)
+    activityStartTime.setHours(startHours, startMinutes, 0, 0)
+
+    const activityEndTime = new Date(activityDate)
+    activityEndTime.setHours(endHours, endMinutes, 0, 0)
+
+    // Check if activity is today
+    const isToday = now.toDateString() === activityDate.toDateString()
+
+    if (now > activityEndTime) {
+      return { status: 'ended', message: 'Activity has ended', color: 'text-red-600' }
+    } else if (now > activityStartTime) {
+      return { status: 'ongoing', message: 'Activity is in progress', color: 'text-orange-600' }
+    } else if (isToday) {
+      const timeUntilStart = Math.floor((activityStartTime - now) / (1000 * 60)) // minutes
+      if (timeUntilStart <= 60) {
+        return { status: 'starting-soon', message: `Starting in ${timeUntilStart} minutes`, color: 'text-yellow-600' }
+      } else {
+        return { status: 'today', message: `Starting today at ${activity.timeFrom}`, color: 'text-blue-600' }
+      }
+    } else {
+      return { status: 'upcoming', message: `Starting ${formatDate(activity.date)} at ${activity.timeFrom}`, color: 'text-green-600' }
+    }
+  }
+
+  const getJoinButtonProps = (activity) => {
+    if (activity.isJoined) {
+      return {
+        disabled: true,
+        className: "w-full bg-gray-400 cursor-not-allowed",
+        children: "Already Joined"
+      }
+    }
+
+    const timingInfo = getActivityTimingInfo(activity)
+
+    switch (timingInfo.status) {
+      case 'upcoming':
+      case 'today':
+        if (activity.status === 'published') {
+          return {
+            disabled: false,
+            className: "w-full bg-blue-600 hover:bg-blue-700",
+            children: "Join Activity"
+          }
+        } else {
+          return {
+            disabled: true,
+            className: "w-full bg-gray-400 cursor-not-allowed",
+            children: "Not Available"
+          }
+        }
+      case 'starting-soon':
+        return {
+          disabled: true,
+          className: "w-full bg-yellow-400 cursor-not-allowed",
+          children: "Starting Soon"
+        }
+      case 'ongoing':
+        return {
+          disabled: true,
+          className: "w-full bg-orange-400 cursor-not-allowed",
+          children: "Activity in Progress"
+        }
+      case 'ended':
+        return {
+          disabled: true,
+          className: "w-full bg-red-400 cursor-not-allowed",
+          children: "Activity Ended"
+        }
+      default:
+        return {
+          disabled: true,
+          className: "w-full bg-gray-400 cursor-not-allowed",
+          children: "Cannot Join"
+        }
+    }
+  }
+
+  const getStatusMessage = (activity) => {
+    if (activity.isJoined) {
+      return "You have already joined this activity"
+    }
+
+    const timingInfo = getActivityTimingInfo(activity)
+
+    switch (timingInfo.status) {
+      case 'upcoming':
+      case 'today':
+        if (activity.status === 'published') {
+          return "This activity is open for volunteers to join"
+        } else {
+          return "This activity is not yet available for joining"
+        }
+      case 'starting-soon':
+        return "This activity is starting very soon. Please contact the organizer for late registration."
+      case 'ongoing':
+        return "This activity is currently in progress and no longer accepting new participants"
+      case 'ended':
+        return "This activity has already ended"
+      default:
+        return "This activity is not available for joining"
     }
   }
 
@@ -99,6 +230,17 @@ const AvailableActivities = ({ onActivityJoin }) => {
 
   return (
     <div className="space-y-6">
+      {/* Status Information */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-blue-800 mb-2">Activity Status Guide:</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-700">
+          <div>• <strong>Published:</strong> Open for volunteers to join</div>
+          <div>• <strong>Ongoing:</strong> In progress, no new participants</div>
+          <div>• <strong>Completed:</strong> Activity finished</div>
+          <div>• <strong>Cancelled:</strong> Activity cancelled</div>
+        </div>
+      </div>
+
       {/* Search and Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -120,9 +262,11 @@ const AvailableActivities = ({ onActivityJoin }) => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-2 text-sm"
             >
-              <option value="all">All Status</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="ongoing">Ongoing</option>
+              <option value="all">All Available</option>
+              <option value="published">Published (Can Join)</option>
+              <option value="ongoing">Ongoing (View Only)</option>
+              <option value="completed">Completed (View Only)</option>
+              <option value="cancelled">Cancelled (View Only)</option>
             </select>
           </div>
         </div>
@@ -204,6 +348,11 @@ const AvailableActivities = ({ onActivityJoin }) => {
                   <span>{formatTime(activity.timeFrom)} - {formatTime(activity.timeTo)}</span>
                 </div>
 
+                {/* Activity Timing Status */}
+                <div className={`text-xs font-medium ${getActivityTimingInfo(activity).color}`}>
+                  {getActivityTimingInfo(activity).message}
+                </div>
+
                 {/* Location */}
                 {activity.location && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -231,10 +380,15 @@ const AvailableActivities = ({ onActivityJoin }) => {
                 <div className="pt-2">
                   <Button
                     onClick={() => handleJoinActivity(activity._id)}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    {...getJoinButtonProps(activity)}
                   >
-                    Join Activity
+                    {getJoinButtonProps(activity).children}
                   </Button>
+
+                  {/* Status Message */}
+                  <div className="mt-2 text-xs text-gray-500 text-center">
+                    {getStatusMessage(activity)}
+                  </div>
                 </div>
               </CardContent>
             </Card>

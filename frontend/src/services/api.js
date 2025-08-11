@@ -99,7 +99,7 @@ export const api = {
     updateStatus: (id, data) => apiClient.patch(`/activities/${id}/status`, data),
 
     // Attendance routes
-    recordAttendance: (id, data) => apiClient.post(`/activities/${id}/attendance`, data),
-    getAttendanceReport: (id) => apiClient.get(`/activities/${id}/attendance`),
+    recordAttendance: (activityId, data) => apiClient.post(`/activities/${activityId}/attendance`, data),
+    getAttendanceReport: (activityId) => apiClient.get(`/activities/${activityId}/attendance`),
   },
 };
