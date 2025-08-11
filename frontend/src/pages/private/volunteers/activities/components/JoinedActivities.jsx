@@ -4,7 +4,8 @@ import { useAuth } from '@/components/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Users, MapPin, Clock, Eye, QrCode } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Calendar, Users, MapPin, Clock, Eye, QrCode, Loader2, Search } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import {
   AlertDialog,
@@ -18,13 +19,33 @@ import {
 const JoinedActivities = ({ onActivityLeave }) => {
   const { user } = useAuth()
   const [activities, setActivities] = useState([])
+  const [filteredActivities, setFilteredActivities] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [loadingActivities, setLoadingActivities] = useState(false)
   const [selectedActivity, setSelectedActivity] = useState(null)
   const [showQRDialog, setShowQRDialog] = useState(false)
+  const [leavingActivities, setLeavingActivities] = useState(new Set())
 
   useEffect(() => {
     loadJoinedActivities()
   }, [])
+
+  useEffect(() => {
+    // Filter activities based on search term
+    if (searchTerm.trim() === '') {
+      setFilteredActivities(activities)
+    } else {
+      const filtered = activities.filter(activity =>
+        activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        activity.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        activity.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (activity.location?.barangay && activity.location.barangay.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (activity.location?.municipality && activity.location.municipality.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        formatDate(activity.date).toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredActivities(filtered)
+    }
+  }, [searchTerm, activities])
 
   const loadJoinedActivities = async () => {
     setLoadingActivities(true)
@@ -38,15 +59,25 @@ const JoinedActivities = ({ onActivityLeave }) => {
       console.log('Joined activities response:', response)
 
       if (response?.data) {
-        setActivities(response.data)
-        console.log('Joined activities loaded:', response.data.length)
+        // Sort activities by date (newer events on top)
+        const sortedActivities = response.data.sort((a, b) => {
+          const dateA = new Date(a.date)
+          const dateB = new Date(b.date)
+          return dateB - dateA // Descending order (newest first)
+        })
+
+        setActivities(sortedActivities)
+        setFilteredActivities(sortedActivities)
+        console.log('Joined activities loaded:', sortedActivities.length)
       } else {
         console.error('Invalid response format:', response)
         setActivities([])
+        setFilteredActivities([])
       }
     } catch (error) {
       console.error('Error loading joined activities:', error)
       setActivities([])
+      setFilteredActivities([])
     } finally {
       setLoadingActivities(false)
     }
@@ -54,6 +85,9 @@ const JoinedActivities = ({ onActivityLeave }) => {
 
   const handleLeaveActivity = async (activityId) => {
     try {
+      // Set loading state for this specific activity
+      setLeavingActivities(prev => new Set(prev).add(activityId))
+
       await api.activities.leave(activityId)
       // Reload activities to update join status
       await loadJoinedActivities()
@@ -63,6 +97,13 @@ const JoinedActivities = ({ onActivityLeave }) => {
       }
     } catch (error) {
       console.error('Error leaving activity:', error)
+    } finally {
+      // Clear loading state for this specific activity
+      setLeavingActivities(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(activityId)
+        return newSet
+      })
     }
   }
 
@@ -111,30 +152,132 @@ const JoinedActivities = ({ onActivityLeave }) => {
     })
   }
 
+  const getLeaveButtonProps = (activity) => {
+    const isLeaving = leavingActivities.has(activity._id)
+    const isDisabled = ['ongoing', 'completed', 'cancelled'].includes(activity.status)
+
+    return {
+      disabled: isDisabled || isLeaving,
+      className: `w-full text-sm sm:text-base ${
+        isDisabled
+          ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
+          : isLeaving
+          ? 'border-blue-200 text-blue-400 cursor-not-allowed bg-blue-50'
+          : 'border-red-200 text-red-600 hover:bg-red-50'
+      }`,
+      children: isLeaving ? (
+        <>
+          <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+          <span className="hidden sm:inline">Leaving...</span>
+          <span className="sm:hidden">Leaving</span>
+        </>
+      ) : (
+        "Leave Activity"
+      )
+    }
+  }
+
+  const getLeaveButtonTooltip = (activity) => {
+    switch (activity.status) {
+      case 'ongoing':
+        return "Cannot leave an ongoing activity"
+      case 'completed':
+        return "Cannot leave a completed activity"
+      case 'cancelled':
+        return "Cannot leave a cancelled activity"
+      default:
+        return "Leave this activity"
+    }
+  }
+
+  const clearSearch = () => {
+    setSearchTerm('')
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Status Information */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+        <h4 className="text-xs sm:text-sm font-medium text-blue-800 mb-2">Activity Status Guide:</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 text-xs text-blue-700">
+          <div>• <strong>Published:</strong> Can leave activity</div>
+          <div>• <strong>Ongoing:</strong> Cannot leave (in progress)</div>
+          <div>• <strong>Completed:</strong> Cannot leave (finished)</div>
+          <div>• <strong>Cancelled:</strong> Cannot leave (cancelled)</div>
+        </div>
+      </div>
+
+      {/* Search Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search your joined activities..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 text-sm sm:text-base"
+              />
+            </div>
+          </div>
+          {searchTerm && (
+            <Button
+              variant="outline"
+              onClick={clearSearch}
+              className="text-xs sm:text-sm px-3 py-2"
+            >
+              Clear Search
+            </Button>
+          )}
+        </div>
+
+        {/* Search Results Summary */}
+        {searchTerm && (
+          <div className="mt-3 text-xs sm:text-sm text-gray-600">
+            Found {filteredActivities.length} activity{filteredActivities.length !== 1 ? 'ies' : 'y'} matching "{searchTerm}"
+          </div>
+        )}
+      </div>
+
       {/* Joined Activities Grid */}
       {loadingActivities ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex justify-center py-8 sm:py-12">
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
         </div>
-      ) : activities.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">No Joined Activities</h3>
-          <p className="text-gray-600">You haven't joined any activities yet. Check the Available Activities tab to find opportunities.</p>
+      ) : filteredActivities.length === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-12 text-center">
+          <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
+            {searchTerm ? 'No Matching Activities' : 'No Joined Activities'}
+          </h3>
+          <p className="text-sm sm:text-base text-gray-600">
+            {searchTerm
+              ? `No activities match your search "${searchTerm}". Try different keywords or clear your search.`
+              : "You haven't joined any activities yet. Check the Available Activities tab to find opportunities."
+            }
+          </p>
+          {searchTerm && (
+            <Button
+              variant="outline"
+              onClick={clearSearch}
+              className="mt-4 text-sm"
+            >
+              Clear Search
+            </Button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {activities.map((activity) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
+          {filteredActivities.map((activity) => (
             <Card key={activity._id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
                 <div className="flex justify-between items-start mb-2">
-                  <CardTitle className="text-lg line-clamp-2">{activity.title}</CardTitle>
+                  <CardTitle className="text-sm sm:text-lg line-clamp-2 leading-tight">{activity.title}</CardTitle>
                   <div className="flex flex-col items-end gap-2">
                     <Badge
                       variant={activity.status === 'ongoing' ? 'default' : 'secondary'}
-                      className="flex-shrink-0"
+                      className="flex-shrink-0 text-xs"
                     >
                       {activity.status}
                     </Badge>
@@ -164,11 +307,16 @@ const JoinedActivities = ({ onActivityLeave }) => {
                     <div>
                       <p className="text-xs font-medium text-gray-600 mb-1">Required Skills:</p>
                       <div className="flex flex-wrap gap-1">
-                        {activity.requiredSkills.map((skill, index) => (
+                        {activity.requiredSkills.slice(0, 3).map((skill, index) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {skill}
                           </Badge>
                         ))}
+                        {activity.requiredSkills.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{activity.requiredSkills.length - 3} more
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   )}
@@ -176,41 +324,46 @@ const JoinedActivities = ({ onActivityLeave }) => {
                     <div>
                       <p className="text-xs font-medium text-gray-600 mb-1">Required Services:</p>
                       <div className="flex flex-wrap gap-1">
-                        {activity.requiredServices.map((service, index) => (
+                        {activity.requiredServices.slice(0, 2).map((service, index) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {service}
                           </Badge>
                         ))}
+                        {activity.requiredServices.length > 2 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{activity.requiredServices.length - 2} more
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6">
                 {/* Date and Time */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>{formatDate(activity.date)}</span>
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="line-clamp-1">{formatDate(activity.date)}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Clock className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   <span>{formatTime(activity.timeFrom)} - {formatTime(activity.timeTo)}</span>
                 </div>
 
                 {/* Location */}
                 {activity.location && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4" />
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     <span className="line-clamp-1">
-                      {activity.location.barangay}, {activity.location.municipality}, {activity.location.province}
+                      {activity.location.barangay}, {activity.location.municipality}
                     </span>
                   </div>
                 )}
 
                 {/* Participants */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Users className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   <span>
                     {activity.participants?.length || 0} / {activity.maxParticipants || '∞'} participants
                   </span>
@@ -218,7 +371,7 @@ const JoinedActivities = ({ onActivityLeave }) => {
 
                 {/* Time Tracking Information */}
                 {activity.userParticipant && (
-                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                  <div className="bg-gray-50 rounded-lg p-2 sm:p-3 space-y-2">
                     <h4 className="text-xs font-medium text-gray-700">Your Attendance</h4>
                     <div className="space-y-1">
                       {activity.userParticipant.timeIn ? (
@@ -271,29 +424,26 @@ const JoinedActivities = ({ onActivityLeave }) => {
 
                 {/* Description */}
                 {activity.description && (
-                  <p className="text-sm text-gray-600 line-clamp-3">{activity.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 sm:line-clamp-3">{activity.description}</p>
                 )}
 
                 {/* Action Buttons */}
                 <div className="pt-2 space-y-2">
                   <Button
                     onClick={() => handleViewDetails(activity)}
-                    className="w-full bg-cyan-600 hover:bg-cyan-700"
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-sm sm:text-base"
                   >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Details & QR Code
+                    <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">View Details & QR Code</span>
+                    <span className="sm:hidden">View Details</span>
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => handleLeaveActivity(activity._id)}
-                    disabled={['ongoing', 'completed', 'cancelled'].includes(activity.status)}
-                    className={`w-full ${
-                      ['ongoing', 'completed', 'cancelled'].includes(activity.status)
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'border-red-200 text-red-600 hover:bg-red-50'
-                    }`}
+                    {...getLeaveButtonProps(activity)}
+                    title={getLeaveButtonTooltip(activity)}
                   >
-                    Leave Activity
+                    {getLeaveButtonProps(activity).children}
                   </Button>
                 </div>
               </CardContent>
@@ -304,53 +454,53 @@ const JoinedActivities = ({ onActivityLeave }) => {
 
       {/* Activity Details & QR Code AlertDialog */}
       <AlertDialog open={showQRDialog} onOpenChange={setShowQRDialog}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="max-w-sm sm:max-w-md max-h-[80vh] overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-center">
+            <AlertDialogTitle className="text-center text-sm sm:text-base">
               {selectedActivity?.title}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Activity Details */}
                 <div className="text-left space-y-2">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     <strong>Date:</strong> {selectedActivity && formatDate(selectedActivity.date)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     <strong>Time:</strong> {selectedActivity && formatTime(selectedActivity.timeFrom)} - {selectedActivity && formatTime(selectedActivity.timeTo)}
                   </p>
                   {selectedActivity?.location && (
-                    <p className="text-sm text-gray-600">
-                      <strong>Location:</strong> {selectedActivity.location.barangay}, {selectedActivity.location.municipality}, {selectedActivity.location.province}
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      <strong>Location:</strong> {selectedActivity.location.barangay}, {selectedActivity.location.municipality}
                     </p>
                   )}
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600">
                     <strong>Status:</strong> {selectedActivity?.status}
                   </p>
 
                   {/* Time Tracking Details */}
                   {selectedActivity?.userParticipant && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Your Attendance Record:</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">Your Attendance Record:</p>
                       <div className="space-y-1">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600">
                           <strong>Time In:</strong> {selectedActivity.userParticipant.timeIn
                             ? new Date(selectedActivity.userParticipant.timeIn).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
                             : 'Not recorded yet'
                           }
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600">
                           <strong>Time Out:</strong> {selectedActivity.userParticipant.timeOut
                             ? new Date(selectedActivity.userParticipant.timeOut).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
                             : 'Not recorded yet'
                           }
                         </p>
                         {selectedActivity.userParticipant.totalHours > 0 && (
-                          <p className="text-sm text-gray-600">
+                          <p className="text-xs sm:text-sm text-gray-600">
                             <strong>Total Hours:</strong> {selectedActivity.userParticipant.totalHours} hours
                           </p>
                         )}
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600">
                           <strong>Status:</strong>
                           <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
                             selectedActivity.userParticipant.status === 'attended'
@@ -371,15 +521,16 @@ const JoinedActivities = ({ onActivityLeave }) => {
 
                 {/* QR Code */}
                 <div className="text-center">
-                  <h4 className="text-md font-medium mb-3">Attendance QR Code</h4>
+                  <h4 className="text-sm sm:text-md font-medium mb-3">Attendance QR Code</h4>
                   <div className="flex justify-center">
                     <QRCode
                       value={selectedActivity ? generateActivityQR(selectedActivity) : ''}
-                      size={200}
+                      size={160}
                       level="M"
+                      className="w-40 h-40 sm:w-48 sm:h-48"
                     />
                   </div>
-                  <p className="text-sm text-gray-500 mt-3">
+                  <p className="text-xs sm:text-sm text-gray-500 mt-3">
                     Show this QR code for attendance tracking at this specific activity
                   </p>
                 </div>
@@ -387,7 +538,7 @@ const JoinedActivities = ({ onActivityLeave }) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <Button onClick={() => setShowQRDialog(false)} className="w-full">
+            <Button onClick={() => setShowQRDialog(false)} className="w-full text-sm sm:text-base">
               Close
             </Button>
           </AlertDialogFooter>

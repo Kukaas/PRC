@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Camera, X, CheckCircle, AlertCircle } from 'lucide-react'
 import jsQR from 'jsqr'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
   const [isScanning, setIsScanning] = useState(false)
@@ -11,58 +12,128 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
   const [availableCameras, setAvailableCameras] = useState([])
   const [selectedCamera, setSelectedCamera] = useState('')
   const [scanAttempts, setScanAttempts] = useState(0)
+  const isMobile = useIsMobile()
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
   const animationFrameRef = useRef(null)
-  const scanningRef = useRef(false) // Use ref to track scanning state
+  const scanningRef = useRef(false)
+  const initializedRef = useRef(false)
 
-  const getAvailableCameras = async () => {
+  const getAvailableCameras = useCallback(async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices()
       const videoDevices = devices.filter(device => device.kind === 'videoinput')
       setAvailableCameras(videoDevices)
 
-      // Auto-select first camera
       if (videoDevices.length > 0) {
-        setSelectedCamera(videoDevices[0].deviceId)
+        let preferredCamera = videoDevices[0]
+
+        if (isMobile) {
+          // On mobile, prefer back camera
+          const backCamera = videoDevices.find(device =>
+            device.label.toLowerCase().includes('back') ||
+            device.label.toLowerCase().includes('rear') ||
+            device.label.toLowerCase().includes('environment') ||
+            device.label.toLowerCase().includes('main') ||
+            device.label.toLowerCase().includes('wide')
+          )
+          if (backCamera) {
+            preferredCamera = backCamera
+          } else if (videoDevices.length > 1) {
+            // Use the last camera (often the back camera on mobile)
+            preferredCamera = videoDevices[videoDevices.length - 1]
+          }
+        } else {
+          // On laptop/desktop, prefer front camera
+          const frontCamera = videoDevices.find(device =>
+            device.label.toLowerCase().includes('front') ||
+            device.label.toLowerCase().includes('user') ||
+            device.label.toLowerCase().includes('selfie')
+          )
+          if (frontCamera) {
+            preferredCamera = frontCamera
+          }
+        }
+
+        setSelectedCamera(preferredCamera.deviceId)
+        return preferredCamera
       }
-
-      return videoDevices
+      return null
     } catch (error) {
-      return []
+      console.error('Error getting cameras:', error)
+      return null
     }
-  }
+  }, [isMobile])
 
-  const startCamera = async () => {
+  const startCamera = useCallback(async (cameraId = null) => {
     try {
       setError('')
       setSuccess('')
-      setScanAttempts(0) // Reset scan attempts
+      setScanAttempts(0)
 
-      // Get available cameras first
-      const cameras = await getAvailableCameras()
-      if (cameras.length === 0) {
-        setError('No cameras found')
-        return
+      // Stop any existing camera first
+      if (streamRef.current) {
+        stopCamera()
+        await new Promise(resolve => setTimeout(resolve, 100))
       }
 
-      // Use selected camera or default to first one
-      const cameraId = selectedCamera || cameras[0].deviceId
-
       let stream
-      try {
-        // Try to use specific camera if selected
-        if (cameraId) {
+      const targetCameraId = cameraId || selectedCamera
+
+      if (isMobile) {
+        // For mobile, prioritize back camera
+        try {
+          if (targetCameraId) {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                deviceId: { exact: targetCameraId },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              }
+            })
+          } else {
+            // Try environment (back camera) directly
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              }
+            })
+          }
+        } catch (error) {
+          // Fallback to environment facing mode
           stream = await navigator.mediaDevices.getUserMedia({
             video: {
-              deviceId: { exact: cameraId },
+              facingMode: 'environment',
               width: { ideal: 1280 },
               height: { ideal: 720 }
             }
           })
-        } else {
-          // Fallback to user-facing camera (better for laptop scanning)
+        }
+      } else {
+        // For desktop, use front camera
+        try {
+          if (targetCameraId) {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                deviceId: { exact: targetCameraId },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              }
+            })
+          } else {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: 'user',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              }
+            })
+          }
+        } catch (error) {
+          // Fallback to user facing mode
           stream = await navigator.mediaDevices.getUserMedia({
             video: {
               facingMode: 'user',
@@ -71,37 +142,25 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
             }
           })
         }
-      } catch (specificCameraError) {
-        // Fallback to user-facing camera
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: 'user',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        })
       }
 
-      if (videoRef.current) {
+      if (videoRef.current && stream) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
 
-        // Start scanning when video is loaded
         videoRef.current.onloadedmetadata = () => {
-          // Set scanning state AFTER video is ready
           setIsScanning(true)
-          scanningRef.current = true // Set ref as well
-          // Start scanning immediately
+          scanningRef.current = true
           scanQRCode()
         }
 
-        // Add error handling for video
-        videoRef.current.onerror = (error) => {
+        videoRef.current.onerror = () => {
           setError('Video stream error. Please try again.')
           setIsScanning(false)
         }
       }
     } catch (err) {
+      console.error('Camera error:', err)
       if (err.name === 'NotAllowedError') {
         setError('Camera access denied. Please allow camera permissions and try again.')
       } else if (err.name === 'NotFoundError') {
@@ -110,26 +169,39 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
         setError(`Unable to access camera: ${err.message}`)
       }
     }
-  }
+  }, [isMobile, selectedCamera])
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
     setIsScanning(false)
-    scanningRef.current = false // Update ref as well
-  }
+    scanningRef.current = false
+  }, [])
 
-  const scanQRCode = () => {
-    if (!videoRef.current || !canvasRef.current) {
-      return
+  const forceRefreshCamera = useCallback(async () => {
+    stopCamera()
+    await new Promise(resolve => setTimeout(resolve, 200))
+    const preferredCamera = await getAvailableCameras()
+    if (preferredCamera) {
+      await startCamera(preferredCamera.deviceId)
     }
+  }, [stopCamera, getAvailableCameras, startCamera])
 
-    if (!scanningRef.current) {
+  const handleCameraChange = useCallback(async (newCameraId) => {
+    setSelectedCamera(newCameraId)
+    if (isScanning) {
+      await startCamera(newCameraId)
+    }
+  }, [isScanning, startCamera])
+
+  const scanQRCode = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current || !scanningRef.current) {
       return
     }
 
@@ -137,26 +209,18 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
     const canvas = canvasRef.current
     const context = canvas.getContext('2d')
 
-    // Check if video is ready
     if (video.readyState !== video.HAVE_ENOUGH_DATA) {
       animationFrameRef.current = requestAnimationFrame(scanQRCode)
       return
     }
 
-    // Set canvas size to match video
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
 
-    // Increment scan attempts for debugging
     setScanAttempts(prev => prev + 1)
-
-    // Draw video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-    // Get image data for QR detection
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
-
-    // Scan for QR code
     const code = jsQR(imageData.data, imageData.width, imageData.height, {
       inversionAttempts: 'dontInvert',
     })
@@ -166,19 +230,17 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
       return
     }
 
-    // Continue scanning only if still scanning
     if (scanningRef.current) {
       animationFrameRef.current = requestAnimationFrame(scanQRCode)
     }
-  }
+  }, [])
 
-  const handleQRCodeDetected = async (qrData) => {
+  const handleQRCodeDetected = useCallback(async (qrData) => {
     try {
       setIsProcessing(true)
       setError('')
-      scanningRef.current = false // Stop scanning immediately
+      scanningRef.current = false
 
-      // Validate QR data format
       let parsedData
       try {
         parsedData = JSON.parse(qrData)
@@ -187,19 +249,14 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
         return
       }
 
-      // Basic validation
       if (!parsedData.userId || !parsedData.name) {
         setError('QR code is missing required information.')
         return
       }
 
-      // Show success message
       setSuccess(`QR Code detected for ${parsedData.name}`)
-
-      // Stop camera
       stopCamera()
 
-      // Wait a moment to show success message, then process
       setTimeout(() => {
         onScan(qrData)
       }, 1000)
@@ -209,37 +266,26 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
     } finally {
       setIsProcessing(false)
     }
-  }
+  }, [onScan, stopCamera])
 
-  const handleManualInput = (e) => {
-    const value = e.target.value.trim()
-    if (value) {
-      try {
-        // Validate JSON format
-        JSON.parse(value)
-        onScan(value)
-      } catch (error) {
-        setError('Invalid JSON format. Please check your input.')
-      }
-    }
-  }
-
-  const handleCameraChange = async (newCameraId) => {
-    setSelectedCamera(newCameraId)
-    if (isScanning) {
-      // Restart camera with new selection
-      stopCamera()
-      setTimeout(() => {
-        startCamera()
-      }, 100)
-    }
-  }
-
+  // Initialize camera on mount
   useEffect(() => {
-    getAvailableCameras()
-    startCamera()
-    return () => stopCamera()
-  }, [])
+    if (!initializedRef.current) {
+      initializedRef.current = true
+      const initCamera = async () => {
+        await getAvailableCameras()
+        await startCamera()
+      }
+      initCamera()
+    }
+  }, [getAvailableCameras, startCamera])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera()
+    }
+  }, [stopCamera])
 
   return (
     <div className="relative">
@@ -250,6 +296,11 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
         <Button onClick={onClose} variant="ghost" size="sm">
           <X className="w-4 h-4" />
         </Button>
+      </div>
+
+      {/* Device Type Indicator */}
+      <div className="mb-4 p-2 bg-gray-100 rounded-md text-sm text-gray-600">
+        <strong>Device:</strong> {isMobile ? 'Mobile (Back Camera)' : 'Laptop/Desktop (Front Camera)'}
       </div>
 
       {error && (
@@ -282,9 +333,7 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="border-2 border-white rounded-lg p-2">
               <div className="w-48 h-48 border-2 border-white rounded-lg relative">
-                {/* Scanning animation */}
                 <div className="absolute inset-0 border-2 border-green-400 animate-pulse"></div>
-                {/* Corner indicators */}
                 <div className="absolute top-0 left-0 w-6 h-6 border-l-4 border-t-4 border-green-400"></div>
                 <div className="absolute top-0 right-0 w-6 h-6 border-r-4 border-t-4 border-green-400"></div>
                 <div className="absolute bottom-0 left-0 w-6 h-6 border-l-4 border-b-4 border-green-400"></div>
@@ -325,30 +374,26 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
           </div>
         )}
 
-        {/* Helpful tips for laptop users */}
+        {/* Helpful tips based on device type */}
         <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
           <p className="text-sm text-blue-700">
-            <strong>💡 Tip:</strong> For laptop users, hold the QR code close to your camera (about 6-12 inches away).
-            Make sure the QR code is well-lit and clearly visible.
+            {isMobile ? (
+              <>
+                <strong>📱 Mobile Tip:</strong> Hold the QR code about 6-12 inches away from your back camera.
+                Make sure the QR code is well-lit and clearly visible. The back camera provides better focus for scanning.
+              </>
+            ) : (
+              <>
+                <strong>💻 Laptop Tip:</strong> Hold the QR code close to your front camera (about 6-12 inches away).
+                Make sure the QR code is well-lit and clearly visible. The front camera is ideal for close-up scanning.
+              </>
+            )}
           </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Or enter QR data manually:
-          </label>
-          <textarea
-            className="w-full p-3 border border-gray-300 rounded-md text-sm"
-            placeholder="Paste QR code data here (JSON format)..."
-            rows={3}
-            onChange={handleManualInput}
-            disabled={isProcessing}
-          />
         </div>
 
         <div className="flex gap-2">
           <Button
-            onClick={startCamera}
+            onClick={() => startCamera()}
             className="flex-1"
             disabled={isScanning || isProcessing}
           >
@@ -365,27 +410,15 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
           </Button>
         </div>
 
-        {/* Manual Test Button */}
-        <div className="text-center">
+        {/* Refresh Camera Button - More Visible Location */}
+        <div className="flex gap-2">
           <Button
-            onClick={() => {
-              const testQRData = JSON.stringify({
-                userId: 'test123',
-                activityId: 'test456',
-                name: 'Test User',
-                contactNumber: '1234567890',
-                email: 'test@example.com',
-                activityTitle: 'Test Activity',
-                activityDate: '2024-01-01',
-                version: 1
-              })
-              onScan(testQRData)
-            }}
+            onClick={forceRefreshCamera}
             variant="outline"
-            size="sm"
-            className="text-xs"
+            className="flex-1"
+            disabled={isProcessing}
           >
-            Test with Sample QR Data
+            🔄 Refresh Camera
           </Button>
         </div>
       </div>

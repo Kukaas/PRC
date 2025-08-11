@@ -323,12 +323,7 @@ const AdminActivities = () => {
 
       {/* QR Scanner Dialog */}
       <AlertDialog open={showQRScanner} onOpenChange={setShowQRScanner}>
-        <AlertDialogContent className="max-w-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center">
-              Scan QR Code for {scanningAction === 'timeIn' ? 'Time In' : 'Time Out'}
-            </AlertDialogTitle>
-          </AlertDialogHeader>
+        <AlertDialogContent className="max-h-[80vh] overflow-y-auto">
           <AlertDialogDescription asChild>
             <QRScanner
               onScan={handleQRScan}

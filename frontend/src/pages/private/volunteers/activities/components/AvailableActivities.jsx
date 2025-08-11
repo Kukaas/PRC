@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Users, MapPin, Clock, Star, Search, Filter } from 'lucide-react'
+import { Calendar, Users, MapPin, Clock, Star, Search, Filter, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 const AvailableActivities = ({ onActivityJoin }) => {
@@ -16,6 +16,7 @@ const AvailableActivities = ({ onActivityJoin }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loadingActivities, setLoadingActivities] = useState(false)
+  const [joiningActivities, setJoiningActivities] = useState(new Set())
 
   useEffect(() => {
     loadActivities()
@@ -70,6 +71,9 @@ const AvailableActivities = ({ onActivityJoin }) => {
 
   const handleJoinActivity = async (activityId) => {
     try {
+      // Set loading state for this specific activity
+      setJoiningActivities(prev => new Set(prev).add(activityId))
+
       await api.activities.join(activityId)
       // Reload activities to update join status
       await loadActivities()
@@ -83,6 +87,13 @@ const AvailableActivities = ({ onActivityJoin }) => {
       // Show user-friendly error message
       const errorMessage = error.message || 'Unknown error occurred'
       toast.error(`Failed to join activity: ${errorMessage}`)
+    } finally {
+      // Clear loading state for this specific activity
+      setJoiningActivities(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(activityId)
+        return newSet
+      })
     }
   }
 
@@ -118,10 +129,12 @@ const AvailableActivities = ({ onActivityJoin }) => {
   }
 
   const getJoinButtonProps = (activity) => {
+    const isJoining = joiningActivities.has(activity._id)
+
     if (activity.isJoined) {
       return {
         disabled: true,
-        className: "w-full bg-gray-400 cursor-not-allowed",
+        className: "w-full bg-gray-400 cursor-not-allowed text-sm sm:text-base",
         children: "Already Joined"
       }
     }
@@ -133,39 +146,47 @@ const AvailableActivities = ({ onActivityJoin }) => {
       case 'today':
         if (activity.status === 'published') {
           return {
-            disabled: false,
-            className: "w-full bg-blue-600 hover:bg-blue-700",
-            children: "Join Activity"
+            disabled: isJoining,
+            className: `w-full text-sm sm:text-base ${isJoining ? 'bg-blue-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`,
+            children: isJoining ? (
+              <>
+                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                <span className="hidden sm:inline">Joining...</span>
+                <span className="sm:hidden">Joining</span>
+              </>
+            ) : (
+              "Join Activity"
+            )
           }
         } else {
           return {
             disabled: true,
-            className: "w-full bg-gray-400 cursor-not-allowed",
+            className: "w-full bg-gray-400 cursor-not-allowed text-sm sm:text-base",
             children: "Not Available"
           }
         }
       case 'starting-soon':
         return {
           disabled: true,
-          className: "w-full bg-yellow-400 cursor-not-allowed",
+          className: "w-full bg-yellow-400 cursor-not-allowed text-sm sm:text-base",
           children: "Starting Soon"
         }
       case 'ongoing':
         return {
           disabled: true,
-          className: "w-full bg-orange-400 cursor-not-allowed",
+          className: "w-full bg-orange-400 cursor-not-allowed text-sm sm:text-base",
           children: "Activity in Progress"
         }
       case 'ended':
         return {
           disabled: true,
-          className: "w-full bg-red-400 cursor-not-allowed",
+          className: "w-full bg-red-400 cursor-not-allowed text-sm sm:text-base",
           children: "Activity Ended"
         }
       default:
         return {
           disabled: true,
-          className: "w-full bg-gray-400 cursor-not-allowed",
+          className: "w-full bg-gray-400 cursor-not-allowed text-sm sm:text-base",
           children: "Cannot Join"
         }
     }
@@ -229,11 +250,11 @@ const AvailableActivities = ({ onActivityJoin }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Status Information */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-blue-800 mb-2">Activity Status Guide:</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-blue-700">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+        <h4 className="text-xs sm:text-sm font-medium text-blue-800 mb-2">Activity Status Guide:</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 text-xs text-blue-700">
           <div>• <strong>Published:</strong> Open for volunteers to join</div>
           <div>• <strong>Ongoing:</strong> In progress, no new participants</div>
           <div>• <strong>Completed:</strong> Activity finished</div>
@@ -242,8 +263,8 @@ const AvailableActivities = ({ onActivityJoin }) => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -251,7 +272,7 @@ const AvailableActivities = ({ onActivityJoin }) => {
                 placeholder="Search activities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm sm:text-base"
               />
             </div>
           </div>
@@ -260,7 +281,7 @@ const AvailableActivities = ({ onActivityJoin }) => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="border border-gray-300 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm"
             >
               <option value="all">All Available</option>
               <option value="published">Published (Can Join)</option>
@@ -274,25 +295,25 @@ const AvailableActivities = ({ onActivityJoin }) => {
 
       {/* Activities Grid */}
       {loadingActivities ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex justify-center py-8 sm:py-12">
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
         </div>
       ) : activities.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">No Available Activities</h3>
-          <p className="text-gray-600">No activities match your current filters or you've joined all available activities.</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-12 text-center">
+          <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">No Available Activities</h3>
+          <p className="text-sm sm:text-base text-gray-600">No activities match your current filters or you've joined all available activities.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
           {activities.map((activity) => (
             <Card key={activity._id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
                 <div className="flex justify-between items-start mb-2">
-                  <CardTitle className="text-lg line-clamp-2">{activity.title}</CardTitle>
+                  <CardTitle className="text-sm sm:text-lg line-clamp-2 leading-tight">{activity.title}</CardTitle>
                   <Badge
                     variant={activity.status === 'ongoing' ? 'default' : 'secondary'}
-                    className="ml-2 flex-shrink-0"
+                    className="ml-2 flex-shrink-0 text-xs"
                   >
                     {activity.status}
                   </Badge>
@@ -301,9 +322,12 @@ const AvailableActivities = ({ onActivityJoin }) => {
                 {/* Match Score */}
                 {activity.totalScore > 0 && (
                   <div className="flex items-center gap-2 mb-2">
-                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    <Badge className={getMatchColor(activity.totalScore)}>
-                      {getMatchText(activity.totalScore)} ({activity.totalScore}%)
+                    <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 fill-current" />
+                    <Badge className={`text-xs ${getMatchColor(activity.totalScore)}`}>
+                      <span className="hidden sm:inline">{getMatchText(activity.totalScore)}</span>
+                      <span className="sm:hidden">{getMatchText(activity.totalScore).split(' ')[0]}</span>
+                      <span className="hidden sm:inline"> ({activity.totalScore}%)</span>
+                      <span className="sm:hidden"> {activity.totalScore}%</span>
                     </Badge>
                   </div>
                 )}
@@ -314,11 +338,16 @@ const AvailableActivities = ({ onActivityJoin }) => {
                     <div>
                       <p className="text-xs font-medium text-gray-600 mb-1">Required Skills:</p>
                       <div className="flex flex-wrap gap-1">
-                        {activity.requiredSkills.map((skill, index) => (
+                        {activity.requiredSkills.slice(0, 3).map((skill, index) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {skill}
                           </Badge>
                         ))}
+                        {activity.requiredSkills.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{activity.requiredSkills.length - 3} more
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   )}
@@ -326,46 +355,51 @@ const AvailableActivities = ({ onActivityJoin }) => {
                     <div>
                       <p className="text-xs font-medium text-gray-600 mb-1">Required Services:</p>
                       <div className="flex flex-wrap gap-1">
-                        {activity.requiredServices.map((service, index) => (
+                        {activity.requiredServices.slice(0, 2).map((service, index) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {service}
                           </Badge>
                         ))}
+                        {activity.requiredServices.length > 2 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{activity.requiredServices.length - 2} more
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6">
                 {/* Date and Time */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>{formatDate(activity.date)}</span>
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="line-clamp-1">{formatDate(activity.date)}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Clock className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   <span>{formatTime(activity.timeFrom)} - {formatTime(activity.timeTo)}</span>
                 </div>
 
                 {/* Activity Timing Status */}
                 <div className={`text-xs font-medium ${getActivityTimingInfo(activity).color}`}>
-                  {getActivityTimingInfo(activity).message}
+                  <span className="line-clamp-1">{getActivityTimingInfo(activity).message}</span>
                 </div>
 
                 {/* Location */}
                 {activity.location && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4" />
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     <span className="line-clamp-1">
-                      {activity.location.barangay}, {activity.location.municipality}, {activity.location.province}
+                      {activity.location.barangay}, {activity.location.municipality}
                     </span>
                   </div>
                 )}
 
                 {/* Participants */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Users className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   <span>
                     {activity.participantCount} / {activity.maxParticipants || '∞'} participants
                   </span>
@@ -373,7 +407,7 @@ const AvailableActivities = ({ onActivityJoin }) => {
 
                 {/* Description */}
                 {activity.description && (
-                  <p className="text-sm text-gray-600 line-clamp-3">{activity.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 sm:line-clamp-3">{activity.description}</p>
                 )}
 
                 {/* Action Button */}
@@ -386,7 +420,7 @@ const AvailableActivities = ({ onActivityJoin }) => {
                   </Button>
 
                   {/* Status Message */}
-                  <div className="mt-2 text-xs text-gray-500 text-center">
+                  <div className="mt-2 text-xs text-gray-500 text-center line-clamp-2">
                     {getStatusMessage(activity)}
                   </div>
                 </div>
@@ -398,21 +432,25 @@ const AvailableActivities = ({ onActivityJoin }) => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8">
+        <div className="flex justify-center items-center gap-2 mt-6 sm:mt-8">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
+            className="text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
           >
             Previous
           </Button>
-          <span className="text-sm text-gray-600">
+          <span className="text-xs sm:text-sm text-gray-600 px-2">
             Page {currentPage} of {totalPages}
           </span>
           <Button
             variant="outline"
+            size="sm"
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
+            className="text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2"
           >
             Next
           </Button>
