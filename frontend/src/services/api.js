@@ -89,6 +89,7 @@ export const api = {
     getMyActivities: (params) => apiClient.get("/activities/my-activities", { params }),
     getVolunteerActivities: (params) => apiClient.get("/activities/volunteer-activities", { params }),
     getMyStatus: () => apiClient.get("/activities/my-status"),
+    getMembersStatus: (params) => apiClient.get("/activities/members-status", { params }),
     join: (id) => apiClient.post(`/activities/${id}/join`),
     leave: (id) => apiClient.post(`/activities/${id}/leave`),
 

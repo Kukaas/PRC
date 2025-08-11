@@ -1,12 +1,10 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Edit, Trash2, Search, Calendar, MapPin, Filter, Printer } from 'lucide-react'
 
 const EventLog = ({
   activities,
   onSelectArchivedEvent,
-  onEdit,
-  onDelete,
   onPrint,
   formatDate,
   formatTime
@@ -18,6 +16,10 @@ const EventLog = ({
   const [selectedMunicipality, setSelectedMunicipality] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+
+  // Pagination
+  const PAGE_SIZE = 15
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Filtered activities based on all filters
   const filteredActivities = useMemo(() => {
@@ -57,6 +59,28 @@ const EventLog = ({
     })
   }, [activities.archived, searchTerm, selectedStatus, selectedBarangay,
       selectedMunicipality, dateFrom, dateTo])
+
+  // Reset to first page on filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, selectedStatus, selectedBarangay, selectedMunicipality, dateFrom, dateTo])
+
+  const totalPages = useMemo(() => {
+    const pages = Math.ceil((filteredActivities?.length || 0) / PAGE_SIZE)
+    return pages > 0 ? pages : 1
+  }, [filteredActivities?.length])
+
+  // Clamp current page when results shrink
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const paginatedFilteredActivities = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return filteredActivities.slice(start, start + PAGE_SIZE)
+  }, [filteredActivities, currentPage])
 
   // Get unique values for filter options
   const uniqueStatuses = [...new Set(activities.archived.map(a => a.status).filter(Boolean))]
@@ -243,7 +267,7 @@ const EventLog = ({
 
           {/* Table Body */}
           <div className="divide-y divide-gray-200">
-            {filteredActivities.map((activity) => (
+            {paginatedFilteredActivities.map((activity) => (
               <div key={activity._id} className="px-6 py-4 hover:bg-gray-50">
                 <div className="grid grid-cols-6 gap-4 text-sm items-center">
                   <div className="font-medium text-gray-900">
@@ -290,6 +314,41 @@ const EventLog = ({
               </div>
             ))}
           </div>
+
+          {/* Pagination */}
+          {filteredActivities.length > PAGE_SIZE && (
+            <div className="px-6 py-4 flex items-center justify-between border-t bg-white">
+              <div className="text-sm text-gray-600">
+                Showing {(currentPage - 1) * PAGE_SIZE + 1}
+                {' '}to {Math.min(currentPage * PAGE_SIZE, filteredActivities.length)} of {filteredActivities.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  className="px-3 py-1 text-sm rounded border disabled:opacity-50"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`px-3 py-1 text-sm rounded border ${currentPage === i + 1 ? 'bg-cyan-600 text-white border-cyan-600' : ''}`}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="px-3 py-1 text-sm rounded border disabled:opacity-50"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Summary Footer */}
           <div className="bg-gray-50 px-6 py-3 border-t">

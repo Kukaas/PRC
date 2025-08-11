@@ -682,6 +682,109 @@ export const getMyStatusSummary = async (req, res) => {
   }
 };
 
+// Admin: Get member status summary for all volunteers (with basic filters)
+export const getMembersStatusSummary = async (req, res) => {
+  try {
+    if (!['admin', 'staff'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Only admin and staff can view member status' });
+    }
+
+    const { search = '', barangay = '', municipality = '', service = '', status = '' } = req.query;
+
+    // Base user query
+    const userQuery = { role: 'volunteer' };
+    if (search) {
+      userQuery.$or = [
+        { givenName: { $regex: search, $options: 'i' } },
+        { familyName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
+    if (barangay) userQuery['personalInfo.address.districtBarangayVillage'] = barangay;
+    if (municipality) userQuery['personalInfo.address.municipalityCity'] = municipality;
+    if (service) userQuery['services.type'] = service;
+
+    const volunteers = await User.find(userQuery).select(
+      'givenName familyName personalInfo services createdAt'
+    );
+
+    const now = new Date();
+    const SIX_MONTHS_MS = 180 * 24 * 60 * 60 * 1000;
+
+    const results = [];
+    for (const user of volunteers) {
+      // Anniversary-based yearly period start (resets each year on signup date)
+      const signup = new Date(user.createdAt || now);
+      const currYear = now.getFullYear();
+      let periodStart = new Date(currYear, signup.getMonth(), signup.getDate(), 0, 0, 0, 0);
+      if (now < periodStart) {
+        periodStart = new Date(currYear - 1, signup.getMonth(), signup.getDate(), 0, 0, 0, 0);
+      }
+
+      // Find activities where the user attended
+      const activities = await Activity.find({
+        'participants.userId': user._id,
+        date: { $lte: now },
+      }).select('date participants requiredServices');
+
+      let lastAttendedDate = null;
+      let hoursServedThisYear = 0;
+
+      activities.forEach((activity) => {
+        const participant = activity.participants.find(
+          (p) => p.userId && p.userId.toString() === user._id.toString()
+        );
+        if (!participant || participant.status !== 'attended') return;
+
+        if (!lastAttendedDate || activity.date > lastAttendedDate) {
+          lastAttendedDate = new Date(activity.date);
+        }
+        if (new Date(activity.date) >= periodStart) {
+          hoursServedThisYear += Number(participant.totalHours || 0);
+        }
+      });
+
+      const isActive = !!lastAttendedDate && now - lastAttendedDate <= SIX_MONTHS_MS;
+
+      const services = (user.services || [])
+        .map((s) => (typeof s === 'string' ? s : s?.type))
+        .filter(Boolean);
+
+      const contactNumber =
+        user?.personalInfo?.mobileNumber || user?.personalInfo?.contactNumber || null;
+      const barangayName = user?.personalInfo?.address?.districtBarangayVillage || null;
+      const municipalityName = user?.personalInfo?.address?.municipalityCity || null;
+
+      const record = {
+        userId: user._id,
+        name: `${user.givenName} ${user.familyName}`.trim(),
+        address: {
+          barangay: barangayName,
+          municipality: municipalityName,
+        },
+        services,
+        hoursServedThisYear: Math.round(hoursServedThisYear * 100) / 100,
+        contactNumber,
+        status: isActive ? 'Active' : 'Inactive',
+        lastActivityDate: lastAttendedDate,
+      };
+
+      results.push(record);
+    }
+
+    // Post-filter by active/inactive if requested
+    let filtered = results;
+    if (status) {
+      filtered = filtered.filter((r) => r.status.toLowerCase() === status.toLowerCase());
+    }
+
+    return res.status(200).json({ success: true, data: filtered });
+  } catch (error) {
+    console.error('Error in getMembersStatusSummary:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 // Update activity status (Admin/Staff only)
 export const updateActivityStatus = async (req, res) => {
   const { id } = req.params;
