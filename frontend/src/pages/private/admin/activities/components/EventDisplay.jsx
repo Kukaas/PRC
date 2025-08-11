@@ -11,9 +11,8 @@ const EventDisplay = ({
   formatDate,
   formatTime
 }) => {
-  if (!activity) return null
-
   const [isStatusUpdating, setIsStatusUpdating] = React.useState(false)
+  if (!activity) return null
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-4">

@@ -1338,3 +1338,77 @@ export const getVolunteerActivities = async (req, res) => {
     });
   }
 };
+
+// Get the current ongoing activity with attendance (Admin/Staff only)
+export const getOngoingActivityWithAttendance = async (req, res) => {
+  try {
+    if (!["admin", "staff"].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Only admin and staff can view ongoing activity",
+      });
+    }
+
+    // Find the ongoing activity (most recent)
+    const activity = await Activity.findOne({ status: "ongoing" })
+      .sort({ date: -1, createdAt: -1 })
+      .populate("participants.userId", "givenName familyName email personalInfo")
+      .populate("createdBy", "givenName familyName email");
+
+    if (!activity) {
+      return res.status(200).json({
+        success: true,
+        message: "No ongoing activity",
+        data: null,
+      });
+    }
+
+    const attendanceData = activity.participants.map((participant) => ({
+      userId: participant.userId?._id,
+      name: participant.userId
+        ? `${participant.userId.givenName} ${participant.userId.familyName}`
+        : "Unknown",
+      email: participant.userId?.email,
+      contactNumber:
+        participant.userId?.personalInfo?.mobileNumber ||
+        participant.userId?.personalInfo?.contactNumber ||
+        null,
+      status: participant.status,
+      timeIn: participant.timeIn,
+      timeOut: participant.timeOut,
+      totalHours: participant.totalHours,
+      joinedAt: participant.joinedAt,
+    }));
+
+    const response = {
+      activity: {
+        id: activity._id,
+        title: activity.title,
+        description: activity.description,
+        status: activity.status,
+        date: activity.date,
+        timeFrom: activity.timeFrom,
+        timeTo: activity.timeTo,
+        location: activity.location,
+        createdBy: activity.createdBy,
+        maxParticipants: activity.maxParticipants,
+        currentParticipants: activity.currentParticipants ?? activity.participants.length,
+      },
+      attendance: attendanceData,
+      summary: {
+        totalRegistered: activity.participants.length,
+        totalAttended: activity.participants.filter((p) => p.status === "attended").length,
+        totalAbsent: activity.participants.filter((p) => p.status === "absent").length,
+      },
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Ongoing activity with attendance retrieved successfully",
+      data: response,
+    });
+  } catch (error) {
+    console.error("Error in getOngoingActivityWithAttendance:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};

@@ -12,6 +12,7 @@ import profileRoute from "./src/routes/profile.route.js";
 import volunteerApplicationRoute from "./src/routes/volunteerApplication.route.js";
 import activityRoute from "./src/routes/activity.route.js";
 import notificationRoute from "./src/routes/notification.route.js";
+import dashboardRoute from "./src/routes/dashboard.route.js";
 
 const app = express();
 
@@ -41,5 +42,6 @@ app.use("/api/v1/profile", profileRoute);
 app.use("/api/v1/volunteer-application", volunteerApplicationRoute);
 app.use("/api/v1/activities", activityRoute);
 app.use("/api/v1/notifications", notificationRoute);
+app.use("/api/v1/dashboard", dashboardRoute);
 
 export default app;

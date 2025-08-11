@@ -103,10 +103,14 @@ export const api = {
     // Attendance routes
     recordAttendance: (activityId, data) => apiClient.post(`/activities/${activityId}/attendance`, data),
     getAttendanceReport: (activityId) => apiClient.get(`/activities/${activityId}/attendance`),
+    getOngoingWithAttendance: () => apiClient.get(`/activities/ongoing-with-attendance`),
   },
   notifications: {
     getAll: (params) => apiClient.get("/notifications", { params }),
     markAsRead: (notificationId) => apiClient.patch(`/notifications/${notificationId}/read`),
     markAllAsRead: () => apiClient.patch("/notifications/mark-all-read"),
+  },
+  dashboard: {
+    getOverview: () => apiClient.get('/dashboard/overview'),
   },
 };

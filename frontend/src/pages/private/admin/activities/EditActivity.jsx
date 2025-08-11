@@ -312,7 +312,7 @@ const EditActivity = () => {
       <PrivateLayout>
         <div className="min-h-screen bg-blue-50 flex items-center justify-center">
           <div className="flex items-center gap-3">
-            <Loader2 className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             <span className="text-gray-600">Loading activity...</span>
           </div>
         </div>
