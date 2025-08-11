@@ -282,15 +282,6 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       <div className="p-4 border-t border-gray-200 space-y-2">
         <Button
           variant="ghost"
-          onClick={() => handleNavigation(`/settings/${userId}`)}
-          className="w-full justify-start text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-        >
-          <Settings className="w-5 h-5 mr-3 text-gray-400" />
-          Settings
-        </Button>
-
-        <Button
-          variant="ghost"
           onClick={handleLogout}
           className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
         >
