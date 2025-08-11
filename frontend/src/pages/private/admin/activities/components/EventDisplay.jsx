@@ -48,6 +48,12 @@ const EventDisplay = ({
               <Clock className="w-4 h-4" />
               <span>{formatTime(activity.timeFrom)} - {formatTime(activity.timeTo)}</span>
             </div>
+            {activity.location?.exactLocation && (
+              <div className="flex items-center gap-2 col-span-2">
+                <MapPin className="w-4 h-4" />
+                <span className="italic">{activity.location.exactLocation}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2 col-span-2">
               <MapPin className="w-4 h-4" />
               <span>{activity.location?.barangay}, {activity.location?.municipality}, {activity.location?.province}</span>

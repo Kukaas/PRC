@@ -38,7 +38,7 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
 
   const locationText = (() => {
     const loc = activity?.location || {}
-    const parts = [loc.barangay, loc.municipality, loc.province].filter(Boolean)
+    const parts = [loc.exactLocation, loc.barangay, loc.municipality, loc.province].filter(Boolean)
     if (parts.length === 0) return ''
     return parts.join(', ')
   })()

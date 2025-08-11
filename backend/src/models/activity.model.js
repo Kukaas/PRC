@@ -32,6 +32,10 @@ const activitySchema = new mongoose.Schema(
 
     // Location
     location: {
+      exactLocation: {
+        type: String,
+        trim: true,
+      },
       barangay: {
         type: String,
         required: true,
@@ -294,6 +298,37 @@ activitySchema.methods.getParticipantTimeInfo = function(userId) {
     totalHours: participant.totalHours,
     status: participant.status
   };
+};
+
+// Method to finalize attendance when event is completed
+activitySchema.methods.finalizeAttendance = function() {
+  // Compute event end time
+  const eventEnd = new Date(this.date);
+  if (this.timeTo) {
+    const [h, m] = String(this.timeTo).split(':').map(Number);
+    if (!Number.isNaN(h)) eventEnd.setHours(h, Number.isNaN(m) ? 0 : m, 0, 0);
+  } else {
+    eventEnd.setHours(23, 59, 59, 999);
+  }
+
+  this.participants.forEach(participant => {
+    // If no timeIn and no timeOut, mark as absent
+    if (!participant.timeIn && !participant.timeOut) {
+      participant.status = 'absent';
+    }
+    // If timeIn exists but no timeOut, set timeOut to event end time
+    else if (participant.timeIn && !participant.timeOut) {
+      participant.timeOut = new Date(eventEnd);
+      // Calculate total hours
+      const timeIn = new Date(participant.timeIn);
+      const timeOut = new Date(participant.timeOut);
+      const diffMs = timeOut - timeIn;
+      const diffHours = diffMs / (1000 * 60 * 60);
+      participant.totalHours = Math.round(diffHours * 100) / 100;
+      participant.status = 'attended'; // still attended
+    }
+  });
+  return this.save();
 };
 
 const Activity = mongoose.model("Activity", activitySchema);

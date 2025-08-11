@@ -665,12 +665,18 @@ export const updateActivityStatus = async (req, res) => {
     });
   }
 
+  // Update status
   const updatedActivity = await Activity.findByIdAndUpdate(
     id,
     { status },
     { new: true, runValidators: true }
   ).populate("createdBy", "givenName familyName email")
    .populate("participants.userId", "givenName familyName email");
+
+  // If status is completed, finalize attendance
+  if (status === 'completed') {
+    await updatedActivity.finalizeAttendance();
+  }
 
   // Send notifications when activity is published (made available for joining)
   if (status === "published" && activity.status !== "published") {

@@ -16,6 +16,22 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
+function isEventEnded(activity) {
+  if (!activity?.date) return false;
+  try {
+    const end = new Date(activity.date);
+    if (activity?.timeTo) {
+      const [h, m] = String(activity.timeTo).split(':').map(Number);
+      if (!Number.isNaN(h)) end.setHours(h, Number.isNaN(m) ? 0 : m, 0, 0);
+    } else {
+      end.setHours(23, 59, 59, 999);
+    }
+    return Date.now() > end.getTime();
+  } catch {
+    return false;
+  }
+}
+
 const JoinedActivities = ({ onActivityLeave }) => {
   const { user } = useAuth()
   const [activities, setActivities] = useState([])
@@ -158,13 +174,12 @@ const JoinedActivities = ({ onActivityLeave }) => {
 
     return {
       disabled: isDisabled || isLeaving,
-      className: `w-full text-sm sm:text-base ${
-        isDisabled
-          ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
-          : isLeaving
+      className: `w-full text-sm sm:text-base ${isDisabled
+        ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
+        : isLeaving
           ? 'border-blue-200 text-blue-400 cursor-not-allowed bg-blue-50'
           : 'border-red-200 text-red-600 hover:bg-red-50'
-      }`,
+        }`,
       children: isLeaving ? (
         <>
           <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
@@ -285,17 +300,20 @@ const JoinedActivities = ({ onActivityLeave }) => {
                     {activity.userParticipant && (
                       <Badge
                         variant={activity.userParticipant.status === 'attended' ? 'default' : 'outline'}
-                        className={`text-xs ${
-                          activity.userParticipant.status === 'attended'
-                            ? 'bg-green-100 text-green-800 border-green-200'
-                            : activity.userParticipant.status === 'registered'
+                        className={`text-xs ${activity.userParticipant.status === 'attended'
+                          ? 'bg-green-100 text-green-800 border-green-200'
+                          : activity.userParticipant.status === 'registered'
                             ? 'bg-blue-100 text-blue-800 border-blue-200'
-                            : 'bg-gray-100 text-gray-800 border-gray-200'
-                        }`}
+                            : activity.userParticipant.status === 'absent' && (activity.status === 'completed' || isEventEnded(activity))
+                              ? 'bg-red-600 text-white border-red-600'
+                              : 'bg-gray-100 text-gray-800 border-gray-200'
+                          }`}
+                        title={activity.userParticipant.status === 'absent' && (activity.status === 'completed' || isEventEnded(activity)) ? 'Marked as absent (no attendance recorded)' : ''}
                       >
                         {activity.userParticipant.status === 'attended' ? '✓ Attended' :
-                         activity.userParticipant.status === 'registered' ? '📝 Registered' :
-                         activity.userParticipant.status}
+                          activity.userParticipant.status === 'registered' ? '📝 Registered' :
+                            activity.userParticipant.status === 'absent' && (activity.status === 'completed' || isEventEnded(activity)) ? '⛔ Absent' :
+                              '📝 Registered'}
                       </Badge>
                     )}
                   </div>
@@ -356,6 +374,7 @@ const JoinedActivities = ({ onActivityLeave }) => {
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                     <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     <span className="line-clamp-1">
+                      {activity.location.exactLocation ? `${activity.location.exactLocation}, ` : ''}
                       {activity.location.barangay}, {activity.location.municipality}
                     </span>
                   </div>
@@ -406,16 +425,15 @@ const JoinedActivities = ({ onActivityLeave }) => {
                       )}
 
                       <div className="flex items-center gap-2 text-xs">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          activity.userParticipant.status === 'attended'
-                            ? 'bg-green-100 text-green-800'
-                            : activity.userParticipant.status === 'registered'
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${activity.userParticipant.status === 'attended'
+                          ? 'bg-green-100 text-green-800'
+                          : activity.userParticipant.status === 'registered'
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-gray-100 text-gray-800'
-                        }`}>
+                          }`}>
                           {activity.userParticipant.status === 'attended' ? 'Attended' :
-                           activity.userParticipant.status === 'registered' ? 'Registered' :
-                           activity.userParticipant.status}
+                            activity.userParticipant.status === 'registered' ? 'Registered' :
+                              activity.userParticipant.status}
                         </span>
                       </div>
                     </div>
@@ -502,16 +520,15 @@ const JoinedActivities = ({ onActivityLeave }) => {
                         )}
                         <p className="text-xs sm:text-sm text-gray-600">
                           <strong>Status:</strong>
-                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                            selectedActivity.userParticipant.status === 'attended'
-                              ? 'bg-green-100 text-green-800'
-                              : selectedActivity.userParticipant.status === 'registered'
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${selectedActivity.userParticipant.status === 'attended'
+                            ? 'bg-green-100 text-green-800'
+                            : selectedActivity.userParticipant.status === 'registered'
                               ? 'bg-blue-100 text-blue-800'
                               : 'bg-gray-100 text-gray-800'
-                          }`}>
+                            }`}>
                             {selectedActivity.userParticipant.status === 'attended' ? 'Attended' :
-                             selectedActivity.userParticipant.status === 'registered' ? 'Registered' :
-                             selectedActivity.userParticipant.status}
+                              selectedActivity.userParticipant.status === 'registered' ? 'Registered' :
+                                selectedActivity.userParticipant.status}
                           </span>
                         </p>
                       </div>

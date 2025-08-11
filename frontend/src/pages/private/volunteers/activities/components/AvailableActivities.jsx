@@ -392,6 +392,7 @@ const AvailableActivities = ({ onActivityJoin }) => {
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                     <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     <span className="line-clamp-1">
+                      {activity.location.exactLocation ? `${activity.location.exactLocation}, ` : ''}
                       {activity.location.barangay}, {activity.location.municipality}
                     </span>
                   </div>

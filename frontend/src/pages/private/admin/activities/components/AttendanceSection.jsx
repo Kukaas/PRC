@@ -118,11 +118,13 @@ const AttendanceSection = ({
                         {participant.timeOut ? new Date(participant.timeOut).toLocaleTimeString() : '--'}
                       </div>
                       <div>
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          participant.status === 'attended' ? 'bg-green-100 text-green-800' :
-                          participant.status === 'absent' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span
+                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${participant.status === 'attended' ? 'bg-green-100 text-green-800' :
+                            participant.status === 'absent' ? 'bg-red-600 text-white' :
+                              'bg-gray-100 text-gray-800'
+                            }`}
+                          title={participant.status === 'absent' ? 'Marked as absent (no attendance recorded)' : ''}
+                        >
                           {participant.status || 'registered'}
                         </span>
                       </div>

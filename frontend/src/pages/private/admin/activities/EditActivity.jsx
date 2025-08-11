@@ -62,6 +62,7 @@ const EditActivity = () => {
     timeFrom: '',
     timeTo: '',
     location: {
+      exactLocation: '',
       barangay: '',
       municipality: '',
       province: ''
@@ -96,6 +97,7 @@ const EditActivity = () => {
         timeFrom: activity.timeFrom || '',
         timeTo: activity.timeTo || '',
         location: {
+          exactLocation: activity.location?.exactLocation || '',
           barangay: activity.location?.barangay || '',
           municipality: activity.location?.municipality || '',
           province: activity.location?.province || ''
@@ -468,6 +470,16 @@ const EditActivity = () => {
                     'Please select location from dropdowns above'
                   }
                 </p>
+              </div>
+
+              {/* Exact Location */}
+              <div className="mt-4 grid grid-cols-1">
+                <CustomInput
+                  label="Exact Location (e.g., Multi-purpose Hall, Building)"
+                  value={formData.location.exactLocation}
+                  onChange={(e) => handleNestedChange('location', 'exactLocation', e.target.value)}
+                  placeholder="Enter exact location details"
+                />
               </div>
             </div>
 
