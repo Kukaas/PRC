@@ -1,9 +1,34 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import logo from "../../assets/logo.png";
 import bgImage from "../../assets/bg.png";
+import { useAuth } from "@/components/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const {user} = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (user) {
+      switch (user.role) {
+        case 'volunteer':
+          if (user.isProfileComplete) {
+            navigate(`/profile/${user._id}`);
+          } else {
+            navigate("/profile-setup");
+          }
+          break;
+        case 'admin':
+          navigate(`/admin/dashboard/${user._id}`);
+          break;
+        case 'staff':
+          navigate(`/staff/dashboard/${user._id}`);
+          break;
+        default:
+          navigate(`/profile/${user._id}`);
+      }
+    }
+  }, [user]);
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
