@@ -105,7 +105,7 @@ const Signup = () => {
     return (
       <PublicLayout>
         <div className="min-h-screen">
-          <section className="relative h-screen overflow-hidden">
+          <section className="relative h-screen">
             <div
               className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
               style={{
