@@ -13,7 +13,7 @@ const notificationSchema = new mongoose.Schema(
     activity: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Activity",
-      required: true,
+      required: false,
     },
 
     // Notification type
@@ -27,9 +27,12 @@ const notificationSchema = new mongoose.Schema(
         "activity_cancelled", // Activity cancelled
         "new_participant", // New participant joined
         "participant_left", // Participant left
-        "general" // General notifications
+        "general", // General notifications
+        "application_accepted", // Application accepted
+        "application_rejected", // Application rejected
+        "application_training_notification", // Application training notification
       ],
-      default: "activity_match",
+      default: "general",
     },
 
     // Notification title

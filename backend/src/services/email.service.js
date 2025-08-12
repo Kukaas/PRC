@@ -312,7 +312,7 @@ export const sendActivityMatchEmail = async (email, name, activityTitle, activit
           </div>
 
           <div style="text-align: center; margin: 35px 0;">
-            <a href="${ENV.FRONTEND_URL}/activities"
+            <a href="${ENV.FRONTEND_URL}/login"
                style="background: linear-gradient(135deg, #5ce1e6 0%, #4bc0c6 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(92, 225, 230, 0.3); transition: all 0.3s ease;">
               View Activity Details
             </a>
@@ -395,7 +395,7 @@ export const sendActivityReminderEmail = async (email, name, activityTitle, acti
           </div>
 
           <div style="text-align: center; margin: 35px 0;">
-            <a href="${ENV.FRONTEND_URL}/activities"
+            <a href="${ENV.FRONTEND_URL}/login"
                style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); transition: all 0.3s ease;">
               View Activity Details
             </a>
@@ -431,6 +431,64 @@ export const sendActivityReminderEmail = async (email, name, activityTitle, acti
     return true;
   } catch (error) {
     console.error("Activity reminder email error:", error);
+    return false;
+  }
+};
+
+// Volunteer application acceptance email
+export const sendApplicationAcceptedEmail = async (email, name, id) => {
+  const mailOptions = {
+    from: ENV.EMAIL_USER,
+    to: email,
+    subject: "🎉 You have been accepted as a volunteer - PRC Volunteer System",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+        <div style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">🎉 Congratulations!</h1>
+          <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Your volunteer application has been accepted</p>
+        </div>
+
+        <div style="padding: 30px; background-color: #ffffff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 24px;">Hello ${name}!</h2>
+
+          <p style="color: #34495e; line-height: 1.6; margin-bottom: 20px;">We're thrilled to inform you that your volunteer application has been <strong>accepted</strong>. Welcome to the PRC Volunteer Family!</p>
+
+          <div style="background-color: #e8f5e9; border: 1px solid #27ae60; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #2c3e50; margin: 0 0 10px 0; font-weight: bold;">✅ Next Steps:</p>
+            <ul style="color: #34495e; margin: 0; padding-left: 20px;">
+              <li>Log in to your dashboard to view available activities</li>
+              <li>Keep your profile information up to date</li>
+              <li>Watch out for upcoming training and events</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${ENV.FRONTEND_URL}/profile/${id}"
+               style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3); transition: all 0.3s ease;">
+              Go to Dashboard
+            </a>
+          </div>
+
+          <p style="color: #7f8c8d; line-height: 1.6; margin-bottom: 20px;">Thank you for your commitment to serving the community. We look forward to working with you!</p>
+
+          <hr style="margin: 30px 0; border: none; border-top: 2px solid #ecf0f1;">
+
+          <div style="text-align: center;">
+            <p style="color: #7f8c8d; font-size: 14px; margin: 0;">
+              Best regards,<br>
+              <strong style="color: #5ce1e6;">PRC Volunteer System Team</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Application accepted email error:", error);
     return false;
   }
 };
@@ -572,7 +630,7 @@ export const sendTrainingNotificationEmail = async (email, name, trainingDate, t
           </div>
 
           <div style="text-align: center; margin: 35px 0;">
-            <a href="${ENV.FRONTEND_URL}/dashboard"
+            <a href="${ENV.FRONTEND_URL}/login"
                style="background: linear-gradient(135deg, #5ce1e6 0%, #4bc0c6 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(92, 225, 230, 0.3); transition: all 0.3s ease;">
               Access Your Dashboard
             </a>

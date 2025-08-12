@@ -738,24 +738,24 @@ const VolunteerTable = ({ onDataChange }) => {
                       </span>
                     </div>
                     <div>
-                      {status === 'pending' && volunteer.trainingNotification?.trainingDate ? (
+                    {volunteer.isTrained ? (
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             volunteer.isTrained
                               ? 'bg-green-100 text-green-800'
                               : 'bg-orange-100 text-orange-800'
                           }`}>
-                            {volunteer.isTrained ? 'Trained' : 'Not Trained'}
+                            Trained
                           </span>
                         </div>
-                      ) : volunteer.isTrained === false && (
+                      ):(
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             volunteer.isTrained
                               ? 'bg-green-100 text-green-800'
                               : 'bg-orange-100 text-orange-800'
                           }`}>
-                            {volunteer.isTrained ? 'Trained' : 'Not Trained'}
+                            Not Trained
                           </span>
                         </div>
                       )}

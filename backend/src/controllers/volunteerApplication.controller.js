@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import { sendTrainingNotificationEmail } from "../services/email.service.js";
 import { sendTrainingNotificationWhatsApp } from "../services/sms.service.js";
 import { ENV } from "../connections/env.js";
+import { notifyApplicationAccepted } from "../services/notification.service.js";
 
 // Submit a new volunteer application
 export const submitApplication = async (req, res) => {
@@ -308,6 +309,16 @@ export const updateApplicationStatus = async (req, res) => {
     )
       .populate("applicant", "givenName familyName email")
       .populate("reviewedBy", "givenName familyName");
+
+    // If accepted, send in-app notification and acceptance email
+    if (status === "accepted" && updatedApplication?.applicant) {
+      try {
+        const applicantUser = await User.findById(updatedApplication.applicant._id);
+        await notifyApplicationAccepted(applicantUser);
+      } catch (notifyErr) {
+        console.error('Error sending acceptance notification/email:', notifyErr);
+      }
+    }
 
     res.status(200).json({
       success: true,

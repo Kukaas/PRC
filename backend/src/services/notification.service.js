@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import Activity from "../models/activity.model.js";
 import Notification from "../models/notification.model.js";
-import { sendActivityMatchEmail, sendActivityReminderEmail, sendGeneralNotificationEmail } from "./email.service.js";
+import { sendActivityMatchEmail, sendActivityReminderEmail, sendGeneralNotificationEmail, sendApplicationAcceptedEmail } from "./email.service.js";
 
 // Service to notify users about new activities that match their skills/services
 export const notifyUsersForNewActivity = async (activityId) => {
@@ -336,6 +336,32 @@ export const notifyActivityParticipants = async (activityId, notificationType, n
   } catch (error) {
     console.error('Error notifying activity participants:', error);
     throw error;
+  }
+};
+
+// Service: notify user on application acceptance (in-app + email)
+export const notifyApplicationAccepted = async (user) => {
+  try {
+    if (!user) throw new Error('User not provided');
+
+    // Send email first (do not block on in-app notification)
+    if (user.notificationPreferences?.emailNotifications !== false) {
+      await sendApplicationAcceptedEmail(user.email, user.givenName || 'Volunteer', user._id);
+    }
+
+    // Create in-app notification (no activity required)
+    const notification = await Notification.create({
+      recipient: user._id,
+      type: 'application_accepted',
+      title: 'Application Accepted',
+      message: 'Congratulations! Your volunteer application has been accepted.',
+      metadata: { notificationType: 'application_accepted' },
+    });
+
+    return { success: true, notificationId: notification._id };
+  } catch (error) {
+    console.error('Error notifying application acceptance:', error);
+    return { success: false, message: error.message };
   }
 };
 
