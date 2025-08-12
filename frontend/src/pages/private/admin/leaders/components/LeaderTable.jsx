@@ -15,8 +15,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Search, MapPin, Filter, Trash2, Edit, MessageSquare } from 'lucide-react'
+import { Search, MapPin, Filter, Trash2, Edit, MessageSquare, Eye } from 'lucide-react'
 import CustomInput from '@/components/CustomInput'
+import LeaderProfileDialog from './LeaderProfileDialog'
 
 const LeaderTable = () => {
   const navigate = useNavigate()
@@ -41,6 +42,9 @@ const LeaderTable = () => {
   const [notifyDialog, setNotifyDialog] = useState({ open: false, leader: null })
   const [notifyLoading, setNotifyLoading] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState('')
+
+  // View profile dialog state
+  const [viewProfileDialog, setViewProfileDialog] = useState({ open: false, leader: null })
 
   useEffect(() => {
     fetchLeaders()
@@ -156,6 +160,10 @@ const LeaderTable = () => {
     }
   }
 
+  const openViewProfileDialog = (leader) => {
+    setViewProfileDialog({ open: true, leader })
+  }
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -264,7 +272,7 @@ const LeaderTable = () => {
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="bg-cyan-500 text-white px-6 py-4">
-          <div className="grid grid-cols-6 gap-4 font-medium text-sm">
+          <div className="grid grid-cols-7 gap-4 font-medium text-sm">
             <div>Name</div>
             <div>Email</div>
             <div>Contact</div>
@@ -278,12 +286,20 @@ const LeaderTable = () => {
           ) : (
             filtered.map((l) => (
               <div key={l._id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                <div className="grid grid-cols-6 gap-4 text-sm items-center">
+                <div className="grid grid-cols-7 gap-4 text-sm items-center">
                   <div className="font-medium text-gray-900">{`${l.firstName} ${l.middleName ? l.middleName + ' ' : ''}${l.lastName}`}</div>
                   <div className="truncate text-gray-600" title={l.email}>{l.email}</div>
                   <div className="text-gray-600">{l.contactNumber || '-'}</div>
                   <div className="text-gray-600">{l.address?.districtBarangayVillage || '-'}, {l.address?.municipalityCity || '-'}</div>
                   <div className="flex gap-2">
+                    <Button
+                      onClick={() => openViewProfileDialog(l)}
+                      className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs rounded"
+                      size="sm"
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      View
+                    </Button>
                     <Button
                       onClick={() => navigate(`/admin/leaders/edit/${l._id}`)}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs rounded"
@@ -395,6 +411,13 @@ const LeaderTable = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Leader Profile Dialog */}
+      <LeaderProfileDialog
+        open={viewProfileDialog.open}
+        leader={viewProfileDialog.leader}
+        onClose={() => setViewProfileDialog({ open: false, leader: null })}
+      />
     </div>
   )
 }
