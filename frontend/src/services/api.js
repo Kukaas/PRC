@@ -83,6 +83,7 @@ export const api = {
     getStats: () => apiClient.get("/volunteer-application/admin/stats"),
     sendTrainingNotification: (id, data) => apiClient.post(`/volunteer-application/admin/${id}/training-notification`, data),
     updateTrainingStatus: (id, data) => apiClient.put(`/volunteer-application/admin/${id}/training-status`, data),
+    bulkSendTrainingNotifications: (data) => apiClient.post(`/volunteer-application/admin/bulk-training-notification`, data),
   },
   activities: {
     // Public routes

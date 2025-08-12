@@ -10,6 +10,7 @@ import {
   getApplicationStats,
   canResubmitApplication,
   sendTrainingNotification,
+  bulkSendTrainingNotifications,
   updateTrainingStatus,
 } from "../controllers/volunteerApplication.controller.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
@@ -88,6 +89,17 @@ router.post("/admin/:id/training-notification", authenticateToken, async (req, r
   }
   next();
 }, sendTrainingNotification);
+
+// Bulk send training notifications
+router.post("/admin/bulk-training-notification", authenticateToken, async (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. Admin role required.",
+    });
+  }
+  next();
+}, bulkSendTrainingNotifications);
 
 // Update training status
 router.put("/admin/:id/training-status", authenticateToken, async (req, res, next) => {

@@ -33,6 +33,11 @@ const VolunteerTable = ({ onDataChange }) => {
   const [profileDialog, setProfileDialog] = useState({ open: false, volunteer: null })
   const [markTrainedDialog, setMarkTrainedDialog] = useState({ open: false, volunteer: null })
 
+  // Bulk selection & notify state
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkNotifyDialogOpen, setBulkNotifyDialogOpen] = useState(false)
+  const [bulkNotifyLoading, setBulkNotifyLoading] = useState(false)
+
   // Training notification form state
   const [trainingForm, setTrainingForm] = useState({
     trainingDate: '',
@@ -57,6 +62,40 @@ const VolunteerTable = ({ onDataChange }) => {
   const [rejectLoading, setRejectLoading] = useState(false)
   const [notifyLoading, setNotifyLoading] = useState(false)
   const [trainingStatusLoading, setTrainingStatusLoading] = useState(false)
+
+  // Helpers for selection
+  const isVolunteerSelectable = (volunteer) => {
+    // Only those who are not trained
+    return !volunteer.isTrained
+  }
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectAllOnPage = (checked) => {
+    if (checked) {
+      const next = new Set(selectedIds)
+      filteredVolunteers.forEach((v) => {
+        const vid = v._id || v.id
+        if (isVolunteerSelectable(v)) next.add(vid)
+      })
+      setSelectedIds(next)
+    } else {
+      // remove only those present on current filtered page
+      const next = new Set(selectedIds)
+      filteredVolunteers.forEach((v) => {
+        const vid = v._id || v.id
+        next.delete(vid)
+      })
+      setSelectedIds(next)
+    }
+  }
 
   // PSGC API functions
   const fetchProvinces = async () => {
@@ -329,6 +368,50 @@ const VolunteerTable = ({ onDataChange }) => {
     }
   }
 
+  const handleBulkNotify = async () => {
+    if (selectedIds.size === 0) {
+      toast.error('No volunteers selected')
+      return
+    }
+    if (!trainingForm.trainingDate || !trainingForm.trainingTime || !selectedTrainingProvince || !selectedTrainingMunicipality || !selectedTrainingBarangay) {
+      toast.error('Please fill in all required training details (date, time, province, municipality, and barangay)')
+      return
+    }
+
+    try {
+      setBulkNotifyLoading(true)
+      const response = await api.volunteerApplication.bulkSendTrainingNotifications({
+        applicationIds: Array.from(selectedIds),
+        ...trainingForm,
+        provinceCode: selectedTrainingProvince,
+        municipalityCode: selectedTrainingMunicipality,
+        barangayCode: selectedTrainingBarangay,
+      })
+
+      if (response.success) {
+        const summary = response.summary || {}
+        toast.success(`Bulk notification: ${summary.success || 0} sent, ${summary.failed || 0} failed`)
+        setBulkNotifyDialogOpen(false)
+        setSelectedIds(new Set())
+        setTrainingForm({ trainingDate: '', trainingTime: '', trainingLocation: '', exactLocation: '' })
+        setSelectedTrainingProvince("")
+        setSelectedTrainingMunicipality("")
+        setSelectedTrainingBarangay("")
+        setMunicipalities([])
+        setBarangays([])
+        await fetchVolunteerData()
+        if (onDataChange) onDataChange()
+      } else {
+        toast.error('Failed to send bulk training notifications: ' + (response.message || 'Unknown error'))
+      }
+    } catch (err) {
+      console.error('Error sending bulk training notifications:', err)
+      toast.error('Failed to send bulk training notifications: ' + err.message)
+    } finally {
+      setBulkNotifyLoading(false)
+    }
+  }
+
     const openNotifyDialog = async (volunteer) => {
     // Pre-fill form with existing training details if available
     if (volunteer.trainingNotification?.trainingDate) {
@@ -551,18 +634,25 @@ const VolunteerTable = ({ onDataChange }) => {
 
           {/* Action Buttons */}
           <div className="flex items-end gap-2">
-            <button
+            <Button
               onClick={handleSearch}
               className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md transition-colors"
             >
               Search
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={clearFilters}
               className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors"
             >
               Clear
-            </button>
+            </Button>
+            <Button
+              onClick={() => setBulkNotifyDialogOpen(true)}
+              disabled={selectedIds.size === 0}
+              className={`flex-1 px-4 py-2 rounded-md transition-colors ${selectedIds.size === 0 ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+            >
+              Bulk Notify ({selectedIds.size})
+            </Button>
           </div>
         </div>
 
@@ -576,6 +666,7 @@ const VolunteerTable = ({ onDataChange }) => {
               {searchTerm && <span className="bg-cyan-100 text-cyan-800 px-2 py-1 rounded">Search: {searchTerm}</span>}
               {selectedBarangay && <span className="bg-cyan-100 text-cyan-800 px-2 py-1 rounded">Barangay: {selectedBarangay}</span>}
               {selectedService && <span className="bg-cyan-100 text-cyan-800 px-2 py-1 rounded">Service: {selectedService}</span>}
+              {selectedIds.size > 0 && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Selected: {selectedIds.size}</span>}
             </div>
           </div>
         </div>
@@ -585,7 +676,14 @@ const VolunteerTable = ({ onDataChange }) => {
       <div className="overflow-hidden rounded-lg border border-gray-200">
         {/* Table Header */}
         <div className="bg-cyan-500 px-4 py-3 border-b border-gray-200">
-          <div className="grid grid-cols-8 gap-4 text-sm font-semibold text-white">
+          <div className="grid grid-cols-9 gap-4 text-sm font-semibold text-white">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                aria-label="Select all"
+                onChange={(e) => selectAllOnPage(e.target.checked)}
+              />
+            </div>
             <div>Name</div>
             <div>Date Applied</div>
             <div>Status</div>
@@ -617,7 +715,15 @@ const VolunteerTable = ({ onDataChange }) => {
 
               return (
                 <div key={volunteer._id || volunteer.id} className="px-4 py-3 hover:bg-gray-50 transition-colors">
-                  <div className="grid grid-cols-8 gap-4 text-sm text-gray-600">
+                  <div className="grid grid-cols-9 gap-4 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(volunteer._id || volunteer.id)}
+                        onChange={() => toggleSelect(volunteer._id || volunteer.id)}
+                        disabled={!isVolunteerSelectable(volunteer)}
+                      />
+                    </div>
                     <div className="font-medium text-gray-800">{fullName || 'Name not provided'}</div>
                     <div>{appliedDate}</div>
                     <div>
@@ -642,7 +748,7 @@ const VolunteerTable = ({ onDataChange }) => {
                             {volunteer.isTrained ? 'Trained' : 'Not Trained'}
                           </span>
                         </div>
-                      ) : status === 'accepted' ? (
+                      ) : volunteer.isTrained === false && (
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             volunteer.isTrained
@@ -652,8 +758,6 @@ const VolunteerTable = ({ onDataChange }) => {
                             {volunteer.isTrained ? 'Trained' : 'Not Trained'}
                           </span>
                         </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">N/A</span>
                       )}
                     </div>
                                          <div>
@@ -712,7 +816,7 @@ const VolunteerTable = ({ onDataChange }) => {
                                >
                                  Notify Training
                                </Button>
-                                                               {volunteer.trainingNotification?.trainingDate && (
+                                    {volunteer.isTrained === false && (
                                   <Button
                                     onClick={() => openMarkTrainedDialog(volunteer)}
                                     disabled={trainingStatusLoading}
@@ -754,6 +858,138 @@ const VolunteerTable = ({ onDataChange }) => {
           </button>
         </div>
       </div>
+
+      {/* Bulk Notify Dialog */}
+      <AlertDialog open={bulkNotifyDialogOpen} onOpenChange={(open) => {
+        if (!open && !bulkNotifyLoading) {
+          setBulkNotifyDialogOpen(false)
+        }
+      }}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-semibold text-gray-900">
+              Send Bulk Training Notification
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-gray-600 mt-2">
+              Send a training notification to the selected volunteers. Only untrained volunteers can be selected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="mt-4">
+            <CustomInput
+              label="Training Date"
+              name="trainingDate"
+              type="date"
+              value={trainingForm.trainingDate}
+              onChange={(e) => setTrainingForm({ ...trainingForm, trainingDate: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <CustomInput
+              label="Training Time"
+              name="trainingTime"
+              type="time"
+              value={trainingForm.trainingTime}
+              onChange={(e) => setTrainingForm({ ...trainingForm, trainingTime: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <CustomInput
+              label="Province"
+              name="province"
+              type="select"
+              value={selectedTrainingProvince}
+              onChange={handleProvinceChange}
+              required
+              disabled={isLoadingProvinces}
+            >
+              <option value="">Select Province</option>
+              {isLoadingProvinces ? (
+                <option value="">Loading Provinces...</option>
+              ) : (
+                provinces.map(province => (
+                  <option key={province.code} value={province.code}>{province.name}</option>
+                ))
+              )}
+            </CustomInput>
+          </div>
+          <div>
+            <CustomInput
+              label="Municipality"
+              name="municipality"
+              type="select"
+              value={selectedTrainingMunicipality}
+              onChange={handleMunicipalityChange}
+              required
+              disabled={!selectedTrainingProvince || isLoadingMunicipalities}
+            >
+              <option value="">Select Municipality</option>
+              {isLoadingMunicipalities ? (
+                <option value="">Loading Municipalities...</option>
+              ) : (
+                municipalities.map(municipality => (
+                  <option key={municipality.code} value={municipality.code}>{municipality.name}</option>
+                ))
+              )}
+            </CustomInput>
+          </div>
+          <div>
+            <CustomInput
+              label="Barangay"
+              name="barangay"
+              type="select"
+              value={selectedTrainingBarangay}
+              onChange={handleBarangayChange}
+              required
+              disabled={!selectedTrainingMunicipality || isLoadingBarangays}
+            >
+              <option value="">Select Barangay</option>
+              {isLoadingBarangays ? (
+                <option value="">Loading Barangays...</option>
+              ) : (
+                barangays.map(barangay => (
+                  <option key={barangay.code} value={barangay.code}>{barangay.name}</option>
+                ))
+              )}
+            </CustomInput>
+          </div>
+          <div>
+            <CustomInput
+              label="Exact Location (Optional)"
+              name="exactLocation"
+              type="text"
+              placeholder="e.g., Street Name, Building Name"
+              value={trainingForm.exactLocation}
+              onChange={handleExactLocationChange}
+            />
+          </div>
+
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4">
+            <AlertDialogCancel
+              disabled={bulkNotifyLoading}
+              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkNotify}
+              disabled={bulkNotifyLoading}
+              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {bulkNotifyLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </div>
+              ) : (
+                `Send to ${selectedIds.size} selected`
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Approve Dialog */}
       <AlertDialog open={approveDialog.open} onOpenChange={(open) => {

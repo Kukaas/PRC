@@ -1,7 +1,7 @@
 import VolunteerApplication from "../models/volunteerApplication.model.js";
 import User from "../models/user.model.js";
 import { sendTrainingNotificationEmail } from "../services/email.service.js";
-import { sendTrainingNotificationSMS, sendTrainingNotificationWhatsApp } from "../services/sms.service.js";
+import { sendTrainingNotificationWhatsApp } from "../services/sms.service.js";
 import { ENV } from "../connections/env.js";
 
 // Submit a new volunteer application
@@ -577,6 +577,160 @@ export const sendTrainingNotification = async (req, res) => {
     });
   } catch (error) {
     console.error('Error sending training notification:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Admin: Bulk send training notifications to selected untrained volunteers
+export const bulkSendTrainingNotifications = async (req, res) => {
+  try {
+    const adminId = req.user.userId;
+    const {
+      applicationIds = [],
+      trainingDate,
+      trainingTime,
+      trainingLocation,
+      exactLocation,
+      provinceCode,
+      municipalityCode,
+      barangayCode,
+    } = req.body;
+
+    if (!Array.isArray(applicationIds) || applicationIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "applicationIds must be a non-empty array",
+      });
+    }
+
+    if (!trainingDate || !trainingTime || !trainingLocation) {
+      return res.status(400).json({
+        success: false,
+        message: "Training date, time, and location are required",
+      });
+    }
+
+    // Fetch admin for SMS/WhatsApp signature once
+    let notifiedByName = "PRC Admin";
+    try {
+      const adminUser = await User.findById(adminId).select(
+        "givenName familyName"
+      );
+      if (adminUser) {
+        notifiedByName = `${adminUser.givenName} ${adminUser.familyName}`;
+      }
+    } catch {}
+
+    const results = {
+      success: [],
+      failed: [],
+    };
+
+    for (const id of applicationIds) {
+      try {
+        const application = await VolunteerApplication.findById(id)
+          .populate(
+            "applicant",
+            "givenName familyName email personalInfo.mobileNumber personalInfo.contactNumber"
+          );
+
+        if (!application) {
+          results.failed.push({ id, reason: "Application not found" });
+          continue;
+        }
+
+        // Skip if already trained
+        if (application.isTrained) {
+          results.failed.push({ id, reason: "Applicant already trained" });
+          continue;
+        }
+
+        // Send email notification (if email fails, skip this application)
+        const emailOk = await sendTrainingNotificationEmail(
+          application.applicant.email,
+          `${application.applicant.givenName} ${application.applicant.familyName}`,
+          trainingDate,
+          trainingTime,
+          trainingLocation,
+          exactLocation
+        );
+
+        if (!emailOk) {
+          results.failed.push({ id, reason: "Failed to send email notification" });
+          continue;
+        }
+
+        // Best-effort WhatsApp notification only (non-blocking; skip SMS in bulk)
+        try {
+          const volunteerMobile =
+            application.applicant?.personalInfo?.mobileNumber ||
+            application.applicant?.personalInfo?.contactNumber;
+
+          if (volunteerMobile) {
+            // Send WhatsApp if Twilio credentials exist
+            if (ENV.TWILIO_ACCOUNT_SID && ENV.TWILIO_AUTH_TOKEN) {
+              const whatsappFrom = process.env.TWILIO_WHATSAPP_FROM || "+14155238886";
+              sendTrainingNotificationWhatsApp({
+                toPhoneNumber: volunteerMobile,
+                volunteerName: `${application.applicant.givenName} ${application.applicant.familyName}`,
+                trainingDate,
+                trainingTime,
+                trainingLocation,
+                exactLocation,
+                notifiedByName,
+                accountSid: ENV.TWILIO_ACCOUNT_SID,
+                authToken: ENV.TWILIO_AUTH_TOKEN,
+                whatsappFrom,
+              }).catch((waErr) => {
+                console.error(
+                  "Error sending WhatsApp training notification (bulk):",
+                  waErr?.message || waErr
+                );
+              });
+            } else {
+              console.warn("Twilio credentials not set for WhatsApp; skipping WhatsApp send in bulk.");
+            }
+          }
+        } catch (waErr) {
+          console.error("Bulk SMS/WhatsApp error:", waErr);
+        }
+
+        // Update application with training notification details
+        application.trainingNotification = {
+          trainingDate: new Date(trainingDate),
+          trainingTime,
+          trainingLocation,
+          provinceCode,
+          municipalityCode,
+          barangayCode,
+          exactLocation: exactLocation || "",
+          notifiedAt: new Date(),
+          notifiedBy: adminId,
+        };
+        await application.save();
+
+        results.success.push({ id });
+      } catch (err) {
+        console.error("Bulk notify error for application", id, err);
+        results.failed.push({ id, reason: "Unexpected error" });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Bulk training notifications processed",
+      summary: {
+        total: applicationIds.length,
+        success: results.success.length,
+        failed: results.failed.length,
+      },
+      results,
+    });
+  } catch (error) {
+    console.error("Error in bulk training notifications:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
