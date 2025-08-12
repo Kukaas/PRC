@@ -178,4 +178,31 @@ export const sendTrainingNotificationWhatsApp = async ({
   }
 };
 
+// Generic WhatsApp text sender (Twilio)
+export const sendWhatsAppText = async ({
+  toPhoneNumber,
+  body,
+  accountSid,
+  authToken,
+  whatsappFrom,
+}) => {
+  try {
+    const { default: twilio } = await import('twilio');
+    const client = twilio(accountSid, authToken);
+
+    const to = normalizePhilippineNumberToE164(toPhoneNumber);
+    if (!to) return false;
+
+    const resp = await client.messages.create({
+      from: `whatsapp:${whatsappFrom}`,
+      to: `whatsapp:${to}`,
+      body,
+    });
+    return !!resp?.sid;
+  } catch (err) {
+    console.error('WhatsApp generic send error:', err?.message || err);
+    return false;
+  }
+};
+
 

@@ -119,4 +119,13 @@ export const api = {
   reports: {
     getVolunteerHours: (year) => apiClient.get('/reports/volunteer-hours', { params: { year } }),
   },
+  leaders: {
+    create: (data) => apiClient.post('/leaders/admin', data),
+    list: (params) => apiClient.get('/leaders/admin', { params }),
+    getById: (id) => apiClient.get(`/leaders/admin/${id}`),
+    update: (id, data) => apiClient.put(`/leaders/admin/${id}`, data),
+    delete: (id) => apiClient.delete(`/leaders/admin/${id}`),
+    notify: (id, data) => apiClient.post(`/leaders/admin/${id}/notify`, data),
+    bulkNotify: (data) => apiClient.post(`/leaders/admin/bulk-notify`, data),
+  },
 };

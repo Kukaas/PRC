@@ -14,6 +14,7 @@ import activityRoute from "./src/routes/activity.route.js";
 import notificationRoute from "./src/routes/notification.route.js";
 import dashboardRoute from "./src/routes/dashboard.route.js";
 import reportsRoute from "./src/routes/reports.route.js";
+import leadersRoute from "./src/routes/leaders.route.js";
 
 const app = express();
 
@@ -45,5 +46,6 @@ app.use("/api/v1/activities", activityRoute);
 app.use("/api/v1/notifications", notificationRoute);
 app.use("/api/v1/dashboard", dashboardRoute);
 app.use("/api/v1/reports", reportsRoute);
+app.use("/api/v1/leaders", leadersRoute);
 
 export default app;

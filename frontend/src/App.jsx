@@ -27,6 +27,9 @@ import Notifications from "./pages/private/volunteers/notifications/Notification
 import MemberStatus from "./pages/private/volunteers/members-status/MemberStatus";
 import AdminMemberStatus from "./pages/private/admin/members-status/AdminMemberStatus";
 import Reports from "./pages/private/admin/reports/Reports";
+import Leaders from "./pages/private/admin/leaders/Leaders";
+import CreateLeader from "./pages/private/admin/leaders/CreateLeader";
+import EditLeader from "./pages/private/admin/leaders/EditLeader";
 
 
 function App() {
@@ -164,6 +167,33 @@ function App() {
               element={
                 <PrivateRoute>
                   <Reports />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/leaders/:id"
+              element={
+                <PrivateRoute>
+                  <Leaders />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/leaders/create"
+              element={
+                <PrivateRoute>
+                  <CreateLeader />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/leaders/edit/:leaderId"
+              element={
+                <PrivateRoute>
+                  <EditLeader />
                 </PrivateRoute>
               }
             />
