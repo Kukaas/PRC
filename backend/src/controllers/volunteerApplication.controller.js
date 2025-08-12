@@ -1,6 +1,8 @@
 import VolunteerApplication from "../models/volunteerApplication.model.js";
 import User from "../models/user.model.js";
 import { sendTrainingNotificationEmail } from "../services/email.service.js";
+import { sendTrainingNotificationSMS, sendTrainingNotificationWhatsApp } from "../services/sms.service.js";
+import { ENV } from "../connections/env.js";
 
 // Submit a new volunteer application
 export const submitApplication = async (req, res) => {
@@ -477,7 +479,10 @@ export const sendTrainingNotification = async (req, res) => {
     const adminId = req.user.userId;
 
     const application = await VolunteerApplication.findById(id)
-      .populate("applicant", "givenName familyName email");
+      .populate("applicant", "givenName familyName email personalInfo.mobileNumber personalInfo.contactNumber");
+
+    // Fetch admin details for SMS signature
+    const adminUser = await User.findById(adminId).select("givenName familyName");
 
     if (!application) {
       return res.status(404).json({
@@ -514,6 +519,33 @@ export const sendTrainingNotification = async (req, res) => {
         success: false,
         message: "Failed to send email notification",
       });
+    }
+
+    // Best-effort SMS notification (currently disabled or custom provider)
+    const volunteerMobile = application.applicant?.personalInfo?.mobileNumber
+      || application.applicant?.personalInfo?.contactNumber;
+    const notifiedByName = adminUser ? `${adminUser.givenName} ${adminUser.familyName}` : 'PRC Admin';
+    if (volunteerMobile) {
+      // WhatsApp via Twilio Sandbox (recipient must have joined sandbox)
+      if (ENV.TWILIO_ACCOUNT_SID && ENV.TWILIO_AUTH_TOKEN) {
+        const whatsappFrom = process.env.TWILIO_WHATSAPP_FROM || '+14155238886';
+        sendTrainingNotificationWhatsApp({
+          toPhoneNumber: volunteerMobile,
+          volunteerName: `${application.applicant.givenName} ${application.applicant.familyName}`,
+          trainingDate,
+          trainingTime,
+          trainingLocation,
+          exactLocation,
+          notifiedByName,
+          accountSid: ENV.TWILIO_ACCOUNT_SID,
+          authToken: ENV.TWILIO_AUTH_TOKEN,
+          whatsappFrom,
+        }).catch((waErr) => {
+          console.error('Error sending WhatsApp training notification:', waErr);
+        });
+      }
+    } else {
+      console.warn('No mobile number found for applicant; skipping SMS.');
     }
 
     // Update application with training notification details
