@@ -496,3 +496,113 @@ export const sendGeneralNotificationEmail = async (email, name, title, message, 
     return false;
   }
 };
+
+// Training notification email
+export const sendTrainingNotificationEmail = async (email, name, trainingDate, trainingTime, trainingLocation, exactLocation) => {
+  // Convert 24-hour format to 12-hour format with AM/PM
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+
+    try {
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours, 10);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return timeString; // Return original if parsing fails
+    }
+  };
+
+  const formattedTime = formatTime(trainingTime);
+
+  const mailOptions = {
+    from: ENV.EMAIL_USER,
+    to: email,
+    subject: "📋 Training Notification - PRC Volunteer System",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+        <div style="background: linear-gradient(135deg, #5ce1e6 0%, #4bc0c6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">📋 Training Notification</h1>
+          <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Important training information from PRC Volunteer System</p>
+        </div>
+
+        <div style="padding: 30px; background-color: #ffffff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 24px;">Hello ${name}!</h2>
+
+          <div style="background: linear-gradient(135deg, #e8f4f8 0%, #d1f2f6 100%); border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+            <p style="color: #2c3e50; margin: 0; font-size: 18px; font-weight: bold;">📋 Training Invitation</p>
+            <p style="color: #34495e; margin: 5px 0 0 0;">You have been invited to attend a mandatory training session</p>
+          </div>
+
+          <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 4px solid #5ce1e6;">
+            <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px;">📅 Training Details:</h3>
+            <ul style="color: #34495e; margin: 0; padding-left: 20px;">
+              <li><strong>Date:</strong> ${new Date(trainingDate).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}</li>
+              <li><strong>Time:</strong> ${formattedTime}</li>
+              <li><strong>Location:</strong> ${trainingLocation}</li>
+              ${exactLocation && exactLocation.trim() ? `<li><strong>Exact Location:</strong> ${exactLocation.trim()}</li>` : ''}
+            </ul>
+          </div>
+
+          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #856404; margin: 0 0 10px 0; font-weight: bold;">⚠️ Important Reminders:</p>
+            <ul style="color: #856404; margin: 0; padding-left: 20px;">
+              <li>Please arrive 15 minutes before the scheduled time</li>
+              <li>Bring a valid ID for verification</li>
+              <li>Dress appropriately for the training session</li>
+              <li>Bring a pen and notebook for taking notes</li>
+            </ul>
+          </div>
+
+          <div style="background-color: #e8f4f8; border: 1px solid #5ce1e6; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #2c3e50; margin: 0 0 10px 0; font-weight: bold;">💡 What to Expect:</p>
+            <ul style="color: #34495e; margin: 0; padding-left: 20px;">
+              <li>Introduction to PRC volunteer policies and procedures</li>
+              <li>Safety guidelines and emergency protocols</li>
+              <li>Overview of available volunteer opportunities</li>
+              <li>Q&A session with experienced volunteers</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${ENV.FRONTEND_URL}/dashboard"
+               style="background: linear-gradient(135deg, #5ce1e6 0%, #4bc0c6 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(92, 225, 230, 0.3); transition: all 0.3s ease;">
+              Access Your Dashboard
+            </a>
+          </div>
+
+          <div style="background-color: #e8f5e8; border: 1px solid #27ae60; border-radius: 8px; padding: 20px; margin: 25px 0;">
+            <p style="color: #2c3e50; margin: 0; font-weight: bold; text-align: center;">🎉 Welcome to the PRC Volunteer Family! 🎉</p>
+            <p style="color: #27ae60; margin: 10px 0 0 0; text-align: center;">We're excited to have you join our team of dedicated volunteers.</p>
+          </div>
+
+          <p style="color: #7f8c8d; line-height: 1.6; margin-bottom: 20px;">This training is mandatory for all volunteers. Please ensure you can attend on the scheduled date and time. If you have any questions, please don't hesitate to contact our support team.</p>
+
+          <hr style="margin: 30px 0; border: none; border-top: 2px solid #ecf0f1;">
+
+          <div style="text-align: center;">
+            <p style="color: #7f8c8d; font-size: 14px; margin: 0;">
+              Best regards,<br>
+              <strong style="color: #5ce1e6;">PRC Volunteer System Team</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Training notification email error:", error);
+    return false;
+  }
+};

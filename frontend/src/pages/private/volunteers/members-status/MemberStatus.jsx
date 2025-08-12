@@ -182,7 +182,20 @@ const MemberStatus = () => {
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-red-700">{error}</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <GradientCard label="Status" value={summary?.trainedStatus || '—'} icon={CheckCircle2} />
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="p-5">
+                  <div className="text-gray-600 text-sm font-medium mb-2">Training Status</div>
+                  <div className="px-4 py-3 rounded-md bg-gradient-to-r from-cyan-50 to-white text-gray-900 font-bold flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-block w-2.5 h-2.5 rounded-full ${
+                        summary?.trainedStatus === 'Trained' ? 'bg-green-500' : 'bg-orange-500'
+                      }`} />
+                      <span>{summary?.trainedStatus || '—'}</span>
+                    </div>
+                    <CheckCircle2 className="w-5 h-5 text-cyan-600" />
+                  </div>
+                </div>
+              </div>
               <GradientCard label="Last activity" value={formatDate(summary?.lastActivityDate) || '—'} icon={ActivityIcon} />
               <GradientCard label="Contact number" value={summary?.contactNumber || '—'} icon={Phone} />
 

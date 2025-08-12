@@ -649,14 +649,11 @@ export const getMyStatusSummary = async (req, res) => {
       const latestApplication = await VolunteerApplication.getLatestByApplicant(
         userId
       );
-      if (latestApplication) {
-        const yes = (val) =>
-          val === "yes" || val === true || val === "yes_i_agree";
-        const trained =
-          yes(latestApplication.underwentBasicVolunteerOrientation) ||
-          yes(latestApplication.underwentBasicRC143OrientationTraining);
-        trainedStatus = trained ? "Trained" : "Not Trained";
+      if (latestApplication && latestApplication.status === "accepted") {
+        // Only use the new isTrained field for accepted applications
+        trainedStatus = latestApplication.isTrained ? "Trained" : "Not Trained";
       }
+      // For non-accepted applications, default to "Not Trained"
     } catch (e) {
       // Ignore application lookup errors for status computation
     }

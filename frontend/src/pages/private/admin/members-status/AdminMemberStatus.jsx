@@ -26,11 +26,33 @@ const AdminMemberStatus = () => {
       if (hasFetched) return
       setLoading(true)
       setError(null)
-      const res = await api.activities.getMembersStatus({})
-      if (res.success) setData(res.data || [])
-      else setError(res.message || 'Failed to load members status')
+      const res = await api.volunteerApplication.getAll({ status: 'accepted' })
+      if (res.success) {
+        // Transform the data to match the expected format
+        const transformedData = (res.data || []).map(application => ({
+          userId: application.applicant?._id || application.applicant?.id,
+          name: `${application.applicant?.givenName || ''} ${application.applicant?.familyName || ''}`.trim(),
+          email: application.applicant?.email || '',
+          contactNumber: application.applicant?.mobileNumber || application.applicant?.personalInfo?.mobileNumber || application.applicant?.personalInfo?.contactNumber || '',
+          address: {
+            barangay: application.applicant?.personalInfo?.address?.districtBarangayVillage || '',
+            municipality: application.applicant?.personalInfo?.address?.municipalityCity || '',
+            province: application.applicant?.personalInfo?.address?.province || ''
+          },
+          services: application.applicant?.services?.map(service => service.type) || [],
+          skills: application.applicant?.skills || [],
+          status: application.status,
+          isTrained: application.isTrained,
+          hoursServedThisYear: application.hoursServedThisYear || 0,
+          submittedAt: application.submittedAt,
+          reviewedAt: application.reviewedAt
+        }))
+        setData(transformedData)
+      } else {
+        setError(res.message || 'Failed to load accepted volunteers')
+      }
     } catch (e) {
-      setError(e.message || 'Failed to load members status')
+      setError(e.message || 'Failed to load accepted volunteers')
     } finally {
       setLoading(false)
       setHasFetched(true)
@@ -78,7 +100,11 @@ const AdminMemberStatus = () => {
     }
     if (status) {
       const st = norm(status)
-      list = list.filter((m) => norm(m.status) === st)
+      if (st === 'trained') {
+        list = list.filter((m) => m.isTrained === true)
+      } else if (st === 'not_trained') {
+        list = list.filter((m) => m.isTrained === false)
+      }
     }
 
     return list
@@ -111,7 +137,8 @@ const AdminMemberStatus = () => {
       <div className="min-h-screen bg-blue-50">
         <div className="px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Member Status</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Accepted Volunteers</h1>
+            <p className="text-gray-600 mt-1">Showing only accepted volunteers</p>
           </div>
 
           {/* Filters */}
@@ -158,18 +185,6 @@ const AdminMemberStatus = () => {
                   {uniqueServices.map(s => <option key={s} value={s}>{s}</option>)}
                 </CustomInput>
               </div>
-              <div>
-                <CustomInput
-                  type="select"
-                  label={<span>Status</span>}
-                  value={status}
-                  onChange={(e)=>setStatus(e.target.value)}
-                >
-                  <option value="">All</option>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </CustomInput>
-              </div>
               <div className="flex items-end">
                 <button onClick={clearFilters} className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors text-sm">Clear</button>
               </div>
@@ -185,7 +200,7 @@ const AdminMemberStatus = () => {
                 <div>Services</div>
                 <div>Hours Served</div>
                 <div>Contact</div>
-                <div>Status</div>
+                <div>Training Status</div>
               </div>
             </div>
             <div className="divide-y divide-gray-200">
@@ -212,8 +227,8 @@ const AdminMemberStatus = () => {
                       <div className="text-gray-700">{Math.round(m.hoursServedThisYear || 0)}</div>
                       <div className="text-gray-700 flex items-center gap-2"><Phone className="w-4 h-4" /> {m.contactNumber || '—'}</div>
                       <div>
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${m.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {m.status}
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${m.isTrained ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                          {m.isTrained ? 'Trained' : 'Not Trained'}
                         </span>
                       </div>
                     </div>

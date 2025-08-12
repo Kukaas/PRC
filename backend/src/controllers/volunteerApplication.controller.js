@@ -1,5 +1,6 @@
 import VolunteerApplication from "../models/volunteerApplication.model.js";
 import User from "../models/user.model.js";
+import { sendTrainingNotificationEmail } from "../services/email.service.js";
 
 // Submit a new volunteer application
 export const submitApplication = async (req, res) => {
@@ -268,7 +269,7 @@ export const updateApplicationStatus = async (req, res) => {
       adminComments,
     } = req.body;
 
-    const adminId = req.user.id;
+    const adminId = req.user.userId;
 
     const application = await VolunteerApplication.findById(id);
 
@@ -276,6 +277,14 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Application not found",
+      });
+    }
+
+    // Check if trying to accept a volunteer who hasn't completed training
+    if (status === "accepted" && !application.isTrained) {
+      return res.status(400).json({
+        success: false,
+        message: "Volunteer must complete training before being accepted",
       });
     }
 
@@ -452,6 +461,144 @@ export const deleteApplication = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting application:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+// Admin: Send training notification to volunteer
+export const sendTrainingNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { trainingDate, trainingTime, trainingLocation, exactLocation, provinceCode, municipalityCode, barangayCode } = req.body;
+    const adminId = req.user.userId;
+
+    const application = await VolunteerApplication.findById(id)
+      .populate("applicant", "givenName familyName email");
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+
+
+    // Validate required fields
+    if (!trainingDate || !trainingTime || !trainingLocation) {
+      return res.status(400).json({
+        success: false,
+        message: "Training date, time, and location are required",
+      });
+    }
+
+    // No need to combine locations - they will be displayed separately
+
+    // Send email notification
+    try {
+      await sendTrainingNotificationEmail(
+        application.applicant.email,
+        `${application.applicant.givenName} ${application.applicant.familyName}`,
+        trainingDate,
+        trainingTime,
+        trainingLocation,
+        exactLocation
+      );
+    } catch (emailError) {
+      console.error('Error sending training notification email:', emailError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send email notification",
+      });
+    }
+
+    // Update application with training notification details
+    application.trainingNotification = {
+      trainingDate: new Date(trainingDate),
+      trainingTime: trainingTime,
+      trainingLocation: trainingLocation,
+      provinceCode: provinceCode,
+      municipalityCode: municipalityCode,
+      barangayCode: barangayCode,
+      exactLocation: exactLocation || '',
+      notifiedAt: new Date(),
+      notifiedBy: adminId,
+    };
+
+    await application.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Training notification sent successfully",
+      data: {
+        applicationId: application._id,
+        trainingDate: trainingDate,
+        trainingTime: trainingTime,
+        trainingLocation: trainingLocation,
+        exactLocation: exactLocation || '',
+        notifiedAt: application.trainingNotification.notifiedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Error sending training notification:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Admin: Update training status
+export const updateTrainingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isTrained } = req.body;
+
+    const application = await VolunteerApplication.findById(id);
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    // Allow training status updates for pending volunteers who have been notified about training
+    if (application.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Training status can only be updated for pending applications",
+      });
+    }
+
+    // Check if volunteer has been notified about training
+    if (!application.trainingNotification?.trainingDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Volunteer must be notified about training before updating training status",
+      });
+    }
+
+    // Update training status
+    const updatedApplication = await VolunteerApplication.findByIdAndUpdate(
+      id,
+      { isTrained },
+      { new: true, runValidators: true }
+    )
+      .populate("applicant", "givenName familyName email")
+      .populate("reviewedBy", "givenName familyName");
+
+    res.status(200).json({
+      success: true,
+      message: `Training status updated to ${isTrained ? 'trained' : 'not trained'}`,
+      data: updatedApplication,
+    });
+  } catch (error) {
+    console.error("Error updating training status:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",

@@ -199,6 +199,29 @@ const volunteerApplicationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Training Status (for accepted volunteers)
+    isTrained: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Training notification details
+    trainingNotification: {
+      trainingDate: Date,
+      trainingTime: String,
+      trainingLocation: String,
+      // Store location codes for easy form population
+      provinceCode: String,
+      municipalityCode: String,
+      barangayCode: String,
+      exactLocation: String,
+      notifiedAt: Date,
+      notifiedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    },
+
     // Timestamps
     submittedAt: {
       type: Date,
