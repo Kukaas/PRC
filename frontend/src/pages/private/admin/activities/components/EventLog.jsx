@@ -294,7 +294,7 @@ const EventLog = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {activity.status !== 'cancelled' && (
+                    {(activity.status === 'completed' || activity.status === 'cancelled') && (
                       <Button
                         onClick={() => onSelectArchivedEvent(activity._id)}
                         className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 text-xs"

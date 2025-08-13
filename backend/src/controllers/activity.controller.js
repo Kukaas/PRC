@@ -1186,17 +1186,19 @@ export const getAttendanceReport = async (req, res) => {
     }
 
     // Format attendance data
-    const attendanceData = activity.participants.map(participant => ({
-      userId: participant.userId._id,
-      name: `${participant.userId.givenName} ${participant.userId.familyName}`,
-      email: participant.userId.email,
-      contactNumber: participant.userId.personalInfo?.mobileNumber || participant.userId.personalInfo?.contactNumber,
-      joinedAt: participant.joinedAt,
-      status: participant.status,
-      timeIn: participant.timeIn,
-      timeOut: participant.timeOut,
-      totalHours: participant.totalHours,
-    }));
+    const attendanceData = activity.participants
+      .filter(participant => participant.userId) // Filter out participants with null userId
+      .map(participant => ({
+        userId: participant.userId._id,
+        name: `${participant.userId.givenName} ${participant.userId.familyName}`,
+        email: participant.userId.email,
+        contactNumber: participant.userId.personalInfo?.mobileNumber || participant.userId.personalInfo?.contactNumber,
+        joinedAt: participant.joinedAt,
+        status: participant.status,
+        timeIn: participant.timeIn,
+        timeOut: participant.timeOut,
+        totalHours: participant.totalHours,
+      }));
 
     const report = {
       activity: {
