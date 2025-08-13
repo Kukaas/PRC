@@ -37,6 +37,7 @@ const LeaderTable = () => {
 
   // Delete confirmation state
   const [leaderToDelete, setLeaderToDelete] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Notify dialog state
   const [notifyDialog, setNotifyDialog] = useState({ open: false, leader: null })
@@ -144,12 +145,16 @@ const LeaderTable = () => {
 
   const deleteLeader = async (id) => {
     try {
+      setDeleteLoading(true)
       await api.leaders.delete(id)
       toast.success('Leader deleted')
-      fetchLeaders()
+      // Update state instead of refetching
+      setLeaders(prevLeaders => prevLeaders.filter(leader => leader._id !== id))
       setLeaderToDelete(null)
     } catch (e) {
       toast.error(e.message || 'Failed to delete leader')
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -320,21 +325,24 @@ const LeaderTable = () => {
                                        <div className="flex gap-2">
                       <Button
                         onClick={() => openViewProfileDialog(l)}
-                        className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs"
+                        disabled={notifyLoading || deleteLoading}
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Eye className="w-3 h-3 mr-1" />
                         View
                       </Button>
                       <Button
                         onClick={() => navigate(`/admin/leaders/edit/${l._id}`)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs"
+                        disabled={notifyLoading || deleteLoading}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Edit
                       </Button>
                       <Button
                         onClick={() => openNotifyDialog(l)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-xs"
+                        disabled={notifyLoading || deleteLoading}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <MessageSquare className="w-3 h-3 mr-1" />
                         Notify
@@ -343,7 +351,8 @@ const LeaderTable = () => {
                         <AlertDialogTrigger asChild>
                           <Button
                             onClick={() => setLeaderToDelete(l)}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-xs"
+                            disabled={notifyLoading || deleteLoading}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Trash2 className="w-3 h-3 mr-1" />
                             Delete
@@ -363,9 +372,17 @@ const LeaderTable = () => {
                            </AlertDialogCancel>
                            <AlertDialogAction
                              onClick={() => deleteLeader(leaderToDelete?._id)}
-                             className="bg-red-600 hover:bg-red-700"
+                             disabled={deleteLoading}
+                             className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                            >
-                             Delete
+                             {deleteLoading ? (
+                               <div className="flex items-center justify-center">
+                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                 Deleting...
+                               </div>
+                             ) : (
+                               'Delete'
+                             )}
                            </AlertDialogAction>
                          </AlertDialogFooter>
                        </AlertDialogContent>
