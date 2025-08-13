@@ -200,7 +200,14 @@ const AdminActivities = () => {
       toast.dismiss(processingToast)
 
       if (response) {
-        toast.success(`${scanningAction === 'timeIn' ? 'Time In' : 'Time Out'} recorded successfully for ${parsedData.name}!`)
+        let message = `${scanningAction === 'timeIn' ? 'Time In' : 'Time Out'} recorded successfully for ${parsedData.name}!`
+
+        // Check if automatic time adjustment was made
+        if (response.data?.participant?.automaticAdjustment) {
+          message += ` (Time automatically adjusted to event ${scanningAction === 'timeIn' ? 'start' : 'end'} time)`
+        }
+
+        toast.success(message)
         setShowQRScanner(false)
       }
     } catch (error) {
@@ -209,13 +216,14 @@ const AdminActivities = () => {
     }
   }
 
+  
   const handlePrint = async (activity) => {
     try {
       let attendance = []
       try {
         const res = await api.activities.getAttendanceReport(activity._id)
         attendance = res.data?.attendance || []
-      } catch (err) {
+      } catch {
         // If fetching fails, proceed with empty attendance
         attendance = []
       }

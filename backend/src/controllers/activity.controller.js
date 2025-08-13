@@ -1057,11 +1057,41 @@ export const recordAttendance = async (req, res) => {
       });
     }
 
+    // Calculate event start and end times for the activity date
+    const activityDate = new Date(activity.date);
+    const [startHours, startMinutes] = activity.timeFrom.split(':').map(Number);
+    const [endHours, endMinutes] = activity.timeTo.split(':').map(Number);
+
+    const eventStartTime = new Date(activityDate);
+    eventStartTime.setHours(startHours, startMinutes, 0, 0);
+
+    const eventEndTime = new Date(activityDate);
+    eventEndTime.setHours(endHours, endMinutes, 0, 0);
+
+    const now = new Date();
+
     let result;
+    let automaticAdjustment = false;
+    let adjustedTime = null;
+
     if (action === "timeIn") {
-      result = await activity.recordTimeIn(userId);
+      // If timing in before event starts, use event start time
+      if (now < eventStartTime) {
+        result = await activity.recordTimeIn(userId, eventStartTime);
+        automaticAdjustment = true;
+        adjustedTime = eventStartTime;
+      } else {
+        result = await activity.recordTimeIn(userId);
+      }
     } else if (action === "timeOut") {
-      result = await activity.recordTimeOut(userId);
+      // If timing out after event end time, use event end time
+      if (now > eventEndTime) {
+        result = await activity.recordTimeOut(userId, eventEndTime);
+        automaticAdjustment = true;
+        adjustedTime = eventEndTime;
+      } else {
+        result = await activity.recordTimeOut(userId);
+      }
     }
 
     // Send notification to the user about attendance recording
@@ -1092,7 +1122,9 @@ export const recordAttendance = async (req, res) => {
           userId: participant.userId,
           name: `${parsedQRData.name || 'Unknown'}`,
           action: action,
-          timestamp: action === 'timeIn' ? participant.timeIn : participant.timeOut
+          timestamp: action === 'timeIn' ? participant.timeIn : participant.timeOut,
+          automaticAdjustment: automaticAdjustment,
+          adjustedTime: adjustedTime
         }
       }
     });

@@ -16,21 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-function isEventEnded(activity) {
-  if (!activity?.date) return false;
-  try {
-    const end = new Date(activity.date);
-    if (activity?.timeTo) {
-      const [h, m] = String(activity.timeTo).split(':').map(Number);
-      if (!Number.isNaN(h)) end.setHours(h, Number.isNaN(m) ? 0 : m, 0, 0);
-    } else {
-      end.setHours(23, 59, 59, 999);
-    }
-    return Date.now() > end.getTime();
-  } catch {
-    return false;
-  }
-}
+
 
 const JoinedActivities = ({ onActivityLeave }) => {
   const { user } = useAuth()
@@ -217,8 +203,8 @@ const JoinedActivities = ({ onActivityLeave }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 text-xs text-blue-700">
           <div>• <strong>Published:</strong> Can leave activity</div>
           <div>• <strong>Ongoing:</strong> Cannot leave (in progress)</div>
-          <div>• <strong>Completed:</strong> Cannot leave (finished)</div>
-          <div>• <strong>Cancelled:</strong> Cannot leave (cancelled)</div>
+          <div>• <strong>Completed:</strong> Cannot leave (finished, QR expired)</div>
+          <div>• <strong>Cancelled:</strong> Cannot leave (cancelled, QR expired)</div>
         </div>
       </div>
 
@@ -304,15 +290,15 @@ const JoinedActivities = ({ onActivityLeave }) => {
                           ? 'bg-green-100 text-green-800 border-green-200'
                           : activity.userParticipant.status === 'registered'
                             ? 'bg-blue-100 text-blue-800 border-blue-200'
-                            : activity.userParticipant.status === 'absent' && (activity.status === 'completed' || isEventEnded(activity))
+                            : activity.userParticipant.status === 'absent' && activity.status === 'completed'
                               ? 'bg-red-600 text-white border-red-600'
                               : 'bg-gray-100 text-gray-800 border-gray-200'
                           }`}
-                        title={activity.userParticipant.status === 'absent' && (activity.status === 'completed' || isEventEnded(activity)) ? 'Marked as absent (no attendance recorded)' : ''}
+                        title={activity.userParticipant.status === 'absent' && activity.status === 'completed' ? 'Marked as absent (no attendance recorded)' : ''}
                       >
                         {activity.userParticipant.status === 'attended' ? '✓ Attended' :
                           activity.userParticipant.status === 'registered' ? '📝 Registered' :
-                            activity.userParticipant.status === 'absent' && (activity.status === 'completed' || isEventEnded(activity)) ? '⛔ Absent' :
+                            activity.userParticipant.status === 'absent' && activity.status === 'completed' ? '⛔ Absent' :
                               '📝 Registered'}
                       </Badge>
                     )}
@@ -541,26 +527,27 @@ const JoinedActivities = ({ onActivityLeave }) => {
                   <h4 className="text-sm sm:text-md font-medium mb-3">Attendance QR Code</h4>
                   <div className="flex justify-center">
                     <div className="relative inline-block">
-                      {(() => {
-                        const expired = selectedActivity && (['completed', 'cancelled'].includes(selectedActivity.status) || isEventEnded(selectedActivity))
-                        return (
-                          <>
-                            <QRCode
-                              value={selectedActivity ? generateActivityQR(selectedActivity) : ''}
-                              size={160}
-                              level="M"
-                              className={`w-40 h-40 sm:w-48 sm:h-48 ${expired ? 'opacity-40' : ''}`}
-                            />
-                            {expired && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="bg-cyan-500 text-white px-3 py-1 rounded-md text-xs sm:text-sm shadow-md">
-                                  EXPIRED
-                                </span>
-                              </div>
-                            )}
-                          </>
-                        )
-                      })()}
+                                             {(() => {
+                         // Only show expired if activity status is completed or cancelled
+                         const expired = selectedActivity && ['completed', 'cancelled'].includes(selectedActivity.status)
+                         return (
+                           <>
+                             <QRCode
+                               value={selectedActivity ? generateActivityQR(selectedActivity) : ''}
+                               size={160}
+                               level="M"
+                               className={`w-40 h-40 sm:w-48 sm:h-48 ${expired ? 'opacity-40' : ''}`}
+                             />
+                             {expired && (
+                               <div className="absolute inset-0 flex items-center justify-center">
+                                 <span className="bg-cyan-500 text-white px-3 py-1 rounded-md text-xs sm:text-sm shadow-md">
+                                   EXPIRED
+                                 </span>
+                               </div>
+                             )}
+                           </>
+                         )
+                       })()}
                     </div>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-500 mt-3">

@@ -234,7 +234,7 @@ activitySchema.methods.updateParticipantStatus = function(userId, status) {
 };
 
 // Method to record time in for a participant
-activitySchema.methods.recordTimeIn = function(userId) {
+activitySchema.methods.recordTimeIn = function(userId, customTime = null) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
@@ -247,13 +247,14 @@ activitySchema.methods.recordTimeIn = function(userId) {
     throw new Error('Time in already recorded for this participant');
   }
 
-  participant.timeIn = new Date();
+  // Use custom time if provided, otherwise use current time
+  participant.timeIn = customTime ? new Date(customTime) : new Date();
   participant.status = 'attended';
   return this.save();
 };
 
 // Method to record time out for a participant
-activitySchema.methods.recordTimeOut = function(userId) {
+activitySchema.methods.recordTimeOut = function(userId, customTime = null) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
@@ -270,7 +271,8 @@ activitySchema.methods.recordTimeOut = function(userId) {
     throw new Error('Time out already recorded for this participant');
   }
 
-  participant.timeOut = new Date();
+  // Use custom time if provided, otherwise use current time
+  participant.timeOut = customTime ? new Date(customTime) : new Date();
 
   // Calculate total hours
   const timeIn = new Date(participant.timeIn);

@@ -113,10 +113,24 @@ const AttendanceSection = ({
                         {participant.contactNumber || '--'}
                       </div>
                       <div className="text-gray-600">
-                        {participant.timeIn ? new Date(participant.timeIn).toLocaleTimeString() : '--'}
+                        {participant.timeIn ? (
+                          <div>
+                            <div>{new Date(participant.timeIn).toLocaleTimeString()}</div>
+                            {participant.automaticAdjustment && participant.action === 'timeIn' && (
+                              <div className="text-xs text-blue-600">(Auto-adjusted)</div>
+                            )}
+                          </div>
+                        ) : '--'}
                       </div>
                       <div className="text-gray-600">
-                        {participant.timeOut ? new Date(participant.timeOut).toLocaleTimeString() : '--'}
+                        {participant.timeOut ? (
+                          <div>
+                            <div>{new Date(participant.timeOut).toLocaleTimeString()}</div>
+                            {participant.automaticAdjustment && participant.action === 'timeOut' && (
+                              <div className="text-xs text-blue-600">(Auto-adjusted)</div>
+                            )}
+                          </div>
+                        ) : '--'}
                       </div>
                       <div>
                         <span
