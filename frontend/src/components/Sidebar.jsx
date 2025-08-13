@@ -73,6 +73,12 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       icon: Bell,
       active: location.pathname.includes('/notifications/')
     },
+    {
+      href: `/admin/settings/${userId}`,
+      label: "Settings",
+      icon: Settings,
+      active: location.pathname.includes('/settings/')
+    },
   ];
 
   // Volunteer navigation links
@@ -100,6 +106,12 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       label: "Notifications",
       icon: Bell,
       active: location.pathname.includes('/notifications/')
+    },
+    {
+      href: `/settings/${userId}`,
+      label: "Settings",
+      icon: Settings,
+      active: location.pathname.includes('/settings/')
     },
   ];
 
@@ -193,18 +205,18 @@ const Sidebar = ({ isMobile = false, onClose }) => {
   };
 
   return (
-    <div className={`bg-white shadow-lg ${isMobile ? 'w-full' : 'w-72'} h-full flex flex-col`}>
+    <div className={`bg-white shadow-lg ${isMobile ? 'w-full' : 'w-72'} h-full flex flex-col ${isMobile ? 'min-h-screen' : ''}`}>
       {/* Logo Section */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <img
             src={logo}
             alt="Philippine Red Cross Logo"
-            className="w-10 h-10 object-contain"
+            className="w-10 h-10 object-contain flex-shrink-0"
           />
-          <div>
-            <h1 className="text-lg font-bold text-gray-800">Red Cross</h1>
-            <p className="text-xs text-gray-500">
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold text-gray-800 truncate">Red Cross</h1>
+            <p className="text-xs text-gray-500 truncate">
               {user?.role === 'admin' ? 'Admin Portal' : 'Volunteer Portal'}
             </p>
           </div>
@@ -212,9 +224,9 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       </div>
 
       {/* User Profile Section */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-3">
-          <div className="relative group">
+          <div className="relative group flex-shrink-0">
             <button
               onClick={handleAvatarClick}
               className="relative cursor-pointer transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
@@ -256,15 +268,15 @@ const Sidebar = ({ isMobile = false, onClose }) => {
             <p className="text-sm font-semibold text-gray-800 truncate">
               {user?.givenName} {user?.familyName}
             </p>
-            <p className="text-xs text-gray-500 capitalize">
+            <p className="text-xs text-gray-500 capitalize truncate">
               {user?.role || 'Volunteer'}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 p-4 space-y-2">
+      {/* Navigation Links - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
         {navigationLinks.map((link) => {
           const Icon = link.icon;
           return (
@@ -277,15 +289,15 @@ const Sidebar = ({ isMobile = false, onClose }) => {
                   : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
-              <Icon className={`w-5 h-5 ${link.active ? 'text-blue-600' : 'text-gray-400'}`} />
-              <span className="font-medium">{link.label}</span>
+              <Icon className={`w-5 h-5 flex-shrink-0 ${link.active ? 'text-blue-600' : 'text-gray-400'}`} />
+              <span className="font-medium truncate">{link.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Bottom Section */}
-      <div className="p-4 border-t border-gray-200 space-y-2">
+      {/* Bottom Section - Fixed */}
+      <div className="p-4 border-t border-gray-200 space-y-2 flex-shrink-0">
         <Button
           variant="ghost"
           onClick={handleLogout}

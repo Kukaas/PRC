@@ -62,6 +62,7 @@ export const api = {
     getProfile: () => apiClient.get("/auth/profile"),
     forgotPassword: (data) => apiClient.post("/auth/forgot-password", data),
     resetPassword: (data) => apiClient.post("/auth/reset-password", data),
+    changePassword: (data) => apiClient.put("/auth/change-password", data),
   },
   profile: {
     update: (data) => apiClient.put("/profile/update", data),

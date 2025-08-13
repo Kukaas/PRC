@@ -9,6 +9,7 @@ import {
   verifyEmail,
   forgotPassword,
   resetPassword,
+  changePassword,
 } from "../controllers/auth.controller.js";
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.post("/reset-password", resetPassword);
 // Protected routes
 router.get("/profile", authenticateToken, getProfile);
 router.post("/logout", authenticateToken, logout);
+router.put("/change-password", authenticateToken, changePassword);
 
 export default router;

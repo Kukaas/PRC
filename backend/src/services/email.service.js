@@ -219,7 +219,6 @@ export const sendPasswordChangeNotification = async (email, name, timestamp, ipA
             <p style="color: #2c3e50; margin: 0 0 15px 0; font-weight: bold;">📅 Change Details:</p>
             <ul style="color: #34495e; margin: 0; padding-left: 20px;">
               <li><strong>Date & Time:</strong> ${new Date(timestamp).toLocaleString()}</li>
-              <li><strong>Location:</strong> ${ipAddress}</li>
               <li><strong>Account:</strong> ${email}</li>
               ${userAgent !== "Unknown" ? `<li><strong>Device:</strong> ${userAgent}</li>` : ''}
             </ul>

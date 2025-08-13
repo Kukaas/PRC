@@ -517,3 +517,95 @@ export const resetPassword = async (req, res) => {
     });
   }
 };
+
+// Change password (authenticated user)
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+
+    // Find user
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Verify old password
+    const isOldPasswordCorrect = await user.comparePassword(oldPassword);
+    if (!isOldPasswordCorrect) {
+      return res.status(401).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    // Check if new password is different from old password
+    const isNewPasswordSame = await user.comparePassword(newPassword);
+    if (isNewPasswordSame) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be different from current password",
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    // Get client IP address and user agent
+    const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    const timestamp = new Date();
+
+    // Format IP address for better display
+    let displayIpAddress = ipAddress;
+    if (ipAddress === '::1' || ipAddress === '127.0.0.1') {
+      displayIpAddress = 'Localhost (Development)';
+    } else if (ipAddress === 'Unknown') {
+      displayIpAddress = 'Unknown Location';
+    } else if (ipAddress.includes('::ffff:')) {
+      // Handle IPv4-mapped IPv6 addresses
+      displayIpAddress = ipAddress.replace('::ffff:', '');
+    }
+
+    // Format user agent for better display
+    let displayUserAgent = 'Unknown Device';
+    if (userAgent !== 'Unknown') {
+      // Extract browser and OS information
+      const browserMatch = userAgent.match(/(chrome|safari|firefox|edge|opera|ie)\/?\s*(\d+)/i);
+      const osMatch = userAgent.match(/\((.*?)\)/);
+
+      if (browserMatch && osMatch) {
+        displayUserAgent = `${browserMatch[1].charAt(0).toUpperCase() + browserMatch[1].slice(1)} on ${osMatch[1]}`;
+      } else if (browserMatch) {
+        displayUserAgent = browserMatch[1].charAt(0).toUpperCase() + browserMatch[1].slice(1);
+      } else {
+        displayUserAgent = 'Unknown Browser';
+      }
+    }
+
+    // Send password change notification email
+    await sendPasswordChangeNotification(
+      user.email,
+      `${user.givenName} ${user.familyName}`,
+      timestamp,
+      displayIpAddress,
+      displayUserAgent
+    );
+
+    res.json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
