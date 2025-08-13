@@ -46,6 +46,10 @@ const LeaderTable = () => {
   // View profile dialog state
   const [viewProfileDialog, setViewProfileDialog] = useState({ open: false, leader: null })
 
+  // Pagination
+  const PAGE_SIZE = 15
+  const [currentPage, setCurrentPage] = useState(1)
+
   useEffect(() => {
     fetchLeaders()
     fetchProvinces()
@@ -115,6 +119,28 @@ const LeaderTable = () => {
     setFilterMunicipality('')
     setFilterBarangay('')
   }
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, filterProvince, filterMunicipality, filterBarangay])
+
+  const totalPages = useMemo(() => {
+    const pages = Math.ceil((filtered?.length || 0) / PAGE_SIZE)
+    return pages > 0 ? pages : 1
+  }, [filtered?.length])
+
+  // Clamp current page when results shrink
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const paginatedFilteredLeaders = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return filtered.slice(start, start + PAGE_SIZE)
+  }, [filtered, currentPage])
 
   const deleteLeader = async (id) => {
     try {
@@ -195,11 +221,11 @@ const LeaderTable = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="rounded-lg overflow-hidden">
       {/* Search and Filters */}
       <div className="mb-6 bg-cyan-50 rounded-lg p-4 border border-cyan-200">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="lg:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <Search className="w-4 h-4 inline mr-1" />
               Search
@@ -262,10 +288,10 @@ const LeaderTable = () => {
               ))}
             </select>
           </div>
-        </div>
-        <div className="mt-3 flex gap-2">
-          <Button onClick={fetchLeaders} className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md">Search</Button>
-          <Button onClick={clearFilters} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">Clear</Button>
+          <div className="flex items-end gap-2">
+            <Button onClick={fetchLeaders} className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md text-sm">Search</Button>
+            <Button onClick={clearFilters} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm">Clear</Button>
+          </div>
         </div>
       </div>
 
@@ -280,80 +306,122 @@ const LeaderTable = () => {
             <div>Actions</div>
           </div>
         </div>
-        <div className="divide-y divide-gray-200">
-          {filtered.length === 0 ? (
-            <div className="px-6 py-8 text-center text-gray-500">No leaders found</div>
-          ) : (
-            filtered.map((l) => (
-              <div key={l._id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                <div className="grid grid-cols-7 gap-4 text-sm items-center">
-                  <div className="font-medium text-gray-900">{`${l.firstName} ${l.middleName ? l.middleName + ' ' : ''}${l.lastName}`}</div>
-                  <div className="truncate text-gray-600" title={l.email}>{l.email}</div>
-                  <div className="text-gray-600">{l.contactNumber || '-'}</div>
-                  <div className="text-gray-600">{l.address?.districtBarangayVillage || '-'}, {l.address?.municipalityCity || '-'}</div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => openViewProfileDialog(l)}
-                      className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs rounded"
-                      size="sm"
-                    >
-                      <Eye className="w-3 h-3 mr-1" />
-                      View
-                    </Button>
-                    <Button
-                      onClick={() => navigate(`/admin/leaders/edit/${l._id}`)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs rounded"
-                      size="sm"
-                    >
-                      <Edit className="w-3 h-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => openNotifyDialog(l)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-xs rounded"
-                      size="sm"
-                    >
-                      <MessageSquare className="w-3 h-3 mr-1" />
-                      Notify
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          onClick={() => setLeaderToDelete(l)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-xs rounded"
-                          size="sm"
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Leader</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete {leaderToDelete ? `${leaderToDelete.firstName} ${leaderToDelete.lastName}` : 'this leader'}?
-                            This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel onClick={() => setLeaderToDelete(null)}>
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteLeader(leaderToDelete?._id)}
-                            className="bg-red-600 hover:bg-red-700"
+                 <div className="divide-y divide-gray-200">
+           {filtered.length === 0 ? (
+             <div className="px-6 py-8 text-center text-gray-500">No leaders found</div>
+           ) : (
+             paginatedFilteredLeaders.map((l) => (
+               <div key={l._id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                 <div className="grid grid-cols-7 gap-4 text-sm items-center">
+                   <div className="font-medium text-gray-900">{`${l.firstName} ${l.middleName ? l.middleName + ' ' : ''}${l.lastName}`}</div>
+                   <div className="truncate text-gray-600" title={l.email}>{l.email}</div>
+                   <div className="text-gray-600">{l.contactNumber || '-'}</div>
+                   <div className="text-gray-600">{l.address?.districtBarangayVillage || '-'}, {l.address?.municipalityCity || '-'}</div>
+                                       <div className="flex gap-2">
+                      <Button
+                        onClick={() => openViewProfileDialog(l)}
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs"
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        onClick={() => navigate(`/admin/leaders/edit/${l._id}`)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs"
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => openNotifyDialog(l)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-xs"
+                      >
+                        <MessageSquare className="w-3 h-3 mr-1" />
+                        Notify
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            onClick={() => setLeaderToDelete(l)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-xs"
                           >
+                            <Trash2 className="w-3 h-3 mr-1" />
                             Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+                          </Button>
+                        </AlertDialogTrigger>
+                       <AlertDialogContent>
+                         <AlertDialogHeader>
+                           <AlertDialogTitle>Delete Leader</AlertDialogTitle>
+                           <AlertDialogDescription>
+                             Are you sure you want to delete {leaderToDelete ? `${leaderToDelete.firstName} ${leaderToDelete.lastName}` : 'this leader'}?
+                             This action cannot be undone.
+                           </AlertDialogDescription>
+                         </AlertDialogHeader>
+                         <AlertDialogFooter>
+                           <AlertDialogCancel onClick={() => setLeaderToDelete(null)}>
+                             Cancel
+                           </AlertDialogCancel>
+                           <AlertDialogAction
+                             onClick={() => deleteLeader(leaderToDelete?._id)}
+                             className="bg-red-600 hover:bg-red-700"
+                           >
+                             Delete
+                           </AlertDialogAction>
+                         </AlertDialogFooter>
+                       </AlertDialogContent>
+                     </AlertDialog>
+                   </div>
+                 </div>
+               </div>
+             ))
+           )}
+         </div>
+
+         {/* Pagination */}
+         {filtered.length > PAGE_SIZE && (
+           <div className="px-6 py-4 flex items-center justify-between border-t bg-white">
+             <div className="text-sm text-gray-600">
+               Showing {(currentPage - 1) * PAGE_SIZE + 1}
+               {' '}to {Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}
+             </div>
+             <div className="flex items-center gap-2">
+               <button
+                 className="px-3 py-1 text-sm rounded border disabled:opacity-50"
+                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                 disabled={currentPage === 1}
+               >
+                 Previous
+               </button>
+               {Array.from({ length: totalPages }).map((_, i) => (
+                 <button
+                   key={i}
+                   className={`px-3 py-1 text-sm rounded border ${currentPage === i + 1 ? 'bg-cyan-600 text-white border-cyan-600' : ''}`}
+                   onClick={() => setCurrentPage(i + 1)}
+                 >
+                   {i + 1}
+                 </button>
+               ))}
+               <button
+                 className="px-3 py-1 text-sm rounded border disabled:opacity-50"
+                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                 disabled={currentPage === totalPages}
+               >
+                 Next
+               </button>
+             </div>
+           </div>
+         )}
+
+        {/* Summary Footer */}
+        {!loading && filtered.length > 0 && (
+          <div className="bg-gray-50 px-6 py-3 border-t text-sm text-gray-700 flex justify-between">
+            <span>Total Leaders: {filtered.length}</span>
+            <div className="flex gap-4">
+              <span>Municipalities: {[...new Set(filtered.map(l => l.address?.municipalityCity).filter(Boolean))].length}</span>
+              <span>Barangays: {[...new Set(filtered.map(l => l.address?.districtBarangayVillage).filter(Boolean))].length}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Notify Dialog */}

@@ -228,7 +228,7 @@ const AdminMemberStatus = () => {
                       <div className="text-gray-700 truncate" title={(m.services||[]).join(', ')}>
                         {(m.services||[]).length ? (m.services||[]).join(', ') : '—'}
                       </div>
-                      <div className="text-gray-700">{Math.round(m.hoursServedThisYear || 0)}</div>
+                      <div className="text-gray-700">{(m.hoursServedThisYear || 0).toFixed(2)}</div>
                       <div className="text-gray-700 flex items-center gap-2"><Phone className="w-4 h-4" /> {m.contactNumber || '—'}</div>
                       <div>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${m.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -271,6 +271,17 @@ const AdminMemberStatus = () => {
                   >
                     Next
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Summary Footer */}
+            {!loading && filteredData.length > 0 && (
+              <div className="bg-gray-50 px-6 py-3 border-t text-sm text-gray-700 flex justify-between">
+                <span>Total Volunteers: {filteredData.length}</span>
+                <div className="flex gap-4">
+                  <span>Active: {filteredData.filter(m => m.status === 'Active').length}</span>
+                  <span>Inactive: {filteredData.filter(m => m.status === 'Inactive').length}</span>
                 </div>
               </div>
             )}

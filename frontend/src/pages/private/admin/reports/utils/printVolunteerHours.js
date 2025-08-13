@@ -34,7 +34,7 @@ export const printVolunteerHoursReport = ({ year, rows = [], filters = {} }) => 
       <td>${escapeHtml(r.name)}</td>
       <td>${escapeHtml([r.address?.barangay, r.address?.municipality].filter(Boolean).join(', '))}</td>
       <td>${escapeHtml((Array.isArray(r.services) ? r.services : []).join(', '))}</td>
-      <td style="text-align:right;">${Math.round(Number(r.hours || 0))}</td>
+      <td style="text-align:right;">${Number(r.hours || 0).toFixed(2)}</td>
       <td>${escapeHtml(r.contactNumber || '')}</td>
       <td>${escapeHtml(r.status || '')}</td>
     </tr>

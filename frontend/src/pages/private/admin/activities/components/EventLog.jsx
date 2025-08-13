@@ -23,40 +23,42 @@ const EventLog = ({
 
   // Filtered activities based on all filters
   const filteredActivities = useMemo(() => {
-    return activities.archived.filter(activity => {
-      const title = activity.title?.toLowerCase() || ''
-      const description = activity.description?.toLowerCase() || ''
-      const barangay = activity.location?.barangay?.toLowerCase() || ''
-      const municipality = activity.location?.municipality?.toLowerCase() || ''
-      const status = activity.status?.toLowerCase() || ''
+    return activities.archived
+      .filter(activity => {
+        const title = activity.title?.toLowerCase() || ''
+        const description = activity.description?.toLowerCase() || ''
+        const barangay = activity.location?.barangay?.toLowerCase() || ''
+        const municipality = activity.location?.municipality?.toLowerCase() || ''
+        const status = activity.status?.toLowerCase() || ''
 
-      // Search filter
-      const matchesSearch = !searchTerm ||
-        title.includes(searchTerm.toLowerCase()) ||
-        description.includes(searchTerm.toLowerCase()) ||
-        barangay.includes(searchTerm.toLowerCase()) ||
-        municipality.includes(searchTerm.toLowerCase())
+        // Search filter
+        const matchesSearch = !searchTerm ||
+          title.includes(searchTerm.toLowerCase()) ||
+          description.includes(searchTerm.toLowerCase()) ||
+          barangay.includes(searchTerm.toLowerCase()) ||
+          municipality.includes(searchTerm.toLowerCase())
 
-      // Status filter
-      const matchesStatus = !selectedStatus || status === selectedStatus.toLowerCase()
+        // Status filter
+        const matchesStatus = !selectedStatus || status === selectedStatus.toLowerCase()
 
-      // Location filters
-      const matchesBarangay = !selectedBarangay ||
-        activity.location?.barangay === selectedBarangay
-      const matchesMunicipality = !selectedMunicipality ||
-        activity.location?.municipality === selectedMunicipality
+        // Location filters
+        const matchesBarangay = !selectedBarangay ||
+          activity.location?.barangay === selectedBarangay
+        const matchesMunicipality = !selectedMunicipality ||
+          activity.location?.municipality === selectedMunicipality
 
-      // Date range filters
-      const activityDate = new Date(activity.date)
-      const fromDate = dateFrom ? new Date(dateFrom) : null
-      const toDate = dateTo ? new Date(dateTo) : null
+        // Date range filters
+        const activityDate = new Date(activity.date)
+        const fromDate = dateFrom ? new Date(dateFrom + 'T00:00:00') : null
+        const toDate = dateTo ? new Date(dateTo + 'T23:59:59') : null
 
-      const matchesDateFrom = !fromDate || activityDate >= fromDate
-      const matchesDateTo = !toDate || activityDate <= toDate
+        const matchesDateFrom = !fromDate || activityDate >= fromDate
+        const matchesDateTo = !toDate || activityDate <= toDate
 
-      return matchesSearch && matchesStatus && matchesBarangay &&
-             matchesMunicipality && matchesDateFrom && matchesDateTo
-    })
+        return matchesSearch && matchesStatus && matchesBarangay &&
+               matchesMunicipality && matchesDateFrom && matchesDateTo
+      })
+      .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort by date descending (newest first)
   }, [activities.archived, searchTerm, selectedStatus, selectedBarangay,
       selectedMunicipality, dateFrom, dateTo])
 
@@ -270,7 +272,7 @@ const EventLog = ({
             {paginatedFilteredActivities.map((activity) => (
               <div key={activity._id} className="px-6 py-4 hover:bg-gray-50">
                 <div className="grid grid-cols-6 gap-4 text-sm items-center">
-                  <div className="font-medium text-gray-900">
+                  <div className="font-medium text-gray-900 truncate" title={activity.title}>
                     {activity.title}
                   </div>
                   <div className="text-gray-600">

@@ -18,6 +18,10 @@ const Reports = () => {
   const [service, setService] = useState('')
   const [status, setStatus] = useState('')
 
+  // Pagination state
+  const PAGE_SIZE = 15
+  const [currentPage, setCurrentPage] = useState(1)
+
   const fetchReport = async (y) => {
     try {
       setLoading(true)
@@ -91,6 +95,28 @@ const Reports = () => {
     }
     return list
   }, [data, search, barangay, municipality, service, status])
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, barangay, municipality, service, status, year])
+
+  const totalPages = useMemo(() => {
+    const pages = Math.ceil((filteredData?.length || 0) / PAGE_SIZE)
+    return pages > 0 ? pages : 1
+  }, [filteredData?.length])
+
+  // Clamp current page if it exceeds totalPages
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return filteredData.slice(start, start + PAGE_SIZE)
+  }, [filteredData, currentPage])
 
   return (
     <PrivateLayout>
@@ -201,7 +227,7 @@ const Reports = () => {
                   No data found for {year}
                 </div>
               ) : (
-                filteredData.map((m) => (
+                paginatedData.map((m) => (
                   <div key={m.userId} className="px-6 py-4 hover:bg-gray-50">
                     <div className="grid grid-cols-6 gap-4 text-sm items-center">
                       <div className="font-medium text-gray-900">{m.name}</div>
@@ -209,7 +235,7 @@ const Reports = () => {
                       <div className="text-gray-700 truncate" title={(m.services||[]).join(', ')}>
                         {(m.services||[]).length ? (m.services||[]).join(', ') : '—'}
                       </div>
-                      <div className="text-gray-700">{Math.round(m.hours || 0)}</div>
+                      <div className="text-gray-700">{(m.hours || 0).toFixed(2)}</div>
                       <div className="text-gray-700">{m.contactNumber || '—'}</div>
                       <div>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${m.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -221,10 +247,46 @@ const Reports = () => {
                 ))
               )}
             </div>
+
+            {/* Pagination */}
+            {filteredData.length > PAGE_SIZE && (
+              <div className="px-6 py-4 flex items-center justify-between border-t bg-white">
+                <div className="text-sm text-gray-600">
+                  Showing {(currentPage - 1) * PAGE_SIZE + 1}
+                  {' '}to {Math.min(currentPage * PAGE_SIZE, filteredData.length)} of {filteredData.length}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="px-3 py-1 text-sm rounded border disabled:opacity-50"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      className={`px-3 py-1 text-sm rounded border ${currentPage === i + 1 ? 'bg-cyan-600 text-white border-cyan-600' : ''}`}
+                      onClick={() => setCurrentPage(i + 1)}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    className="px-3 py-1 text-sm rounded border disabled:opacity-50"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
             {!loading && filteredData.length > 0 && (
               <div className="bg-gray-50 px-6 py-3 border-t text-sm text-gray-700 flex justify-between">
                 <span>Total Volunteers: {filteredData.length}</span>
-                <span>Total Hours: {Math.round(totalHours)}</span>
+                <span>Total Hours: {(totalHours || 0).toFixed(2)}</span>
               </div>
             )}
           </div>

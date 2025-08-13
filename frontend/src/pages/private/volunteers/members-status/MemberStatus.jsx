@@ -128,7 +128,7 @@ const MemberStatus = () => {
                       <div className="font-medium text-gray-900 whitespace-nowrap">{name}</div>
                       <div className="whitespace-nowrap">{barangay}</div>
                       <div className="whitespace-nowrap">{formatDate(summary?.lastActivityDate) || '—'}</div>
-                      <div className="whitespace-nowrap">{summary ? Math.round((summary.hoursServedThisYear || 0)) : 0}</div>
+                      <div className="whitespace-nowrap">{summary ? (summary.hoursServedThisYear || 0).toFixed(2) : '0.00'}</div>
                       <div className="whitespace-nowrap">{summary ? (summary.activeStatus || '—') : '—'}</div>
                     </div>
                   )}
@@ -160,7 +160,7 @@ const MemberStatus = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Hours Served</span>
-                    <span className="text-gray-900">{summary ? Math.round((summary.hoursServedThisYear || 0)) : 0}</span>
+                    <span className="text-gray-900">{summary ? (summary.hoursServedThisYear || 0).toFixed(2) : '0.00'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Status</span>
@@ -211,7 +211,7 @@ const MemberStatus = () => {
 
               <GradientCard
                 label="Hours Served"
-                value={`${Math.round((summary?.hoursServedThisYear || 0))} Hours`}
+                value={`${(summary?.hoursServedThisYear || 0).toFixed(2)} Hours`}
                 icon={Clock}
               />
 
