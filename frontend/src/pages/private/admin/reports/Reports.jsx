@@ -97,7 +97,10 @@ const Reports = () => {
       <div className="min-h-screen bg-blue-50">
         <div className="px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6">
           <div className="flex items-center justify-between">
+            <div>
             <h1 className="text-2xl font-bold text-gray-900">Volunteer Hours Report</h1>
+            <p className="text-gray-600 mt-1">View hours served of each volunteers</p>
+            </div>
             <button onClick={handlePrint} className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2">
               <Printer className="w-4 h-4" /> Print
             </button>
@@ -184,7 +187,7 @@ const Reports = () => {
                 <div>Services</div>
                 <div>Hours ({year})</div>
                 <div>Contact</div>
-                <div>Notes</div>
+                <div>Status</div>
               </div>
             </div>
             <div className="divide-y divide-gray-200">

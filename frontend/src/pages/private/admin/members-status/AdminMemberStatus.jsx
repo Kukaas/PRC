@@ -26,33 +26,41 @@ const AdminMemberStatus = () => {
       if (hasFetched) return
       setLoading(true)
       setError(null)
-      const res = await api.volunteerApplication.getAll({ status: 'accepted' })
+
+      // First get accepted volunteers to filter by acceptance status
+      const acceptedRes = await api.volunteerApplication.getAll({ status: 'accepted' })
+
+      if (!acceptedRes.success) {
+        setError(acceptedRes.message || 'Failed to load accepted volunteers')
+        return
+      }
+
+      // Get the IDs of accepted volunteers
+      const acceptedVolunteerIds = acceptedRes.data.map(app => app.applicant?._id || app.applicant?.id).filter(Boolean)
+
+      if (acceptedVolunteerIds.length === 0) {
+        setData([])
+        return
+      }
+
+      // Use the activities API endpoint to get member status with proper hours calculation
+      // Filter by accepted volunteer IDs
+      const res = await api.activities.getMembersStatus({
+        search,
+        barangay,
+        municipality,
+        service,
+        status,
+        volunteerIds: acceptedVolunteerIds.join(',') // Pass accepted volunteer IDs as comma-separated string
+      })
+
       if (res.success) {
-        // Transform the data to match the expected format
-        const transformedData = (res.data || []).map(application => ({
-          userId: application.applicant?._id || application.applicant?.id,
-          name: `${application.applicant?.givenName || ''} ${application.applicant?.familyName || ''}`.trim(),
-          email: application.applicant?.email || '',
-          contactNumber: application.applicant?.mobileNumber || application.applicant?.personalInfo?.mobileNumber || application.applicant?.personalInfo?.contactNumber || '',
-          address: {
-            barangay: application.applicant?.personalInfo?.address?.districtBarangayVillage || '',
-            municipality: application.applicant?.personalInfo?.address?.municipalityCity || '',
-            province: application.applicant?.personalInfo?.address?.province || ''
-          },
-          services: application.applicant?.services?.map(service => service.type) || [],
-          skills: application.applicant?.skills || [],
-          status: application.status,
-          isTrained: application.isTrained,
-          hoursServedThisYear: application.hoursServedThisYear || 0,
-          submittedAt: application.submittedAt,
-          reviewedAt: application.reviewedAt
-        }))
-        setData(transformedData)
+        setData(res.data || [])
       } else {
-        setError(res.message || 'Failed to load accepted volunteers')
+        setError(res.message || 'Failed to load member status')
       }
     } catch (e) {
-      setError(e.message || 'Failed to load accepted volunteers')
+      setError(e.message || 'Failed to load member status')
     } finally {
       setLoading(false)
       setHasFetched(true)
@@ -100,11 +108,7 @@ const AdminMemberStatus = () => {
     }
     if (status) {
       const st = norm(status)
-      if (st === 'trained') {
-        list = list.filter((m) => m.isTrained === true)
-      } else if (st === 'not_trained') {
-        list = list.filter((m) => m.isTrained === false)
-      }
+      list = list.filter((m) => norm(m.status) === st)
     }
 
     return list
@@ -138,7 +142,7 @@ const AdminMemberStatus = () => {
         <div className="px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Accepted Volunteers</h1>
-            <p className="text-gray-600 mt-1">Showing only accepted volunteers</p>
+            <p className="text-gray-600 mt-1">Showing only accepted volunteers with their activity status (inactive after 3 months of no activity)</p>
           </div>
 
           {/* Filters */}
@@ -200,7 +204,7 @@ const AdminMemberStatus = () => {
                 <div>Services</div>
                 <div>Hours Served</div>
                 <div>Contact</div>
-                <div>Training Status</div>
+                <div>Status</div>
               </div>
             </div>
             <div className="divide-y divide-gray-200">
@@ -227,8 +231,8 @@ const AdminMemberStatus = () => {
                       <div className="text-gray-700">{Math.round(m.hoursServedThisYear || 0)}</div>
                       <div className="text-gray-700 flex items-center gap-2"><Phone className="w-4 h-4" /> {m.contactNumber || '—'}</div>
                       <div>
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${m.isTrained ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                          {m.isTrained ? 'Trained' : 'Not Trained'}
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${m.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {m.status || '—'}
                         </span>
                       </div>
                     </div>

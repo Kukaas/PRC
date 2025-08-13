@@ -599,6 +599,7 @@ export const getMyStatusSummary = async (req, res) => {
 
     const now = new Date();
     const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+    const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000;
 
     // Find activities the user attended
     const attendedActivities = await Activity.find({
@@ -632,9 +633,8 @@ export const getMyStatusSummary = async (req, res) => {
       }
     });
 
-    // Determine active/inactive based on last attendance within 6 months (≈180 days)
-    const SIX_MONTHS_MS = 180 * 24 * 60 * 60 * 1000;
-    const isActive = !!lastAttendedDate && now - lastAttendedDate <= SIX_MONTHS_MS;
+    // Determine active/inactive based on last attendance within 3 months (≈90 days)
+    const isActive = !!lastAttendedDate && now - lastAttendedDate <= THREE_MONTHS_MS;
 
     // Get user contact info
     const user = await User.findById(userId).select(
@@ -686,7 +686,7 @@ export const getMembersStatusSummary = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Only admin and staff can view member status' });
     }
 
-    const { search = '', barangay = '', municipality = '', service = '', status = '' } = req.query;
+    const { search = '', barangay = '', municipality = '', service = '', status = '', volunteerIds = '' } = req.query;
 
     // Base user query
     const userQuery = { role: 'volunteer' };
@@ -701,12 +701,21 @@ export const getMembersStatusSummary = async (req, res) => {
     if (municipality) userQuery['personalInfo.address.municipalityCity'] = municipality;
     if (service) userQuery['services.type'] = service;
 
+    // Filter by specific volunteer IDs if provided
+    if (volunteerIds) {
+      const volunteerIdsArray = volunteerIds.split(',').map(id => id.trim()).filter(Boolean);
+      if (volunteerIdsArray.length > 0) {
+        userQuery._id = { $in: volunteerIdsArray };
+      }
+    }
+
     const volunteers = await User.find(userQuery).select(
       'givenName familyName personalInfo services createdAt'
     );
 
     const now = new Date();
-    const SIX_MONTHS_MS = 180 * 24 * 60 * 60 * 1000;
+    const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+    const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000; // 3 months in milliseconds
 
     const results = [];
     for (const user of volunteers) {
@@ -741,7 +750,7 @@ export const getMembersStatusSummary = async (req, res) => {
         }
       });
 
-      const isActive = !!lastAttendedDate && now - lastAttendedDate <= SIX_MONTHS_MS;
+      const isActive = !!lastAttendedDate && now - lastAttendedDate <= THREE_MONTHS_MS;
 
       const services = (user.services || [])
         .map((s) => (typeof s === 'string' ? s : s?.type))

@@ -17,7 +17,10 @@ const Leaders = () => {
       <div className="min-h-screen bg-blue-50">
         <div className="p-6 space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-800">Leaders</h1>
+            <div>
+            <h1 className="text-2xl font-bold text-gray-900">Barangay Leaders</h1>
+            <p className="text-gray-600 mt-1">View and manage leaders of each barangay</p>
+            </div>
             <Button onClick={handleCreate} className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg">
               <Plus className="w-4 h-4 mr-2" /> Add Leader
             </Button>
