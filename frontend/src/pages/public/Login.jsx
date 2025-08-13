@@ -8,6 +8,7 @@ import { useAuth } from "../../components/AuthContext";
 import logo from "../../assets/logo.png";
 import bgImage from "../../assets/bg.png";
 import { api } from "../../services/api";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +39,9 @@ const Login = () => {
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState("");
   const [cooldownTimer, setCooldownTimer] = useState(0);
   const [isCooldownActive, setIsCooldownActive] = useState(false);
+
+  // Resend verification state
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
 
   // Check for success message from navigation state
   useEffect(() => {
@@ -170,9 +174,17 @@ const Login = () => {
         setErrors({ general: result.error });
       }
     } catch (error) {
-      setErrors({
-        general: error.message || "Login failed. Please try again.",
-      });
+      // Check if it's an unverified email error
+      if (error.message && error.message.includes("verify your email")) {
+        setErrors({
+          general: error.message,
+          showResendOption: true
+        });
+      } else {
+        setErrors({
+          general: error.message || "Login failed. Please try again.",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -236,6 +248,29 @@ const Login = () => {
     // Don't reset cooldown - let it continue if active
   };
 
+  const handleResendVerification = async () => {
+    if (!formData.email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setIsResendingVerification(true);
+    try {
+      const result = await api.auth.resendVerification({ email: formData.email });
+
+      if (result.success) {
+        toast.success("Verification email sent successfully! Please check your inbox.");
+        setErrors({ general: "Verification email sent! Please check your inbox and click the verification link." });
+      } else {
+        toast.error(result.message || "Failed to send verification email");
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to send verification email");
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
+
   return (
     <PublicLayout>
       <div className="min-h-screen">
@@ -267,6 +302,18 @@ const Login = () => {
                 {errors.general && (
                   <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
                     {errors.general}
+                    {errors.showResendOption && (
+                      <div className="mt-3">
+                        <Button
+                          type="button"
+                          onClick={handleResendVerification}
+                          disabled={isResendingVerification}
+                          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50 text-sm"
+                        >
+                          {isResendingVerification ? "Sending..." : "Resend Verification Email"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
 
