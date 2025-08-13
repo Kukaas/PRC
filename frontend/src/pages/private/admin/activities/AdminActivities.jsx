@@ -73,7 +73,17 @@ const AdminActivities = () => {
         }
       }
 
-      // Don't auto-select any event - let user choose
+      // Auto-select the latest published or ongoing event if no event is currently selected
+      if (!selectedActivity && activeActivities.length > 0) {
+        // Find the latest published or ongoing event by date
+        const latestEvent = activeActivities
+          .filter(activity => ['published', 'ongoing'].includes(activity.status))
+          .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+
+        if (latestEvent) {
+          setSelectedActivity(latestEvent._id)
+        }
+      }
     } catch (error) {
       toast.error('Failed to load activities')
       console.error('Error loading activities:', error)
@@ -216,7 +226,7 @@ const AdminActivities = () => {
     }
   }
 
-  
+
   const handlePrint = async (activity) => {
     try {
       let attendance = []

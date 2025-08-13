@@ -17,7 +17,7 @@ const EventSelector = ({ selectedActivity, onActivityChange, activities }) => {
       </SelectTrigger>
       <SelectContent>
         {/* Only show active events in the dropdown */}
-        {activities.active.length > 0 && (
+        {activities.active.length > 0 ? (
           <>
             <div className="px-2 py-1.5 text-sm font-semibold text-gray-500 bg-gray-100">Active Events</div>
             {activities.active.map((activity) => (
@@ -26,6 +26,10 @@ const EventSelector = ({ selectedActivity, onActivityChange, activities }) => {
               </SelectItem>
             ))}
           </>
+        ) : (
+          <div className="px-2 py-3 text-center text-gray-500 text-sm">
+            No active events available
+          </div>
         )}
       </SelectContent>
     </Select>
