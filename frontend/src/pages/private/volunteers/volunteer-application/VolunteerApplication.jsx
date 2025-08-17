@@ -112,7 +112,6 @@ const VolunteerApplication = () => {
         }
               } catch {
           // If no application found, it's a new application
-          console.log('No existing application found, starting fresh')
         }
     }
 

@@ -22,17 +22,12 @@ const Activities = () => {
 
   const checkVolunteerApplication = async () => {
     try {
-      console.log('Checking volunteer application...')
       const response = await api.volunteerApplication.getMyApplication()
-      console.log('Volunteer application response:', response)
       setHasApplication(true)
       setApplicationStatus(response.data.status)
-      console.log('Set application status to:', response.data.status)
     } catch (error) {
-      console.log('Error checking volunteer application:', error.message)
       if (error.message.includes('No application found')) {
         setHasApplication(false)
-        console.log('No application found, set hasApplication to false')
       }
     } finally {
       setLoading(false)
@@ -49,12 +44,10 @@ const Activities = () => {
 
   const handleActivityJoin = () => {
     // Refresh joined activities when user joins a new activity
-    console.log('Activity joined, refreshing tabs...')
   }
 
   const handleActivityLeave = () => {
     // Refresh available activities when user leaves an activity
-    console.log('Activity left, refreshing tabs...')
   }
 
   if (loading) {

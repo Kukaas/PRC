@@ -94,9 +94,7 @@ const AdminActivities = () => {
 
   const loadAttendanceReport = async (activityId) => {
     try {
-      console.log('Loading attendance report for activity:', activityId)
       const response = await api.activities.getAttendanceReport(activityId)
-      console.log('Attendance report response:', response)
       setAttendanceData(response.data?.attendance || [])
     } catch (error) {
       console.error('Error loading attendance report:', error)
@@ -147,7 +145,6 @@ const AdminActivities = () => {
 
   const handleRecordAttendance = async (qrData, action) => {
     try {
-      console.log('Recording attendance:', { activityId: selectedActivity, qrData, action })
 
       const response = await api.activities.recordAttendance(selectedActivity, {
         activityId: selectedActivity,
@@ -155,7 +152,6 @@ const AdminActivities = () => {
         action: action
       })
 
-      console.log('Attendance recorded successfully:', response)
 
       // Reload attendance data to show the update
       await loadAttendanceReport(selectedActivity)
@@ -170,15 +166,11 @@ const AdminActivities = () => {
 
   const handleQRScan = async (qrData) => {
     try {
-      console.log('QR Data received:', qrData)
-      console.log('Selected activity:', selectedActivity)
-      console.log('Scanning action:', scanningAction)
 
       // Parse QR data to validate it
       let parsedData
       try {
         parsedData = JSON.parse(qrData)
-        console.log('Parsed QR data:', parsedData)
       } catch (parseError) {
         console.error('QR parse error:', parseError)
         toast.error('Invalid QR code format. Please try again.')
@@ -197,9 +189,7 @@ const AdminActivities = () => {
         toast.error('QR code is for a different activity')
         return
       }
-
-      console.log('QR validation passed, recording attendance...')
-
+        
       // Show processing toast
       const processingToast = toast.loading(`Recording ${scanningAction === 'timeIn' ? 'Time In' : 'Time Out'}...`)
 

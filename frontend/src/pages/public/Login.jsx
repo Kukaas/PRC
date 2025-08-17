@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import CustomForm from "../../components/CustomForm";
 import CustomInput from "../../components/CustomInput";
 import PublicLayout from "../../layout/PublicLayout";
 import { useAuth } from "../../components/AuthContext";
 import logo from "../../assets/logo.png";
-import bgImage from "../../assets/bg.png";
 import { api } from "../../services/api";
 import { toast } from "sonner";
 import {
@@ -19,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../components/ui/alert-dialog";
+import { Heart } from "lucide-react";
 
 const Login = () => {
   const { login, isAuthenticated, user } = useAuth();
@@ -103,7 +102,6 @@ const Login = () => {
       console.error("No user ID found:", userData);
       return;
     }
-
 
     switch (userData.role) {
       case 'volunteer':
@@ -273,119 +271,137 @@ const Login = () => {
 
   return (
     <PublicLayout>
-      <div className="min-h-screen">
-        {/* Background Section */}
-        <section className="relative h-screen overflow-hidden">
-          {/* Background Image with Blur Effect */}
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-            style={{
-              backgroundImage: `url(${bgImage})`,
-              filter: "blur(2px)",
-            }}
-          />
-
-          {/* Login Form */}
-          <div className="relative z-10 flex items-center justify-center h-full p-4">
-            <div className="w-full max-w-md mx-auto">
-              <CustomForm
-                title="Login as Volunteer"
-                logo={logo}
-                onSubmit={handleSubmit}
-              >
-                {successMessage && (
-                  <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md text-sm">
-                    {successMessage}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto">
+          {/* Login Form Card */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <img
+                    src={logo}
+                    alt="Philippine Red Cross Logo"
+                    className="w-16 h-16 object-contain"
+                  />
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                    <Heart className="w-3 h-3 text-white" />
                   </div>
-                )}
-
-                {errors.general && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                    {errors.general}
-                    {errors.showResendOption && (
-                      <div className="mt-3">
-                        <Button
-                          type="button"
-                          onClick={handleResendVerification}
-                          disabled={isResendingVerification}
-                          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50 text-sm"
-                        >
-                          {isResendingVerification ? "Sending..." : "Resend Verification Email"}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <CustomInput
-                  label="Email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  error={errors.email}
-                />
-
-                <CustomInput
-                  label="Password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  error={errors.password}
-                />
-
-                <div className="text-right">
-                  <button
-                    type="button"
-                    onClick={openForgotPassword}
-                    className="text-sm text-blue-500 hover:text-blue-600 underline transition-colors"
-                  >
-                    Forgot Password?
-                  </button>
                 </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Logging in..." : "Login"}
-                </Button>
-
-                <div className="text-center text-sm text-gray-600">
-                  Don't have an account?{" "}
-                  <a
-                    href="/signup"
-                    className="text-blue-500 underline hover:text-blue-600 transition-colors"
-                  >
-                    Sign up
-                  </a>
-                </div>
-              </CustomForm>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome Back</h2>
+              <p className="text-gray-600">Sign in to your volunteer account</p>
             </div>
+
+            {/* Success Message */}
+            {successMessage && (
+              <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl text-sm mb-6">
+                {successMessage}
+              </div>
+            )}
+
+            {/* Error Message */}
+            {errors.general && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm mb-6">
+                {errors.general}
+                {errors.showResendOption && (
+                  <div className="mt-3">
+                    <Button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={isResendingVerification}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-xl transition-colors disabled:opacity-50 text-sm"
+                    >
+                      {isResendingVerification ? "Sending..." : "Resend Verification Email"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Login Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <CustomInput
+                label="Email Address"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                error={errors.email}
+              />
+
+              <CustomInput
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                error={errors.password}
+              />
+
+              {/* Forgot Password Link */}
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={openForgotPassword}
+                  className="text-sm text-red-600 hover:text-red-700 underline transition-colors"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl transition-colors disabled:opacity-50 font-semibold"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Signing in..." : "Sign In"}
+              </Button>
+
+              {/* Sign Up Link */}
+              <div className="text-center text-sm text-gray-600">
+                Don't have an account?{" "}
+                <Link
+                  to="/signup"
+                  className="text-red-600 underline hover:text-red-700 transition-colors font-medium"
+                >
+                  Sign up
+                </Link>
+              </div>
+            </form>
           </div>
-        </section>
+        </div>
       </div>
 
       {/* Forgot Password Alert Dialog */}
       <AlertDialog
         open={isForgotPasswordOpen}
         onOpenChange={(open) => {
-          // Only allow closing if not currently submitting and no error is showing
-          if (!isForgotPasswordSubmitting && !forgotPasswordError) {
+          // Allow closing if not currently submitting
+          if (!isForgotPasswordSubmitting) {
             setIsForgotPasswordOpen(open);
+            // Clear error and success messages when closing
+            if (!open) {
+              setForgotPasswordError("");
+              setForgotPasswordSuccess("");
+            }
           }
         }}
       >
         <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
             <div className="flex items-center justify-center mb-4">
-              <img src={logo} alt="Logo" className="h-12 w-auto" />
+              <div className="relative">
+                <img src={logo} alt="Logo" className="h-12 w-auto" />
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <Heart className="w-3 h-3 text-white" />
+                </div>
+              </div>
             </div>
             <AlertDialogTitle>Reset Password</AlertDialogTitle>
             <AlertDialogDescription>
@@ -394,36 +410,39 @@ const Login = () => {
           </AlertDialogHeader>
 
           <div className="space-y-4">
-            <div>
-              <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <input
-                id="forgot-email"
-                type="email"
-                value={forgotPasswordEmail}
-                onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                disabled={isForgotPasswordSubmitting}
-              />
-            </div>
+            <CustomInput
+              label="Email Address"
+              name="forgot-email"
+              type="email"
+              placeholder="Enter your email"
+              value={forgotPasswordEmail}
+              onChange={(e) => setForgotPasswordEmail(e.target.value)}
+              disabled={isForgotPasswordSubmitting}
+            />
 
             {forgotPasswordError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-xl text-sm">
                 {forgotPasswordError}
               </div>
             )}
 
             {forgotPasswordSuccess && (
-              <div className="bg-green-50 border border-green-200 text-green-600 px-3 py-2 rounded-md text-sm">
+              <div className="bg-green-50 border border-green-200 text-green-600 px-3 py-2 rounded-xl text-sm">
                 {forgotPasswordSuccess}
               </div>
             )}
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel key="cancel" disabled={isForgotPasswordSubmitting}>
+            <AlertDialogCancel
+              key="cancel"
+              disabled={isForgotPasswordSubmitting}
+              onClick={() => {
+                setIsForgotPasswordOpen(false);
+                setForgotPasswordError("");
+                setForgotPasswordSuccess("");
+              }}
+            >
               Cancel
             </AlertDialogCancel>
             <Button

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import CustomForm from "../../components/CustomForm";
 import CustomInput from "../../components/CustomInput";
 import PublicLayout from "../../layout/PublicLayout";
 import logo from "../../assets/logo.png";
-import bgImage from "../../assets/bg.png";
 import { api } from "../../services/api";
+import { Heart, CheckCircle } from "lucide-react";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -97,7 +96,7 @@ const ResetPassword = () => {
   if (isLoading) {
     return (
       <PublicLayout>
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading...</p>
@@ -110,35 +109,40 @@ const ResetPassword = () => {
   if (!isValidToken) {
     return (
       <PublicLayout>
-        <div className="min-h-screen">
-          <section className="relative h-screen overflow-hidden">
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-              style={{
-                backgroundImage: `url(${bgImage})`,
-                filter: "blur(2px)",
-              }}
-            />
-            <div className="relative z-10 flex items-center justify-center h-full p-4">
-              <div className="w-full max-w-md mx-auto">
-                <CustomForm
-                  title="Invalid Reset Link"
-                  logo={logo}
-                  onSubmit={() => {}}
-                >
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-4">
-                    {errors.general}
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md mx-auto">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <img
+                      src={logo}
+                      alt="Philippine Red Cross Logo"
+                      className="w-16 h-16 object-contain"
+                    />
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <Heart className="w-3 h-3 text-white" />
+                    </div>
                   </div>
-                  <Button
-                    onClick={() => navigate("/login")}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
-                  >
-                    Back to Login
-                  </Button>
-                </CustomForm>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Invalid Reset Link</h2>
+                <p className="text-gray-600">The password reset link is invalid or has expired</p>
               </div>
+
+              {/* Error Message */}
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm mb-6">
+                {errors.general}
+              </div>
+
+              <Button
+                onClick={() => navigate("/login")}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl transition-colors font-semibold"
+              >
+                Back to Login
+              </Button>
             </div>
-          </section>
+          </div>
         </div>
       </PublicLayout>
     );
@@ -146,71 +150,96 @@ const ResetPassword = () => {
 
   return (
     <PublicLayout>
-      <div className="min-h-screen">
-        <section className="relative h-screen overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-            style={{
-              backgroundImage: `url(${bgImage})`,
-              filter: "blur(2px)",
-            }}
-          />
-          <div className="relative z-10 flex items-center justify-center h-full p-4">
-            <div className="w-full max-w-md mx-auto">
-              <CustomForm
-                title="Reset Password"
-                logo={logo}
-                onSubmit={handleSubmit}
-              >
-                {errors.general && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                    {errors.general}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto">
+          {/* Reset Password Form Card */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <img
+                    src={logo}
+                    alt="Philippine Red Cross Logo"
+                    className="w-16 h-16 object-contain"
+                  />
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                    <Heart className="w-3 h-3 text-white" />
                   </div>
-                )}
-
-                <CustomInput
-                  label="New Password"
-                  name="newPassword"
-                  type="password"
-                  placeholder="Enter your new password"
-                  value={formData.newPassword}
-                  onChange={handleChange}
-                  required
-                  error={errors.newPassword}
-                />
-
-                <CustomInput
-                  label="Confirm Password"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your new password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  error={errors.confirmPassword}
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Resetting..." : "Reset Password"}
-                </Button>
-
-                <div className="text-center text-sm text-gray-600">
-                  Remember your password?{" "}
-                  <a
-                    href="/login"
-                    className="text-blue-500 underline hover:text-blue-600 transition-colors"
-                  >
-                    Login here
-                  </a>
                 </div>
-              </CustomForm>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Reset Your Password</h2>
+              <p className="text-gray-600">Enter your new password below</p>
             </div>
+
+            {/* Error Message */}
+            {errors.general && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm mb-6">
+                {errors.general}
+              </div>
+            )}
+
+            {/* Reset Password Form */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <CustomInput
+                label="New Password"
+                name="newPassword"
+                type="password"
+                placeholder="Enter your new password"
+                value={formData.newPassword}
+                onChange={handleChange}
+                required
+                error={errors.newPassword}
+              />
+
+              <CustomInput
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                placeholder="Confirm your new password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                error={errors.confirmPassword}
+              />
+
+              {/* Password Requirements */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Password Requirements:</h4>
+                <ul className="text-xs text-gray-600 space-y-1">
+                  <li className="flex items-center">
+                    <CheckCircle className="w-3 h-3 text-green-500 mr-2" />
+                    At least 6 characters long
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-3 h-3 text-green-500 mr-2" />
+                    Passwords must match
+                  </li>
+                </ul>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl transition-colors disabled:opacity-50 font-semibold"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Resetting..." : "Reset Password"}
+              </Button>
+
+              {/* Login Link */}
+              <div className="text-center text-sm text-gray-600">
+                Remember your password?{" "}
+                <a
+                  href="/login"
+                  className="text-red-600 underline hover:text-red-700 transition-colors font-medium"
+                >
+                  Login here
+                </a>
+              </div>
+            </form>
           </div>
-        </section>
+        </div>
       </div>
     </PublicLayout>
   );

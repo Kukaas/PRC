@@ -52,13 +52,11 @@ const JoinedActivities = ({ onActivityLeave }) => {
   const loadJoinedActivities = async () => {
     setLoadingActivities(true)
     try {
-      console.log('Loading joined activities for user:', user?.email)
       const response = await api.activities.getMyActivities({
         page: 1,
         limit: 50,
         status: 'all'
       })
-      console.log('Joined activities response:', response)
 
       if (response?.data) {
         // Sort activities by date (newer events on top)
@@ -70,9 +68,7 @@ const JoinedActivities = ({ onActivityLeave }) => {
 
         setActivities(sortedActivities)
         setFilteredActivities(sortedActivities)
-        console.log('Joined activities loaded:', sortedActivities.length)
       } else {
-        console.error('Invalid response format:', response)
         setActivities([])
         setFilteredActivities([])
       }

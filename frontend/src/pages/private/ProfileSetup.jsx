@@ -252,7 +252,6 @@ const ProfileSetup = () => {
         services: formData.services,
       };
 
-      console.log("Submitting profile data:", structuredData);
 
       const result = await updateProfile(structuredData);
       if (result.success) {

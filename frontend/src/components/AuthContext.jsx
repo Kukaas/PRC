@@ -26,10 +26,8 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = async () => {
     try {
       setLoading(true);
-      console.log("Checking authentication status...");
 
       const response = await api.auth.getProfile();
-      console.log("Auth check response:", response);
 
       if (response.success) {
         // Handle new response format with profile completion included
@@ -51,9 +49,7 @@ export const AuthProvider = ({ children }) => {
           }
         }
         setIsAuthenticated(true);
-        console.log("User authenticated successfully:", response.data);
       } else {
-        console.log("Auth check failed with response:", response);
         // Only clear user data if the response explicitly indicates authentication failure
         if (response.message && (
           response.message.includes('Access token is required') ||
@@ -61,7 +57,6 @@ export const AuthProvider = ({ children }) => {
           response.message.includes('Invalid token') ||
           response.message.includes('User no longer exists')
         )) {
-          console.log("Clearing user data due to authentication failure");
           setUser(null);
           setIsAuthenticated(false);
           setProfileCompletion(null);
@@ -80,7 +75,6 @@ export const AuthProvider = ({ children }) => {
           errorMessage.includes('Invalid token') ||
           errorMessage.includes('User no longer exists')
         ) {
-          console.log("Clearing user data due to authentication error");
           setUser(null);
           setIsAuthenticated(false);
           setProfileCompletion(null);
@@ -89,7 +83,6 @@ export const AuthProvider = ({ children }) => {
         error.message.includes('401') ||
         error.message.includes('Unauthorized')
       )) {
-        console.log("Clearing user data due to authentication error");
         setUser(null);
         setIsAuthenticated(false);
         setProfileCompletion(null);

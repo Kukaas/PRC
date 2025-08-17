@@ -4,8 +4,8 @@ import { Button } from "../../components/ui/button";
 import PublicLayout from "../../layout/PublicLayout";
 import { api } from "../../services/api";
 import logo from "../../assets/logo.png";
-import bgImage from "../../assets/bg.png";
 import { toast } from "sonner";
+import { Heart, CheckCircle, AlertCircle, Clock, Mail, Loader2 } from "lucide-react";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
@@ -92,7 +92,7 @@ const VerifyEmail = () => {
         return (
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
               Verifying Your Email
             </h2>
             <p className="text-gray-600">
@@ -105,27 +105,15 @@ const VerifyEmail = () => {
         return (
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
               Email Verified Successfully!
             </h2>
             <p className="text-gray-600 mb-6">{message}</p>
             <Button
               onClick={handleManualRedirect}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl transition-colors font-semibold"
             >
               Go to Login
             </Button>
@@ -136,28 +124,16 @@ const VerifyEmail = () => {
         return (
           <div className="text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
               Verification Failed
             </h2>
             <p className="text-gray-600 mb-6">{message}</p>
             <div className="space-y-3">
               <Button
                 onClick={() => navigate("/login")}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl transition-colors font-semibold"
               >
                 Go to Login
               </Button>
@@ -172,21 +148,9 @@ const VerifyEmail = () => {
         return (
           <div className="text-center">
             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-orange-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Clock className="w-8 h-8 text-orange-600" />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
               Verification Link Expired
             </h2>
             <p className="text-gray-600 mb-6">{message}</p>
@@ -195,27 +159,39 @@ const VerifyEmail = () => {
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Enter your email address
                 </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  disabled={isResending}
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    disabled={isResending}
+                  />
+                </div>
               </div>
               <Button
                 onClick={handleResendVerification}
                 disabled={isResending}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition-colors disabled:opacity-50"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl transition-colors disabled:opacity-50 font-semibold"
               >
-                {isResending ? "Sending..." : "Resend Verification Email"}
+                {isResending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Resend Verification Email"
+                )}
               </Button>
               <Button
                 onClick={() => navigate("/login")}
                 variant="outline"
-                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 rounded-xl transition-colors"
               >
                 Go to Login
               </Button>
@@ -230,37 +206,30 @@ const VerifyEmail = () => {
 
   return (
     <PublicLayout>
-      <div className="min-h-screen">
-        {/* Background Section */}
-        <section className="relative h-screen overflow-hidden">
-          {/* Background Image with Blur Effect */}
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-            style={{
-              backgroundImage: `url(${bgImage})`,
-              filter: "blur(2px)",
-            }}
-          />
-
-          {/* Verification Content */}
-          <div className="relative z-10 flex items-center justify-center h-full p-4">
-            <div className="w-full max-w-md mx-auto">
-              <div className="bg-white rounded-lg shadow-xl p-8">
-                {/* Logo */}
-                <div className="text-center mb-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto">
+          {/* Verification Card */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="flex justify-center mb-6">
+                <div className="relative">
                   <img
                     src={logo}
                     alt="Philippine Red Cross Logo"
-                    className="w-16 h-16 object-contain mx-auto mb-4"
+                    className="w-16 h-16 object-contain"
                   />
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                    <Heart className="w-3 h-3 text-white" />
+                  </div>
                 </div>
-
-                {/* Content */}
-                {renderContent()}
               </div>
             </div>
+
+            {/* Content */}
+            {renderContent()}
           </div>
-        </section>
+        </div>
       </div>
     </PublicLayout>
   );
