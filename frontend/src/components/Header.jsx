@@ -13,9 +13,9 @@ const Header = () => {
 
   const navigationLinks = [
     { href: "/", label: "Home", icon: Home, active: location.pathname === "/" },
-    { href: "#", label: "Volunteer", icon: Users, active: location.pathname === "/volunteer" },
-    { href: "#", label: "Services", icon: Settings, active: location.pathname === "/services" },
-    { href: "#", label: "About us", icon: FileText, active: location.pathname === "/about" },
+    { href: "/volunteer", label: "Volunteer", icon: Users, active: location.pathname === "/volunteer" },
+    { href: "/services", label: "Services", icon: Settings, active: location.pathname === "/services" },
+    { href: "/about", label: "About us", icon: FileText, active: location.pathname === "/about" },
   ];
 
   const closeMobileMenu = () => {

@@ -131,8 +131,8 @@ const VolunteerProfileDialog = ({ open, volunteer, onClose }) => {
                   <div className="space-y-1">
                     <div className="text-gray-600">Signup Agreement</div>
                     <div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes','true','1','agree','agreed','i agree'].includes(String(volunteer.signupAgreement).toLowerCase()) || volunteer.signupAgreement === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {(['yes','true','1','agree','agreed','i agree'].includes(String(volunteer.signupAgreement).toLowerCase()) || volunteer.signupAgreement === true) ? 'Yes' : 'No'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes','true','1','agree','agreed','i agree', 'yes_i_agree'].includes(String(volunteer.signupAgreement).toLowerCase()) || volunteer.signupAgreement === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {(['yes','true','1','agree','agreed','i agree', 'yes_i_agree'].includes(String(volunteer.signupAgreement).toLowerCase()) || volunteer.signupAgreement === true) ? 'Yes' : 'No'}
                       </span>
                     </div>
                   </div>

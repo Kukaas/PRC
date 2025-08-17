@@ -13,6 +13,9 @@ import Login from "./pages/public/Login.jsx";
 import Signup from "./pages/public/Signup.jsx";
 import VerifyEmail from "./pages/public/VerifyEmail.jsx";
 import ResetPassword from "./pages/public/ResetPassword.jsx";
+import Volunteer from "./pages/public/Volunteer.jsx";
+import Services from "./pages/public/Services.jsx";
+import About from "./pages/public/About.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 import ProfileSetup from "./pages/private/ProfileSetup.jsx";
 import Profile from "./pages/private/volunteers/Profile.jsx";
@@ -52,6 +55,9 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/volunteer" element={<Volunteer />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/about" element={<About />} />
 
             {/* Protected routes */}
             <Route
