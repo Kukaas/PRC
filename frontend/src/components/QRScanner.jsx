@@ -11,7 +11,7 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [availableCameras, setAvailableCameras] = useState([])
   const [selectedCamera, setSelectedCamera] = useState('')
-  const [scanAttempts, setScanAttempts] = useState(0)
+  const [_scanAttempts, setScanAttempts] = useState(0)
   const isMobile = useIsMobile()
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -102,7 +102,7 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
               }
             })
           }
-        } catch (error) {
+        } catch {
           // Fallback to environment facing mode
           stream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -132,7 +132,7 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
               }
             })
           }
-        } catch (error) {
+        } catch {
           // Fallback to user facing mode
           stream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -244,7 +244,7 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
       let parsedData
       try {
         parsedData = JSON.parse(qrData)
-      } catch (parseError) {
+      } catch {
         setError('Invalid QR code format. Please try again.')
         return
       }
@@ -261,7 +261,7 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
         onScan(qrData)
       }, 1000)
 
-    } catch (error) {
+    } catch {
       setError('Error processing QR code. Please try again.')
     } finally {
       setIsProcessing(false)
@@ -394,11 +394,13 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
         {/* Automatic Time Adjustment Info */}
         <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
           <p className="text-sm text-amber-700">
-            <strong>⏰ Automatic Time Adjustment:</strong>
+            <strong>⏰ Automatic Time Adjustment (Philippines Timezone):</strong>
             <br />
             • <strong>Time In:</strong> If scanned before event starts, will automatically record event start time
             <br />
-            • <strong>Time Out:</strong> If scanned more than 3 minutes after event ends, will automatically record event end time
+            • <strong>Time Out:</strong> If scanned after event ends, will automatically record event end time
+            <br />
+            • All times are recorded in Philippines timezone (UTC+8)
           </p>
         </div>
 

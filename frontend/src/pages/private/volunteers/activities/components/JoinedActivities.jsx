@@ -382,7 +382,12 @@ const JoinedActivities = ({ onActivityLeave }) => {
                       {activity.userParticipant.timeIn ? (
                         <div className="flex items-center gap-2 text-xs text-green-600">
                           <Clock className="w-3 h-3" />
-                          <span>Time In: {new Date(activity.userParticipant.timeIn).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                          <span>Time In: {new Date(activity.userParticipant.timeIn).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true,
+                            timeZone: 'Asia/Manila'
+                          })}</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -394,7 +399,12 @@ const JoinedActivities = ({ onActivityLeave }) => {
                       {activity.userParticipant.timeOut ? (
                         <div className="flex items-center gap-2 text-xs text-blue-600">
                           <Clock className="w-3 h-3" />
-                          <span>Time Out: {new Date(activity.userParticipant.timeOut).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+                          <span>Time Out: {new Date(activity.userParticipant.timeOut).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true,
+                            timeZone: 'Asia/Manila'
+                          })}</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -489,13 +499,23 @@ const JoinedActivities = ({ onActivityLeave }) => {
                       <div className="space-y-1">
                         <p className="text-xs sm:text-sm text-gray-600">
                           <strong>Time In:</strong> {selectedActivity.userParticipant.timeIn
-                            ? new Date(selectedActivity.userParticipant.timeIn).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                            ? new Date(selectedActivity.userParticipant.timeIn).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true,
+                              timeZone: 'Asia/Manila'
+                            })
                             : 'Not recorded yet'
                           }
                         </p>
                         <p className="text-xs sm:text-sm text-gray-600">
                           <strong>Time Out:</strong> {selectedActivity.userParticipant.timeOut
-                            ? new Date(selectedActivity.userParticipant.timeOut).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                            ? new Date(selectedActivity.userParticipant.timeOut).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true,
+                              timeZone: 'Asia/Manila'
+                            })
                             : 'Not recorded yet'
                           }
                         </p>

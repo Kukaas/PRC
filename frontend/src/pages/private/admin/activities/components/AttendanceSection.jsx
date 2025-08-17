@@ -115,7 +115,12 @@ const AttendanceSection = ({
                       <div className="text-gray-600">
                         {participant.timeIn ? (
                           <div>
-                            <div>{new Date(participant.timeIn).toLocaleTimeString()}</div>
+                            <div>{new Date(participant.timeIn).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true,
+                              timeZone: 'Asia/Manila'
+                            })}</div>
                             {participant.automaticAdjustment && participant.action === 'timeIn' && (
                               <div className="text-xs text-blue-600">(Auto-adjusted)</div>
                             )}
@@ -125,7 +130,12 @@ const AttendanceSection = ({
                       <div className="text-gray-600">
                         {participant.timeOut ? (
                           <div>
-                            <div>{new Date(participant.timeOut).toLocaleTimeString()}</div>
+                            <div>{new Date(participant.timeOut).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true,
+                              timeZone: 'Asia/Manila'
+                            })}</div>
                             {participant.automaticAdjustment && participant.action === 'timeOut' && (
                               <div className="text-xs text-blue-600">(Auto-adjusted)</div>
                             )}

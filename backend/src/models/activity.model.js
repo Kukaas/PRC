@@ -304,11 +304,19 @@ activitySchema.methods.getParticipantTimeInfo = function(userId) {
 
 // Method to finalize attendance when event is completed
 activitySchema.methods.finalizeAttendance = function() {
-  // Compute event end time
+  // Compute event end time in Philippines timezone
   const eventEnd = new Date(this.date);
   if (this.timeTo) {
     const [h, m] = String(this.timeTo).split(':').map(Number);
-    if (!Number.isNaN(h)) eventEnd.setHours(h, Number.isNaN(m) ? 0 : m, 0, 0);
+    if (!Number.isNaN(h)) {
+      eventEnd.setHours(h, Number.isNaN(m) ? 0 : m, 0, 0);
+
+      // Handle case where end time is on the next day (e.g., 4:00 AM)
+      const [startH] = String(this.timeFrom).split(':').map(Number);
+      if (h < startH) {
+        eventEnd.setDate(eventEnd.getDate() + 1);
+      }
+    }
   } else {
     eventEnd.setHours(23, 59, 59, 999);
   }
@@ -331,6 +339,19 @@ activitySchema.methods.finalizeAttendance = function() {
     }
   });
   return this.save();
+};
+
+// Utility function to get current time in Philippines timezone
+activitySchema.statics.getPhilippinesTime = function() {
+  return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Manila"}));
+};
+
+// Utility function to create a date with specific time in Philippines timezone
+activitySchema.statics.createPhilippinesDateTime = function(date, timeString) {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  const dateTime = new Date(date);
+  dateTime.setHours(hours, minutes, 0, 0);
+  return dateTime;
 };
 
 const Activity = mongoose.model("Activity", activitySchema);

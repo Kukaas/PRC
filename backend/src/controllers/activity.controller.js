@@ -61,11 +61,11 @@ export const createActivity = async (req, res) => {
       });
     }
 
-    // Create the activity
+    // Create the activity with Philippines timezone
     const activity = await Activity.create({
       title,
       description,
-      date: new Date(date),
+      date: new Date(date + 'T00:00:00+08:00'), // Philippines timezone (UTC+8)
       timeFrom,
       timeTo,
       location,
@@ -367,8 +367,9 @@ export const joinActivity = async (req, res) => {
     });
   }
 
-  // Check if activity is in the past
+  // Check if activity is in the past using Philippines timezone
   const now = new Date();
+  const philippinesTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
   const activityDate = new Date(activity.date);
 
   // Set the activity start and end times for the date
@@ -381,8 +382,13 @@ export const joinActivity = async (req, res) => {
   const activityEndTime = new Date(activityDate);
   activityEndTime.setHours(endHours, endMinutes, 0, 0);
 
+  // Handle case where end time is on the next day (e.g., 4:00 AM)
+  if (endHours < startHours) {
+    activityEndTime.setDate(activityEndTime.getDate() + 1);
+  }
+
   // Check if current time is after the activity end time
-  if (now > activityEndTime) {
+  if (philippinesTime > activityEndTime) {
     return res.status(400).json({
       success: false,
       message: "Cannot join activities that have already ended",
@@ -390,8 +396,8 @@ export const joinActivity = async (req, res) => {
   }
 
   // Check if activity is starting very soon (within the next hour)
-  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-  if (now > activityStartTime && now < oneHourFromNow) {
+  const oneHourFromNow = new Date(philippinesTime.getTime() + 60 * 60 * 1000);
+  if (philippinesTime > activityStartTime && philippinesTime < oneHourFromNow) {
     return res.status(400).json({
       success: false,
       message: "Activity is starting soon. Please contact the organizer for late registration.",
@@ -1057,18 +1063,27 @@ export const recordAttendance = async (req, res) => {
       });
     }
 
-    // Calculate event start and end times for the activity date
+    // Calculate event start and end times for the activity date in Philippines timezone
     const activityDate = new Date(activity.date);
     const [startHours, startMinutes] = activity.timeFrom.split(':').map(Number);
     const [endHours, endMinutes] = activity.timeTo.split(':').map(Number);
 
+    // Create event start time in Philippines timezone
     const eventStartTime = new Date(activityDate);
     eventStartTime.setHours(startHours, startMinutes, 0, 0);
 
+    // Create event end time in Philippines timezone
     const eventEndTime = new Date(activityDate);
     eventEndTime.setHours(endHours, endMinutes, 0, 0);
 
+    // Handle case where end time is on the next day (e.g., 4:00 AM)
+    if (endHours < startHours) {
+      eventEndTime.setDate(eventEndTime.getDate() + 1);
+    }
+
+    // Get current time in Philippines timezone
     const now = new Date();
+    const philippinesTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
 
     let result;
     let automaticAdjustment = false;
@@ -1076,7 +1091,7 @@ export const recordAttendance = async (req, res) => {
 
     if (action === "timeIn") {
       // If timing in before event starts, use event start time
-      if (now < eventStartTime) {
+      if (philippinesTime < eventStartTime) {
         result = await activity.recordTimeIn(userId, eventStartTime);
         automaticAdjustment = true;
         adjustedTime = eventStartTime;
@@ -1085,11 +1100,12 @@ export const recordAttendance = async (req, res) => {
       }
     } else if (action === "timeOut") {
       // If timing out after event end time, use event end time
-      if (now > eventEndTime) {
+      if (philippinesTime > eventEndTime) {
         result = await activity.recordTimeOut(userId, eventEndTime);
         automaticAdjustment = true;
         adjustedTime = eventEndTime;
       } else {
+        // If timing out before or during event, use current time
         result = await activity.recordTimeOut(userId);
       }
     }
