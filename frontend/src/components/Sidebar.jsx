@@ -13,6 +13,7 @@ import {
   BarChart3,
   Target,
   FileText,
+  Calendar,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { api } from '../services/api';
@@ -48,6 +49,12 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       label: "Activities",
       icon: BarChart3,
       active: location.pathname.includes('/admin/activities')
+    },
+    {
+      href: `/admin/calendar/${userId}`,
+      label: "Calendar",
+      icon: Calendar,
+      active: location.pathname.includes('/admin/calendar')
     },
     {
       href: `/admin/members-status/${userId}`,

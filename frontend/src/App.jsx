@@ -25,6 +25,7 @@ import AdminVolunteers from "./pages/private/admin/volunteers/AdminVolunteers";
 import AdminActivities from "./pages/private/admin/activities/AdminActivities";
 import CreateActivity from "./pages/private/admin/activities/CreateActivity";
 import EditActivity from "./pages/private/admin/activities/EditActivity";
+import Calendar from "./pages/private/admin/calendar/Calendar";
 import Activities from "./pages/private/volunteers/activities/Activities";
 import Notifications from "./pages/private/volunteers/notifications/Notifications";
 import MemberStatus from "./pages/private/volunteers/members-status/MemberStatus";
@@ -156,6 +157,15 @@ function App() {
               element={
                 <PrivateRoute>
                   <EditActivity />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/calendar/:id"
+              element={
+                <PrivateRoute>
+                  <Calendar />
                 </PrivateRoute>
               }
             />

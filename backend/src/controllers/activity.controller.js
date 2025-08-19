@@ -108,8 +108,6 @@ export const createActivity = async (req, res) => {
 export const getAllActivities = async (req, res) => {
   try {
     const {
-      page = 1,
-      limit = 10,
       status,
       location,
       skills,
@@ -133,7 +131,7 @@ export const getAllActivities = async (req, res) => {
       if (location.barangay) query["location.barangay"] = location.barangay;
     }
 
-    // Filter by skills
+    // Filter by skills and services
     if (skills) {
       const skillsArray = skills.split(",");
       query.requiredSkills = { $in: skillsArray };
@@ -160,41 +158,22 @@ export const getAllActivities = async (req, res) => {
       ];
     }
 
-    // Calculate skip value for pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
     // Get total count for pagination info
     const total = await Activity.countDocuments(query);
 
     // Get activities with pagination
     const activities = await Activity.find(query)
       .sort({ date: 1, createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
       .populate([
         { path: "createdBy", select: "givenName familyName email" },
         { path: "participants.userId", select: "givenName familyName email" },
       ]);
 
-    // Calculate pagination info
-    const totalPages = Math.ceil(total / parseInt(limit));
-    const hasNextPage = parseInt(page) < totalPages;
-    const hasPrevPage = parseInt(page) > 1;
-
-    const paginationInfo = {
-      currentPage: parseInt(page),
-      totalPages,
-      totalItems: total,
-      itemsPerPage: parseInt(limit),
-      hasNextPage,
-      hasPrevPage,
-    };
 
     return res.status(200).json({
       success: true,
       message: "Activities retrieved successfully",
       data: activities,
-      pagination: paginationInfo
     });
   } catch (error) {
     console.error("Error in getAllActivities:", error);
@@ -524,7 +503,7 @@ export const leaveActivity = async (req, res) => {
 // Get user's joined activities
 export const getMyActivities = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { status } = req.query;
     const userId = req.user.userId;
 
     const query = {
@@ -535,17 +514,8 @@ export const getMyActivities = async (req, res) => {
       query.status = status;
     }
 
-    // Calculate skip value for pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    // Get total count for pagination info
-    const total = await Activity.countDocuments(query);
-
-    // Get activities with pagination
     const activities = await Activity.find(query)
       .sort({ date: 1, createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
       .populate([
         { path: "createdBy", select: "givenName familyName email" },
         { path: "participants.userId", select: "givenName familyName email" },
@@ -569,25 +539,11 @@ export const getMyActivities = async (req, res) => {
       };
     });
 
-    // Calculate pagination info
-    const totalPages = Math.ceil(total / parseInt(limit));
-    const hasNextPage = parseInt(page) < totalPages;
-    const hasPrevPage = parseInt(page) > 1;
-
-    const paginationInfo = {
-      currentPage: parseInt(page),
-      totalPages,
-      totalItems: total,
-      itemsPerPage: parseInt(limit),
-      hasNextPage,
-      hasPrevPage,
-    };
 
     return res.status(200).json({
       success: true,
       message: "Your activities retrieved successfully",
       data: activitiesWithUserData,
-      pagination: paginationInfo
     });
   } catch (error) {
     console.error("Error in getMyActivities:", error);
@@ -916,7 +872,7 @@ export const updateActivityStatus = async (req, res) => {
 // Get activities by creator (Admin/Staff only)
 export const getActivitiesByCreator = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { status } = req.query;
 
     // Check if user has permission
     if (!["admin", "staff"].includes(req.user.role)) {
@@ -934,41 +890,22 @@ export const getActivitiesByCreator = async (req, res) => {
       query.status = status;
     }
 
-    // Calculate skip value for pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
     // Get total count for pagination info
     const total = await Activity.countDocuments(query);
 
     // Get activities with pagination
     const activities = await Activity.find(query)
       .sort({ date: 1, createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
       .populate([
         { path: "createdBy", select: "givenName familyName email" },
         { path: "participants.userId", select: "givenName familyName email" },
       ]);
 
-    // Calculate pagination info
-    const totalPages = Math.ceil(total / parseInt(limit));
-    const hasNextPage = parseInt(page) < totalPages;
-    const hasPrevPage = parseInt(page) > 1;
-
-    const paginationInfo = {
-      currentPage: parseInt(page),
-      totalPages,
-      totalItems: total,
-      itemsPerPage: parseInt(limit),
-      hasNextPage,
-      hasPrevPage,
-    };
 
     return res.status(200).json({
       success: true,
       message: "Your created activities retrieved successfully",
       data: activities,
-      pagination: paginationInfo
     });
   } catch (error) {
     console.error("Error in getActivitiesByCreator:", error);
@@ -1254,7 +1191,7 @@ export const getAttendanceReport = async (req, res) => {
 // Get activities for volunteers with skill matching prioritization
 export const getVolunteerActivities = async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, search } = req.query;
+    const { status, search } = req.query;
     const userId = req.user.userId;
 
     // Get user profile to extract skills and services
@@ -1298,17 +1235,12 @@ export const getVolunteerActivities = async (req, res) => {
       };
     }
 
-    // Calculate skip value for pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
     // Get total count for pagination info
     const total = await Activity.countDocuments(query);
 
     // Get activities with pagination
     const activities = await Activity.find(query)
       .sort({ date: 1, createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
       .populate([
         { path: "createdBy", select: "givenName familyName email" },
         { path: "participants.userId", select: "givenName familyName email" },
@@ -1364,25 +1296,10 @@ export const getVolunteerActivities = async (req, res) => {
       return new Date(a.date) - new Date(b.date);
     });
 
-    // Calculate pagination info
-    const totalPages = Math.ceil(total / parseInt(limit));
-    const hasNextPage = parseInt(page) < totalPages;
-    const hasPrevPage = parseInt(page) > 1;
-
-    const paginationInfo = {
-      currentPage: parseInt(page),
-      totalPages,
-      totalItems: total,
-      itemsPerPage: parseInt(limit),
-      hasNextPage,
-      hasPrevPage,
-    };
-
           return res.status(200).json({
         success: true,
         message: "Volunteer activities retrieved successfully",
         data: activitiesWithScores,
-        pagination: paginationInfo,
       userSkills,
       userServices
     });
