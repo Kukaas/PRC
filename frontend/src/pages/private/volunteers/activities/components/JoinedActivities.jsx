@@ -381,8 +381,7 @@ const JoinedActivities = ({ onActivityLeave }) => {
                           <span>Time In: {new Date(activity.userParticipant.timeIn).toLocaleTimeString('en-US', {
                             hour: 'numeric',
                             minute: '2-digit',
-                            hour12: true,
-                            timeZone: 'Asia/Manila'
+                            hour12: true
                           })}</span>
                         </div>
                       ) : (
@@ -398,8 +397,7 @@ const JoinedActivities = ({ onActivityLeave }) => {
                           <span>Time Out: {new Date(activity.userParticipant.timeOut).toLocaleTimeString('en-US', {
                             hour: 'numeric',
                             minute: '2-digit',
-                            hour12: true,
-                            timeZone: 'Asia/Manila'
+                            hour12: true
                           })}</span>
                         </div>
                       ) : (
@@ -498,8 +496,7 @@ const JoinedActivities = ({ onActivityLeave }) => {
                             ? new Date(selectedActivity.userParticipant.timeIn).toLocaleTimeString('en-US', {
                               hour: 'numeric',
                               minute: '2-digit',
-                              hour12: true,
-                              timeZone: 'Asia/Manila'
+                              hour12: true
                             })
                             : 'Not recorded yet'
                           }
@@ -509,8 +506,7 @@ const JoinedActivities = ({ onActivityLeave }) => {
                             ? new Date(selectedActivity.userParticipant.timeOut).toLocaleTimeString('en-US', {
                               hour: 'numeric',
                               minute: '2-digit',
-                              hour12: true,
-                              timeZone: 'Asia/Manila'
+                              hour12: true
                             })
                             : 'Not recorded yet'
                           }
@@ -543,27 +539,27 @@ const JoinedActivities = ({ onActivityLeave }) => {
                   <h4 className="text-sm sm:text-md font-medium mb-3">Attendance QR Code</h4>
                   <div className="flex justify-center">
                     <div className="relative inline-block">
-                                             {(() => {
-                         // Only show expired if activity status is completed or cancelled
-                         const expired = selectedActivity && ['completed', 'cancelled'].includes(selectedActivity.status)
-                         return (
-                           <>
-                             <QRCode
-                               value={selectedActivity ? generateActivityQR(selectedActivity) : ''}
-                               size={160}
-                               level="M"
-                               className={`w-40 h-40 sm:w-48 sm:h-48 ${expired ? 'opacity-40' : ''}`}
-                             />
-                             {expired && (
-                               <div className="absolute inset-0 flex items-center justify-center">
-                                 <span className="bg-cyan-500 text-white px-3 py-1 rounded-md text-xs sm:text-sm shadow-md">
-                                   EXPIRED
-                                 </span>
-                               </div>
-                             )}
-                           </>
-                         )
-                       })()}
+                      {(() => {
+                        // Only show expired if activity status is completed or cancelled
+                        const expired = selectedActivity && ['completed', 'cancelled'].includes(selectedActivity.status)
+                        return (
+                          <>
+                            <QRCode
+                              value={selectedActivity ? generateActivityQR(selectedActivity) : ''}
+                              size={160}
+                              level="M"
+                              className={`w-40 h-40 sm:w-48 sm:h-48 ${expired ? 'opacity-40' : ''}`}
+                            />
+                            {expired && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="bg-cyan-500 text-white px-3 py-1 rounded-md text-xs sm:text-sm shadow-md">
+                                  EXPIRED
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        )
+                      })()}
                     </div>
                   </div>
                   <p className="text-xs sm:text-sm text-gray-500 mt-3">

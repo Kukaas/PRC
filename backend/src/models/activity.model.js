@@ -71,7 +71,7 @@ const activitySchema = new mongoose.Schema(
         "Creativity and Event Planning"
       ],
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return v && v.length > 0;
         },
         message: 'At least one skill is required'
@@ -90,7 +90,7 @@ const activitySchema = new mongoose.Schema(
         "Wash Services",
       ],
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return v && v.length > 0;
         },
         message: 'At least one service type is required'
@@ -163,6 +163,8 @@ const activitySchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
 
@@ -173,24 +175,30 @@ activitySchema.index({ requiredSkills: 1 });
 activitySchema.index({ requiredServices: 1 });
 
 // Virtual for checking if activity is full
-activitySchema.virtual('isFull').get(function() {
+activitySchema.virtual('isFull').get(function () {
   return this.currentParticipants >= this.maxParticipants;
 });
 
 // Virtual for checking if activity is in the past
-activitySchema.virtual('isPast').get(function() {
+activitySchema.virtual('isPast').get(function () {
   return new Date() > this.date;
 });
 
 // Virtual for checking if activity is today
-activitySchema.virtual('isToday').get(function() {
+activitySchema.virtual('isToday').get(function () {
   const today = new Date();
   const activityDate = new Date(this.date);
   return today.toDateString() === activityDate.toDateString();
 });
 
+// Virtual for getting the activity date in Philippines timezone
+activitySchema.virtual('philippinesDate').get(function () {
+  // Convert UTC date to Philippines timezone (UTC+8)
+  return new Date(this.date.getTime() + (8 * 60 * 60 * 1000));
+});
+
 // Method to add participant
-activitySchema.methods.addParticipant = function(userId) {
+activitySchema.methods.addParticipant = function (userId) {
   if (this.currentParticipants >= this.maxParticipants) {
     throw new Error('Activity is already full');
   }
@@ -205,7 +213,7 @@ activitySchema.methods.addParticipant = function(userId) {
 };
 
 // Method to remove participant
-activitySchema.methods.removeParticipant = function(userId) {
+activitySchema.methods.removeParticipant = function (userId) {
   const participantIndex = this.participants.findIndex(
     p => p.userId.toString() === userId.toString()
   );
@@ -220,7 +228,7 @@ activitySchema.methods.removeParticipant = function(userId) {
 };
 
 // Method to update participant status
-activitySchema.methods.updateParticipantStatus = function(userId, status) {
+activitySchema.methods.updateParticipantStatus = function (userId, status) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
@@ -234,7 +242,7 @@ activitySchema.methods.updateParticipantStatus = function(userId, status) {
 };
 
 // Method to record time in for a participant
-activitySchema.methods.recordTimeIn = function(userId, customTime = null) {
+activitySchema.methods.recordTimeIn = function (userId, customTime = null) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
@@ -248,13 +256,18 @@ activitySchema.methods.recordTimeIn = function(userId, customTime = null) {
   }
 
   // Use custom time if provided, otherwise use current time
-  participant.timeIn = customTime ? new Date(customTime) : new Date();
+  if (customTime) {
+    participant.timeIn = new Date(customTime);
+  } else {
+    // Store current time as-is
+    participant.timeIn = new Date();
+  }
   participant.status = 'attended';
   return this.save();
 };
 
 // Method to record time out for a participant
-activitySchema.methods.recordTimeOut = function(userId, customTime = null) {
+activitySchema.methods.recordTimeOut = function (userId, customTime = null) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
@@ -272,7 +285,12 @@ activitySchema.methods.recordTimeOut = function(userId, customTime = null) {
   }
 
   // Use custom time if provided, otherwise use current time
-  participant.timeOut = customTime ? new Date(customTime) : new Date();
+  if (customTime) {
+    participant.timeOut = new Date(customTime);
+  } else {
+    // Store current time as-is
+    participant.timeOut = new Date();
+  }
 
   // Calculate total hours
   const timeIn = new Date(participant.timeIn);
@@ -285,7 +303,7 @@ activitySchema.methods.recordTimeOut = function(userId, customTime = null) {
 };
 
 // Method to get participant's time tracking info
-activitySchema.methods.getParticipantTimeInfo = function(userId) {
+activitySchema.methods.getParticipantTimeInfo = function (userId) {
   const participant = this.participants.find(
     p => p.userId.toString() === userId.toString()
   );
@@ -303,9 +321,11 @@ activitySchema.methods.getParticipantTimeInfo = function(userId) {
 };
 
 // Method to finalize attendance when event is completed
-activitySchema.methods.finalizeAttendance = function() {
+activitySchema.methods.finalizeAttendance = function () {
   // Compute event end time in Philippines timezone
-  const eventEnd = new Date(this.date);
+  // Convert stored UTC date to Philippines timezone
+  const activityDate = new Date(this.date.getTime() + (8 * 60 * 60 * 1000));
+  const eventEnd = new Date(activityDate);
   if (this.timeTo) {
     const [h, m] = String(this.timeTo).split(':').map(Number);
     if (!Number.isNaN(h)) {
@@ -328,7 +348,7 @@ activitySchema.methods.finalizeAttendance = function() {
     }
     // If timeIn exists but no timeOut, set timeOut to event end time
     else if (participant.timeIn && !participant.timeOut) {
-      participant.timeOut = new Date(eventEnd);
+      participant.timeOut = eventEnd;
       // Calculate total hours
       const timeIn = new Date(participant.timeIn);
       const timeOut = new Date(participant.timeOut);
@@ -342,14 +362,17 @@ activitySchema.methods.finalizeAttendance = function() {
 };
 
 // Utility function to get current time in Philippines timezone
-activitySchema.statics.getPhilippinesTime = function() {
-  return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Manila"}));
+activitySchema.statics.getPhilippinesTime = function () {
+  const now = new Date();
+  return new Date(now.getTime() + (8 * 60 * 60 * 1000));
 };
 
 // Utility function to create a date with specific time in Philippines timezone
-activitySchema.statics.createPhilippinesDateTime = function(date, timeString) {
+activitySchema.statics.createPhilippinesDateTime = function (date, timeString) {
   const [hours, minutes] = timeString.split(':').map(Number);
-  const dateTime = new Date(date);
+  // Convert stored UTC date to Philippines timezone
+  const activityDate = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+  const dateTime = new Date(activityDate);
   dateTime.setHours(hours, minutes, 0, 0);
   return dateTime;
 };

@@ -61,11 +61,16 @@ export const createActivity = async (req, res) => {
       });
     }
 
-    // Create the activity with Philippines timezone
+    // Create the activity with proper date handling
+    // Parse the date string and create a date object in Philippines timezone
+    const activityDate = new Date(date + 'T00:00:00+08:00'); // Explicitly set Philippines timezone
+    // Convert to UTC for storage
+    const utcDate = new Date(activityDate.getTime());
+
     const activity = await Activity.create({
       title,
       description,
-      date: new Date(date + 'T00:00:00+08:00'), // Philippines timezone (UTC+8)
+      date: utcDate, // Store as UTC
       timeFrom,
       timeTo,
       location,
@@ -250,7 +255,7 @@ export const updateActivity = async (req, res) => {
     updateData,
     { new: true, runValidators: true }
   ).populate("createdBy", "givenName familyName email")
-   .populate("participants.userId", "givenName familyName email");
+    .populate("participants.userId", "givenName familyName email");
 
   // Send notifications to existing participants about activity updates
   if (updatedActivity.participants.length > 0) {
@@ -312,8 +317,10 @@ export const deleteActivity = async (req, res) => {
   await Activity.findByIdAndDelete(id);
 
   return res.status(200).json(
-    {success: true,
-    message: "Activity deleted successfully",}
+    {
+      success: true,
+      message: "Activity deleted successfully",
+    }
   );
 };
 
@@ -348,7 +355,7 @@ export const joinActivity = async (req, res) => {
 
   // Check if activity is in the past using Philippines timezone
   const now = new Date();
-  const philippinesTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
+  const philippinesTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
   const activityDate = new Date(activity.date);
 
   // Set the activity start and end times for the date
@@ -430,8 +437,10 @@ export const joinActivity = async (req, res) => {
   }
 
   return res.status(200).json(
-    {success: true,
-    message: "Successfully joined activity",}
+    {
+      success: true,
+      message: "Successfully joined activity",
+    }
   );
 };
 
@@ -495,8 +504,10 @@ export const leaveActivity = async (req, res) => {
   }
 
   return res.status(200).json(
-    {success: true,
-    message: "Successfully left activity",}
+    {
+      success: true,
+      message: "Successfully left activity",
+    }
   );
 };
 
@@ -833,7 +844,7 @@ export const updateActivityStatus = async (req, res) => {
     { status },
     { new: true, runValidators: true }
   ).populate("createdBy", "givenName familyName email")
-   .populate("participants.userId", "givenName familyName email");
+    .populate("participants.userId", "givenName familyName email");
 
   // If status is completed, finalize attendance
   if (status === 'completed') {
@@ -864,8 +875,10 @@ export const updateActivityStatus = async (req, res) => {
   }
 
   return res.status(200).json(
-    {success: true,
-    message: "Activity status updated successfully",}
+    {
+      success: true,
+      message: "Activity status updated successfully",
+    }
   );
 };
 
@@ -1001,7 +1014,8 @@ export const recordAttendance = async (req, res) => {
     }
 
     // Calculate event start and end times for the activity date in Philippines timezone
-    const activityDate = new Date(activity.date);
+    // Convert stored UTC date to Philippines timezone
+    const activityDate = new Date(activity.date.getTime() + (8 * 60 * 60 * 1000));
     const [startHours, startMinutes] = activity.timeFrom.split(':').map(Number);
     const [endHours, endMinutes] = activity.timeTo.split(':').map(Number);
 
@@ -1018,9 +1032,9 @@ export const recordAttendance = async (req, res) => {
       eventEndTime.setDate(eventEndTime.getDate() + 1);
     }
 
-    // Get current time in Philippines timezone
+    // Get current time
     const now = new Date();
-    const philippinesTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Manila"}));
+    const philippinesTime = now;
 
     let result;
     let automaticAdjustment = false;
@@ -1296,10 +1310,10 @@ export const getVolunteerActivities = async (req, res) => {
       return new Date(a.date) - new Date(b.date);
     });
 
-          return res.status(200).json({
-        success: true,
-        message: "Volunteer activities retrieved successfully",
-        data: activitiesWithScores,
+    return res.status(200).json({
+      success: true,
+      message: "Volunteer activities retrieved successfully",
+      data: activitiesWithScores,
       userSkills,
       userServices
     });

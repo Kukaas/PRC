@@ -73,8 +73,16 @@ const AttendanceSection = () => {
                     <div className="grid grid-cols-5 gap-4 text-sm">
                       <div className="font-medium text-gray-900">{participant.name}</div>
                       <div className="text-gray-600 text-xs">{participant.contactNumber || '--'}</div>
-                      <div className="text-gray-600">{participant.timeIn ? new Date(participant.timeIn).toLocaleTimeString() : '--'}</div>
-                      <div className="text-gray-600">{participant.timeOut ? new Date(participant.timeOut).toLocaleTimeString() : '--'}</div>
+                      <div className="text-gray-600">{participant.timeIn ? new Date(participant.timeIn).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      }) : '--'}</div>
+                      <div className="text-gray-600">{participant.timeOut ? new Date(participant.timeOut).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      }) : '--'}</div>
                       <div>
                         <span
                           className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${participant.status === 'attended' ? 'bg-green-100 text-green-800' : participant.status === 'absent' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-800'}`}

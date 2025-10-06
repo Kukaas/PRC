@@ -394,7 +394,7 @@ const QRScanner = ({ onScan, onClose, scanningAction = 'timeIn' }) => {
         {/* Automatic Time Adjustment Info */}
         <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
           <p className="text-sm text-amber-700">
-            <strong>⏰ Automatic Time Adjustment (Philippines Timezone):</strong>
+            <strong>⏰ Automatic Time Adjustment:</strong>
             <br />
             • <strong>Time In:</strong> If scanned before event starts, will automatically record event start time
             <br />

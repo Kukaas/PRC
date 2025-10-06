@@ -72,7 +72,7 @@ const EditActivity = () => {
     maxParticipants: 50,
     isUrgent: false,
     tags: [],
-     notes: ''
+    notes: ''
   })
 
   const [newTag, setNewTag] = useState('')
@@ -93,7 +93,8 @@ const EditActivity = () => {
       setFormData({
         title: activity.title || '',
         description: activity.description || '',
-        date: activity.date ? new Date(activity.date).toISOString().split('T')[0] : '',
+        date: activity.philippinesDate ? new Date(activity.philippinesDate).toISOString().split('T')[0] :
+          activity.date ? new Date(new Date(activity.date).getTime() + (8 * 60 * 60 * 1000)).toISOString().split('T')[0] : '',
         timeFrom: activity.timeFrom || '',
         timeTo: activity.timeTo || '',
         location: {
@@ -108,7 +109,7 @@ const EditActivity = () => {
         isUrgent: activity.isUrgent || false,
         tags: activity.tags || [],
         notes: activity.notes || '',
-         // status is controlled by backend; do not edit here
+        // status is controlled by backend; do not edit here
       })
 
       // Set location dropdowns
@@ -287,9 +288,9 @@ const EditActivity = () => {
     e.preventDefault()
 
     if (!formData.title || !formData.description || !formData.date ||
-        !formData.timeFrom || !formData.timeTo ||
-        !formData.location.barangay || !formData.location.municipality || !formData.location.province ||
-        formData.requiredSkills.length === 0 || formData.requiredServices.length === 0) {
+      !formData.timeFrom || !formData.timeTo ||
+      !formData.location.barangay || !formData.location.municipality || !formData.location.province ||
+      formData.requiredSkills.length === 0 || formData.requiredServices.length === 0) {
       toast.error('Please fill in all required fields')
       return
     }

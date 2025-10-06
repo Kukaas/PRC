@@ -44,8 +44,16 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
   })()
 
   const rowsHtml = attendanceData.map((p, index) => {
-    const timeIn = p.timeIn ? new Date(p.timeIn).toLocaleTimeString() : ''
-    const timeOut = p.timeOut ? new Date(p.timeOut).toLocaleTimeString() : ''
+    const timeIn = p.timeIn ? new Date(p.timeIn).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }) : ''
+    const timeOut = p.timeOut ? new Date(p.timeOut).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }) : ''
     return `
       <tr>
         <td>${index + 1}</td>
@@ -158,7 +166,7 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
     opened.document.write(html)
     opened.document.close()
     opened.focus();
-    setTimeout(() =>  { opened.print();  }, 150)
+    setTimeout(() => { opened.print(); }, 150)
     return
   }
   // Fallback: try blob URL
@@ -170,23 +178,23 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
     setTimeout(() => URL.revokeObjectURL(url), 60_000)
   } catch (err) {
     // Final fallback: hidden iframe (bypasses popup blockers)
-      const iframe = document.createElement('iframe')
-      iframe.style.position = 'fixed'
-      iframe.style.right = '0'
-      iframe.style.bottom = '0'
-      iframe.style.width = '0'
-      iframe.style.height = '0'
-      iframe.style.border = '0'
-      document.body.appendChild(iframe)
-      const doc = iframe.contentWindow?.document || iframe.contentDocument
-      if (!doc) return
-      doc.open()
-      doc.write(html)
-      doc.close()
-      setTimeout(() => {
-          iframe.contentWindow?.focus(); iframe.contentWindow?.print();  { /* ignore */ }
-          document.body.removeChild(iframe)
-      }, 200)
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = '0'
+    document.body.appendChild(iframe)
+    const doc = iframe.contentWindow?.document || iframe.contentDocument
+    if (!doc) return
+    doc.open()
+    doc.write(html)
+    doc.close()
+    setTimeout(() => {
+      iframe.contentWindow?.focus(); iframe.contentWindow?.print(); { /* ignore */ }
+      document.body.removeChild(iframe)
+    }, 200)
   }
 }
 
