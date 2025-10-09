@@ -1,10 +1,65 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Award, Building, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import CustomInput from '@/components/CustomInput';
+import { api } from '@/services/api';
 
 const SkillsServicesTab = ({ user, isEditing = false, formData, setFormData }) => {
+  const [availableSkills, setAvailableSkills] = useState([]);
+  const [availableServices, setAvailableServices] = useState([]);
+  const [loadingSkills, setLoadingSkills] = useState(true);
+  const [loadingServices, setLoadingServices] = useState(true);
+
+  // Fetch skills and services from maintenance API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch skills
+        setLoadingSkills(true);
+        const skillsResponse = await api.maintenance.getActiveSkills();
+        if (skillsResponse.data && skillsResponse.data.data) {
+          setAvailableSkills(skillsResponse.data.data.map(skill => skill.name));
+        }
+
+        // Fetch services
+        setLoadingServices(true);
+        const servicesResponse = await api.maintenance.getActiveServices();
+        if (servicesResponse.data && servicesResponse.data.data) {
+          setAvailableServices(servicesResponse.data.data.map(service => service.name));
+        }
+      } catch (error) {
+        console.error('Error fetching skills and services:', error);
+        // Fallback to predefined values if API fails
+        setAvailableSkills([
+          'Strong Communication skills',
+          'First Aid and CPR/BLS Certification',
+          'Swimming and Lifesaving Skills',
+          'Fire Safety Knowledge',
+          'Disaster Preparedness Training',
+          'Public Speaking and Teaching Skills',
+          'Physical Fitness',
+          'Leadership and Organizing',
+          'First Aid and Disaster Preparedness',
+          'Communication and Advocacy',
+          'Creativity and Event Planning',
+        ]);
+        setAvailableServices([
+          'Welfare Services',
+          'Safety Services',
+          'Health Services',
+          'Youth Services',
+          'Blood Services',
+          'Wash Services',
+        ]);
+      } finally {
+        setLoadingSkills(false);
+        setLoadingServices(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   const getServiceDisplayName = (service) => {
     const serviceNameMap = {
       "Welfare Services": "Welfare Services",
@@ -51,65 +106,67 @@ const SkillsServicesTab = ({ user, isEditing = false, formData, setFormData }) =
             <div className="space-y-4">
               <div>
                 <h4 className="font-medium mb-2 text-sm sm:text-base">Skills</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {[
-                    'Strong Communication skills',
-                    'First Aid and CPR/BLS Certification',
-                    'Swimming and Lifesaving Skills',
-                    'Fire Safety Knowledge',
-                    'Disaster Preparedness Training',
-                    'Public Speaking and Teaching Skills',
-                    'Physical Fitness',
-                    'Leadership and Organizing',
-                    'First Aid and Disaster Preparedness',
-                    'Communication and Advocacy',
-                    'Creativity and Event Planning',
-                  ].map((skill) => {
-                    const checked = (formData?.skills || []).includes(skill);
-                    return (
-                      <label key={skill} className="flex items-center space-x-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            const isChecked = e.target.checked;
-                            setFormData((prev) => ({
-                              ...prev,
-                              skills: isChecked ? [...(prev.skills || []), skill] : (prev.skills || []).filter((s) => s !== skill),
-                            }));
-                          }}
-                          className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
-                        />
-                        <span className="text-sm text-gray-700">{skill}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+                {loadingSkills ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                    <span className="ml-2 text-gray-600">Loading skills...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {availableSkills.map((skill) => {
+                      const checked = (formData?.skills || []).includes(skill);
+                      return (
+                        <label key={skill} className="flex items-center space-x-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setFormData((prev) => ({
+                                ...prev,
+                                skills: isChecked ? [...(prev.skills || []), skill] : (prev.skills || []).filter((s) => s !== skill),
+                              }));
+                            }}
+                            className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
+                          />
+                          <span className="text-sm text-gray-700">{skill}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div>
                 <h4 className="font-medium mb-2 text-sm sm:text-base">Services</h4>
-                <div className="space-y-3">
-                  {['Welfare Services', 'Safety Services', 'Health Services', 'Youth Services', 'Blood Services', 'Wash Services'].map((service) => {
-                    const checked = (formData?.services || []).includes(service);
-                    return (
-                      <label key={service} className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            const isChecked = e.target.checked;
-                            setFormData((prev) => ({
-                              ...prev,
-                              services: isChecked ? [...(prev.services || []), service] : (prev.services || []).filter((s) => s !== service),
-                            }));
-                          }}
-                          className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                        />
-                        <span className="text-gray-700">{service}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+                {loadingServices ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                    <span className="ml-2 text-gray-600">Loading services...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {availableServices.map((service) => {
+                      const checked = (formData?.services || []).includes(service);
+                      return (
+                        <label key={service} className="flex items-center space-x-3">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setFormData((prev) => ({
+                                ...prev,
+                                services: isChecked ? [...(prev.services || []), service] : (prev.services || []).filter((s) => s !== service),
+                              }));
+                            }}
+                            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                          />
+                          <span className="text-gray-700">{service}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           ) : (

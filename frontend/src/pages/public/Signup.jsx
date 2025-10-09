@@ -45,6 +45,33 @@ const Signup = () => {
     // Middle name is not required
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = "Date of birth is required";
+    } else {
+      // Validate date of birth
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+
+      // Reset time to start of day for accurate comparison
+      today.setHours(0, 0, 0, 0);
+      birthDate.setHours(0, 0, 0, 0);
+
+      // Check if birth date is today or in the future
+      if (birthDate >= today) {
+        newErrors.dateOfBirth = "Date of birth cannot be today or in the future";
+      } else {
+        // Calculate age
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        // Adjust age if birthday hasn't occurred this year
+        const actualAge = (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()))
+          ? age - 1
+          : age;
+
+        // Check if user is at least 18 years old
+        if (actualAge < 18) {
+          newErrors.dateOfBirth = "You must be at least 18 years old to register";
+        }
+      }
     }
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -217,7 +244,20 @@ const Signup = () => {
                 onChange={handleChange}
                 required
                 error={errors.dateOfBirth}
+                max={(() => {
+                  // Set max date to yesterday to prevent today and future dates
+                  const yesterday = new Date();
+                  yesterday.setDate(yesterday.getDate() - 1);
+                  return yesterday.toISOString().split('T')[0];
+                })()}
               />
+
+              {/* Age Requirement Note */}
+              <div className="bg-blue-50 rounded-xl p-4">
+                <p className="text-sm text-blue-700">
+                  <strong>Age Requirement:</strong> You must be at least 18 years old to register as a volunteer.
+                </p>
+              </div>
 
               {/* Email Field */}
               <CustomInput

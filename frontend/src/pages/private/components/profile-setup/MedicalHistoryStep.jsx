@@ -78,11 +78,13 @@ const MedicalHistoryStep = ({ formData, handleChange, errors }) => {
             label="Mobile Number"
             name="emergencyContact.immediateFamily.mobileNumber"
             type="tel"
-            placeholder="Enter mobile number"
+            placeholder="Enter mobile number (11 digits)"
             value={formData.emergencyContact.immediateFamily.mobileNumber}
             onChange={handleChange}
             required
             error={errors["emergencyContact.immediateFamily.mobileNumber"]}
+            maxLength={11}
+            pattern="[0-9]{11}"
           />
         </div>
         <CustomInput
@@ -123,10 +125,12 @@ const MedicalHistoryStep = ({ formData, handleChange, errors }) => {
             label="Mobile Number"
             name="emergencyContact.other.mobileNumber"
             type="tel"
-            placeholder="Enter mobile number"
+            placeholder="Enter mobile number (11 digits)"
             value={formData.emergencyContact.other.mobileNumber}
             onChange={handleChange}
             error={errors["emergencyContact.other.mobileNumber"]}
+            maxLength={11}
+            pattern="[0-9]{11}"
           />
         </div>
         <CustomInput

@@ -1,21 +1,61 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import CustomInput from "../../../../components/CustomInput";
+import { api } from "../../../../services/api";
 
 const EducationSkillsStep = ({ formData, handleChange, errors, setFormData }) => {
-  // Predefined skills list from the user model
-  const predefinedSkills = [
-    "Strong Communication skills",
-    "First Aid and CPR/BLS Certification",
-    "Swimming and Lifesaving Skills",
-    "Fire Safety Knowledge",
-    "Disaster Preparedness Training",
-    "Public Speaking and Teaching Skills",
-    "Physical Fitness",
-    "Leadership and Organizing",
-    "First Aid and Disaster Preparedness",
-    "Communication and Advocacy",
-    "Creativity and Event Planning",
-  ];
+  const [availableSkills, setAvailableSkills] = useState([]);
+  const [loadingSkills, setLoadingSkills] = useState(true);
+
+  // Fetch skills from maintenance API
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        setLoadingSkills(true);
+        const response = await api.maintenance.getActiveSkills()
+
+        // The API returns { success: true, data: [...] }
+        if (response.success && response.data) {
+          setAvailableSkills(response.data.map(skill => skill.name));
+        } else {
+          console.warn('Unexpected API response structure:', response);
+          // Fallback to predefined skills
+          setAvailableSkills([
+            "Strong Communication skills",
+            "First Aid and CPR/BLS Certification",
+            "Swimming and Lifesaving Skills",
+            "Fire Safety Knowledge",
+            "Disaster Preparedness Training",
+            "Public Speaking and Teaching Skills",
+            "Physical Fitness",
+            "Leadership and Organizing",
+            "First Aid and Disaster Preparedness",
+            "Communication and Advocacy",
+            "Creativity and Event Planning",
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching skills:', error);
+        // Fallback to predefined skills if API fails
+        setAvailableSkills([
+          "Strong Communication skills",
+          "First Aid and CPR/BLS Certification",
+          "Swimming and Lifesaving Skills",
+          "Fire Safety Knowledge",
+          "Disaster Preparedness Training",
+          "Public Speaking and Teaching Skills",
+          "Physical Fitness",
+          "Leadership and Organizing",
+          "First Aid and Disaster Preparedness",
+          "Communication and Advocacy",
+          "Creativity and Event Planning",
+        ]);
+      } finally {
+        setLoadingSkills(false);
+      }
+    };
+
+    fetchSkills();
+  }, []);
 
   const handleSkillChange = (skill, checked) => {
     if (checked) {
@@ -229,19 +269,26 @@ const EducationSkillsStep = ({ formData, handleChange, errors, setFormData }) =>
           <h4 className="font-medium text-gray-700">
             What are some skill(s) you possess?
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {predefinedSkills.map((skill) => (
-              <label key={skill} className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.skills.includes(skill)}
-                  onChange={(e) => handleSkillChange(skill, e.target.checked)}
-                  className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
-                />
-                <span className="text-sm text-gray-700">{skill}</span>
-              </label>
-            ))}
-          </div>
+          {loadingSkills ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+              <span className="ml-2 text-gray-600">Loading skills...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {availableSkills.map((skill) => (
+                <label key={skill} className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.skills.includes(skill)}
+                    onChange={(e) => handleSkillChange(skill, e.target.checked)}
+                    className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
+                  />
+                  <span className="text-sm text-gray-700">{skill}</span>
+                </label>
+              ))}
+            </div>
+          )}
           {errors.skills && (
             <p className="text-red-500 text-sm mt-1">{errors.skills}</p>
           )}

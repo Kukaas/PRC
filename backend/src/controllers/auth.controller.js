@@ -237,6 +237,7 @@ export const login = async (req, res) => {
           familyName: user.familyName,
           givenName: user.givenName,
           middleName: user.middleName,
+          dateOfBirth: user.dateOfBirth,
           email: user.email,
           role: user.role,
           isEmailVerified: user.isEmailVerified,

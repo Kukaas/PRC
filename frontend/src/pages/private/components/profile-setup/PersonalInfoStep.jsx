@@ -159,7 +159,7 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
            name="givenName"
            type="text"
            placeholder="Enter your first name"
-           value={formData.givenName || user?.givenName || ""}
+           value={formData.givenName || ""}
            onChange={handleChange}
            required
            error={errors.givenName}
@@ -169,7 +169,7 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
             name="familyName"
             type="text"
             placeholder="Enter your last name"
-            value={formData.familyName || user?.familyName || ""}
+            value={formData.familyName || ""}
             onChange={handleChange}
             required
             error={errors.familyName}
@@ -181,7 +181,7 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
            name="middleName"
            type="text"
            placeholder="Enter your middle name (optional)"
-           value={formData.middleName || user?.middleName || ""}
+           value={formData.middleName || ""}
            onChange={handleChange}
            error={errors.middleName}
          />
@@ -208,6 +208,7 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
           onChange={handleChange}
           required
           error={errors.dateOfBirth}
+          disabled={true}
         />
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-600">Age</label>
@@ -289,20 +290,24 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
           label="Mobile Number"
           name="mobileNumber"
           type="tel"
-          placeholder="Enter your mobile number"
+          placeholder="Enter your mobile number (11 digits)"
           value={formData.mobileNumber}
           onChange={handleChange}
           required
           error={errors.mobileNumber}
+          maxLength={11}
+          pattern="[0-9]{11}"
         />
         <CustomInput
           label="Contact Number"
           name="contactNumber"
           type="tel"
-          placeholder="Enter contact number (optional)"
+          placeholder="Enter contact number (11 digits, optional)"
           value={formData.contactNumber}
           onChange={handleChange}
           error={errors.contactNumber}
+          maxLength={11}
+          pattern="[0-9]{11}"
         />
       </div>
 

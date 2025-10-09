@@ -28,30 +28,61 @@ const CreateActivity = () => {
   const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false)
   const [isLoadingBarangays, setIsLoadingBarangays] = useState(false)
 
-  // Predefined skills list from the user model
-  const predefinedSkills = [
-    "Strong Communication skills",
-    "First Aid and CPR/BLS Certification",
-    "Swimming and Lifesaving Skills",
-    "Fire Safety Knowledge",
-    "Disaster Preparedness Training",
-    "Public Speaking and Teaching Skills",
-    "Physical Fitness",
-    "Leadership and Organizing",
-    "First Aid and Disaster Preparedness",
-    "Communication and Advocacy",
-    "Creativity and Event Planning",
-  ]
+  // Skills and services from maintenance API
+  const [availableSkills, setAvailableSkills] = useState([])
+  const [availableServices, setAvailableServices] = useState([])
+  const [loadingSkills, setLoadingSkills] = useState(true)
+  const [loadingServices, setLoadingServices] = useState(true)
 
-  // Predefined services list
-  const predefinedServices = [
-    "Welfare Services",
-    "Safety Services",
-    "Health Services",
-    "Youth Services",
-    "Blood Services",
-    "Wash Services",
-  ]
+  // Fetch skills and services from maintenance API
+  useEffect(() => {
+    const fetchSkillsAndServices = async () => {
+      try {
+        // Fetch skills
+        setLoadingSkills(true)
+        const skillsResponse = await api.maintenance.getActiveSkills()
+        if (skillsResponse.data && skillsResponse.data.data) {
+          setAvailableSkills(skillsResponse.data.data.map(skill => skill.name))
+        }
+
+        // Fetch services
+        setLoadingServices(true)
+        const servicesResponse = await api.maintenance.getActiveServices()
+        if (servicesResponse.data && servicesResponse.data.data) {
+          setAvailableServices(servicesResponse.data.data.map(service => service.name))
+        }
+      } catch (error) {
+        console.error('Error fetching skills and services:', error)
+        // Fallback to predefined values if API fails
+        setAvailableSkills([
+          "Strong Communication skills",
+          "First Aid and CPR/BLS Certification",
+          "Swimming and Lifesaving Skills",
+          "Fire Safety Knowledge",
+          "Disaster Preparedness Training",
+          "Public Speaking and Teaching Skills",
+          "Physical Fitness",
+          "Leadership and Organizing",
+          "First Aid and Disaster Preparedness",
+          "Communication and Advocacy",
+          "Creativity and Event Planning",
+        ])
+        setAvailableServices([
+          "Welfare Services",
+          "Safety Services",
+          "Health Services",
+          "Youth Services",
+          "Blood Services",
+          "Wash Services",
+        ])
+      } finally {
+        setLoadingSkills(false)
+        setLoadingServices(false)
+      }
+    }
+
+    fetchSkillsAndServices()
+  }, [])
 
   const [formData, setFormData] = useState({
     title: '',
@@ -227,9 +258,9 @@ const CreateActivity = () => {
     e.preventDefault()
 
     if (!formData.title || !formData.description || !formData.date ||
-        !formData.timeFrom || !formData.timeTo ||
-        !formData.location.barangay || !formData.location.municipality || !formData.location.province ||
-        formData.requiredSkills.length === 0 || formData.requiredServices.length === 0) {
+      !formData.timeFrom || !formData.timeTo ||
+      !formData.location.barangay || !formData.location.municipality || !formData.location.province ||
+      formData.requiredSkills.length === 0 || formData.requiredServices.length === 0) {
       toast.error('Please fill in all required fields')
       return
     }
@@ -419,19 +450,26 @@ const CreateActivity = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Required Skills
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {predefinedSkills.map((skill) => (
-                    <label key={skill} className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.requiredSkills.includes(skill)}
-                        onChange={(e) => handleSkillChange(skill, e.target.checked)}
-                        className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
-                      />
-                      <span className="text-sm text-gray-700">{skill}</span>
-                    </label>
-                  ))}
-                </div>
+                {loadingSkills ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                    <span className="ml-2 text-gray-600">Loading skills...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {availableSkills.map((skill) => (
+                      <label key={skill} className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.requiredSkills.includes(skill)}
+                          onChange={(e) => handleSkillChange(skill, e.target.checked)}
+                          className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
+                        />
+                        <span className="text-sm text-gray-700">{skill}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
                 {formData.requiredSkills.length === 0 && (
                   <p className="text-sm text-red-600 mt-1">Please select at least one skill</p>
                 )}
@@ -442,19 +480,26 @@ const CreateActivity = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Required Services
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {predefinedServices.map((service) => (
-                    <label key={service} className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.requiredServices.includes(service)}
-                        onChange={(e) => handleServiceChange(service, e.target.checked)}
-                        className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
-                      />
-                      <span className="text-sm text-gray-700">{service}</span>
-                    </label>
-                  ))}
-                </div>
+                {loadingServices ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                    <span className="ml-2 text-gray-600">Loading services...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {availableServices.map((service) => (
+                      <label key={service} className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.requiredServices.includes(service)}
+                          onChange={(e) => handleServiceChange(service, e.target.checked)}
+                          className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
+                        />
+                        <span className="text-sm text-gray-700">{service}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
                 {formData.requiredServices.length === 0 && (
                   <p className="text-sm text-red-600 mt-1">Please select at least one service</p>
                 )}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../components/AuthContext";
 import logo from "../../assets/logo.png";
 import StepRenderer from "./components/profile-setup/StepRenderer";
@@ -6,14 +6,18 @@ import ProgressBar from "./components/profile-setup/ProgressBar";
 import NavigationButtons from "./components/profile-setup/NavigationButtons";
 
 const ProfileSetup = () => {
-  const { updateProfile } = useAuth();
+  const { updateProfile, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const hasInitialized = useRef(false);
 
-
-
+  // Initialize formData with user data
   const [formData, setFormData] = useState({
+    // Basic user info from signup
+    givenName: "",
+    familyName: "",
+    middleName: "",
     // Personal Information
     nickname: "",
     sex: "",
@@ -106,6 +110,107 @@ const ProfileSetup = () => {
     services: [],
   });
 
+  // Initialize formData with user data only once when component mounts
+  useEffect(() => {
+    if (user && !hasInitialized.current) {
+      hasInitialized.current = true;
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        // Basic user info from signup
+        givenName: user.givenName || "",
+        familyName: user.familyName || "",
+        middleName: user.middleName || "",
+        // Personal info from profile
+        nickname: user.personalInfo?.nickname || "",
+        sex: user.personalInfo?.sex || "",
+        birthPlace: user.personalInfo?.birthPlace || "",
+        height: user.personalInfo?.height || "",
+        weight: user.personalInfo?.weight || "",
+        civilStatus: user.personalInfo?.civilStatus || "",
+        spouseName: user.personalInfo?.spouseName || "",
+        numberOfChildren: user.personalInfo?.numberOfChildren || "",
+        mobileNumber: user.personalInfo?.mobileNumber || "",
+        contactNumber: user.personalInfo?.contactNumber || "",
+        landlineNumber: user.personalInfo?.landlineNumber || "",
+        address: {
+          houseNo: user.personalInfo?.address?.houseNo || "",
+          streetBlockLot: user.personalInfo?.address?.streetBlockLot || "",
+          districtBarangayVillage: user.personalInfo?.address?.districtBarangayVillage || "",
+          municipalityCity: user.personalInfo?.address?.municipalityCity || "",
+          province: user.personalInfo?.address?.province || "",
+          zipcode: user.personalInfo?.address?.zipcode || "",
+        },
+        // Medical History
+        bloodType: user.medicalHistory?.bloodType || "",
+        preExistingConditions: user.medicalHistory?.preExistingConditions || "",
+        currentMedications: user.medicalHistory?.currentMedications || "",
+        emergencyContact: {
+          immediateFamily: {
+            name: user.medicalHistory?.emergencyContact?.immediateFamily?.name || "",
+            relationship: user.medicalHistory?.emergencyContact?.immediateFamily?.relationship || "",
+            landlineNumber: user.medicalHistory?.emergencyContact?.immediateFamily?.landlineNumber || "",
+            mobileNumber: user.medicalHistory?.emergencyContact?.immediateFamily?.mobileNumber || "",
+          },
+          other: {
+            name: user.medicalHistory?.emergencyContact?.other?.name || "",
+            relationship: user.medicalHistory?.emergencyContact?.other?.relationship || "",
+            landlineNumber: user.medicalHistory?.emergencyContact?.other?.landlineNumber || "",
+            mobileNumber: user.medicalHistory?.emergencyContact?.other?.mobileNumber || "",
+          },
+        },
+        // Family Background
+        familyBackground: {
+          father: {
+            name: user.familyBackground?.father?.name || "",
+            age: user.familyBackground?.father?.age || "",
+            occupation: user.familyBackground?.father?.occupation || "",
+          },
+          mother: {
+            name: user.familyBackground?.mother?.name || "",
+            age: user.familyBackground?.mother?.age || "",
+            occupation: user.familyBackground?.mother?.occupation || "",
+          },
+          numberOfSiblings: user.familyBackground?.numberOfSiblings || "",
+          positionInFamily: user.familyBackground?.positionInFamily || "",
+        },
+        // Educational Background
+        educationalBackground: {
+          elementary: {
+            school: user.educationalBackground?.elementary?.school || "",
+            yearGraduated: user.educationalBackground?.elementary?.yearGraduated || "",
+            honorsAwards: user.educationalBackground?.elementary?.honorsAwards || "",
+          },
+          highSchool: {
+            school: user.educationalBackground?.highSchool?.school || "",
+            yearGraduated: user.educationalBackground?.highSchool?.yearGraduated || "",
+            honorsAwards: user.educationalBackground?.highSchool?.honorsAwards || "",
+          },
+          vocational: {
+            school: user.educationalBackground?.vocational?.school || "",
+            yearGraduated: user.educationalBackground?.vocational?.yearGraduated || "",
+            honorsAwards: user.educationalBackground?.vocational?.honorsAwards || "",
+          },
+          higherStudies: {
+            school: user.educationalBackground?.higherStudies?.school || "",
+            yearGraduated: user.educationalBackground?.higherStudies?.yearGraduated || "",
+            honorsAwards: user.educationalBackground?.higherStudies?.honorsAwards || "",
+          },
+          college: {
+            school: user.educationalBackground?.college?.school || "",
+            course: user.educationalBackground?.college?.course || "",
+            yearGraduated: user.educationalBackground?.college?.yearGraduated || "",
+            honorsAwards: user.educationalBackground?.college?.honorsAwards || "",
+          },
+        },
+        // Skills and Services
+        skills: user.skills || [],
+        socioCivicInvolvements: user.socioCivicInvolvements || [],
+        workExperience: user.workExperience || [],
+        services: user.services || [],
+      }));
+    }
+  }, [user]);
+
   const steps = [
     { title: "Personal Information", fields: ["personalInfo"] },
     { title: "Medical History", fields: ["medicalHistory"] },
@@ -166,8 +271,15 @@ const ProfileSetup = () => {
         if (!formData.weight) newErrors.weight = "Weight is required";
         if (!formData.civilStatus)
           newErrors.civilStatus = "Civil status is required";
-        if (!formData.mobileNumber)
+        if (!formData.mobileNumber) {
           newErrors.mobileNumber = "Mobile number is required";
+        } else if (!/^[0-9]{11}$/.test(formData.mobileNumber)) {
+          newErrors.mobileNumber = "Mobile number must be exactly 11 digits";
+        }
+        // Validate contact number if provided
+        if (formData.contactNumber && !/^[0-9]{11}$/.test(formData.contactNumber)) {
+          newErrors.contactNumber = "Contact number must be exactly 11 digits";
+        }
         // Address fields - only required fields
         if (!formData.address.districtBarangayVillage)
           newErrors["address.districtBarangayVillage"] =
@@ -224,6 +336,10 @@ const ProfileSetup = () => {
     try {
       // Structure the data according to backend expectations
       const structuredData = {
+        // Basic user info
+        givenName: formData.givenName,
+        familyName: formData.familyName,
+        middleName: formData.middleName,
         personalInfo: {
           nickname: formData.nickname,
           sex: formData.sex,
