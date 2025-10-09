@@ -1,5 +1,5 @@
 import PrivateLayout from '@/layout/PrivateLayout'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { api } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import CustomInput from '@/components/CustomInput'
@@ -18,7 +18,7 @@ const VolunteerApplication = () => {
   const [canResubmit, setCanResubmit] = useState(false)
 
   // Function to get current date and place
-  const getCurrentDateAndPlace = () => {
+  const getCurrentDateAndPlace = useCallback(() => {
     const now = new Date()
     const options = {
       year: 'numeric',
@@ -29,7 +29,7 @@ const VolunteerApplication = () => {
     const city = user.personalInfo?.address?.municipalityCity || 'N/A'
     const province = user.personalInfo?.address?.province || 'N/A'
     return `${formattedDate}, ${city}, ${province}`
-  }
+  }, [user.personalInfo?.address?.municipalityCity, user.personalInfo?.address?.province])
   const [formData, setFormData] = useState({
     applicant: userId,
     isRedCrossVolunteer: '',
@@ -116,7 +116,7 @@ const VolunteerApplication = () => {
     }
 
     loadExistingApplication()
-  }, [navigate, user?.givenName, user?.familyName, user?.personalInfo?.address?.municipalityCity, user?.personalInfo?.address?.province])
+  }, [navigate, user?.givenName, user?.familyName, user?.personalInfo?.address?.municipalityCity, user?.personalInfo?.address?.province, getCurrentDateAndPlace])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -387,10 +387,12 @@ const VolunteerApplication = () => {
                       <div>
                         <CustomInput
                           label="Contact Number"
-                          type="text"
-                          placeholder="Enter contact number"
+                          type="tel"
+                          placeholder="Enter contact number (11 digits)"
                           value={reference.contactNumber}
                           onChange={(e) => handleReferenceChange(index, 'contactNumber', e.target.value)}
+                          maxLength={11}
+                          pattern="[0-9]{11}"
                         />
                       </div>
                       <div>
@@ -429,23 +431,33 @@ const VolunteerApplication = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <CustomInput
-                    label=""
-                    type="checkbox"
-                    value={formData.signupAgreement === 'yes_i_agree'}
-                    onChange={(e) => handleInputChange('signupAgreement', e.target.checked ? 'yes_i_agree' : '')}
+                  <input
+                    type="radio"
+                    id="signup_yes"
+                    name="signupAgreement"
+                    value="yes_i_agree"
+                    checked={formData.signupAgreement === 'yes_i_agree'}
+                    onChange={(e) => handleInputChange('signupAgreement', e.target.value)}
+                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                   />
-                  <span className="font-medium">YES, I Agree Please Sign Me Up</span>
+                  <label htmlFor="signup_yes" className="font-medium cursor-pointer">
+                    YES, I Agree Please Sign Me Up
+                  </label>
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <CustomInput
-                    label=""
-                    type="checkbox"
-                    value={formData.signupAgreement === 'no_i_dont_agree'}
-                    onChange={(e) => handleInputChange('signupAgreement', e.target.checked ? 'no_i_dont_agree' : '')}
+                  <input
+                    type="radio"
+                    id="signup_no"
+                    name="signupAgreement"
+                    value="no_i_dont_agree"
+                    checked={formData.signupAgreement === 'no_i_dont_agree'}
+                    onChange={(e) => handleInputChange('signupAgreement', e.target.value)}
+                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                   />
-                  <span className="font-medium">NO, I Don't Agree</span>
+                  <label htmlFor="signup_no" className="font-medium cursor-pointer">
+                    NO, I Don't Agree
+                  </label>
                 </div>
 
                 {formData.signupAgreement === 'no_i_dont_agree' && (

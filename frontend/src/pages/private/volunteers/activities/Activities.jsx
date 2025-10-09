@@ -124,13 +124,6 @@ const Activities = () => {
                     You'll be able to access activities once your application is approved.
                   </p>
                 </div>
-                <Button
-                  onClick={handleViewApplication}
-                  variant="outline"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2"
-                >
-                  View Application Status
-                </Button>
               </div>
             </div>
           </div>
