@@ -129,4 +129,19 @@ export const api = {
     notify: (id, data) => apiClient.post(`/leaders/admin/${id}/notify`, data),
     bulkNotify: (data) => apiClient.post(`/leaders/admin/bulk-notify`, data),
   },
+  maintenance: {
+    // Skills
+    createSkill: (data) => apiClient.post('/maintenance/skills', data),
+    getSkills: (params) => apiClient.get('/maintenance/skills', { params }),
+    getActiveSkills: () => apiClient.get('/maintenance/skills/active'),
+    updateSkill: (id, data) => apiClient.put(`/maintenance/skills/${id}`, data),
+    deleteSkill: (id) => apiClient.delete(`/maintenance/skills/${id}`),
+
+    // Services
+    createService: (data) => apiClient.post('/maintenance/services', data),
+    getServices: (params) => apiClient.get('/maintenance/services', { params }),
+    getActiveServices: () => apiClient.get('/maintenance/services/active'),
+    updateService: (id, data) => apiClient.put(`/maintenance/services/${id}`, data),
+    deleteService: (id) => apiClient.delete(`/maintenance/services/${id}`),
+  },
 };

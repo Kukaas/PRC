@@ -165,19 +165,6 @@ const userSchema = new mongoose.Schema(
     // Skills
     skills: {
       type: [String],
-      enum: [
-        "Strong Communication skills",
-        "First Aid and CPR/BLS Certification",
-        "Swimming and Lifesaving Skills",
-        "Fire Safety Knowledge",
-        "Disaster Preparedness Training",
-        "Public Speaking and Teaching Skills",
-        "Physical Fitness",
-        "Leadership and Organizing",
-        "First Aid and Disaster Preparedness",
-        "Communication and Advocacy",
-        "Creativity and Event Planning"
-      ]
     },
 
     // Socio-Civic & Cultural Religious Involvements
@@ -203,14 +190,6 @@ const userSchema = new mongoose.Schema(
       {
         type: {
           type: String,
-          enum: [
-            "Welfare Services",
-            "Safety Services",
-            "Health Services",
-            "Youth Services",
-            "Blood Services",
-            "Wash Services",
-          ],
         },
       },
     ],

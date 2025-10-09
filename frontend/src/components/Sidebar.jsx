@@ -14,6 +14,7 @@ import {
   Target,
   FileText,
   Calendar,
+  Wrench,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { api } from '../services/api';
@@ -85,6 +86,12 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       label: "Settings",
       icon: Settings,
       active: location.pathname.includes('/settings/')
+    },
+    {
+      href: `/admin/maintenance/${userId}`,
+      label: "Maintenance",
+      icon: Wrench,
+      active: location.pathname.includes('/admin/maintenance')
     },
   ];
 
@@ -290,11 +297,10 @@ const Sidebar = ({ isMobile = false, onClose }) => {
             <button
               key={link.href}
               onClick={() => handleNavigation(link.href)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                link.active
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
-                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-              }`}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${link.active
+                ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                }`}
             >
               <Icon className={`w-5 h-5 flex-shrink-0 ${link.active ? 'text-blue-600' : 'text-gray-400'}`} />
               <span className="font-medium truncate">{link.label}</span>

@@ -34,6 +34,7 @@ import Reports from "./pages/private/admin/reports/Reports";
 import Leaders from "./pages/private/admin/leaders/Leaders";
 import CreateLeader from "./pages/private/admin/leaders/CreateLeader";
 import EditLeader from "./pages/private/admin/leaders/EditLeader";
+import Maintenance from "./pages/private/admin/maintenance/Maintenance";
 import Settings from "./pages/private/Settings.jsx";
 
 
@@ -211,6 +212,15 @@ function App() {
               element={
                 <PrivateRoute>
                   <EditLeader />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/admin/maintenance/:id"
+              element={
+                <PrivateRoute>
+                  <Maintenance />
                 </PrivateRoute>
               }
             />
