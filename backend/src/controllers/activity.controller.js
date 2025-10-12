@@ -1296,8 +1296,8 @@ export const getVolunteerActivities = async (req, res) => {
         skillMatchScore: Math.round(skillMatchScore),
         serviceMatchScore: Math.round(serviceMatchScore),
         totalScore: Math.round(totalScore),
-        isJoined: activity.participants.some(p => p.userId._id.toString() === userId),
-        participantCount: activity.participants.length,
+        isJoined: activity.participants.some(p => p.userId && p.userId._id && p.userId._id.toString() === userId),
+        participantCount: activity.participants.filter(p => p.userId).length,
         maxParticipants: activity.maxParticipants || 0
       };
     });

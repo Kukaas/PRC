@@ -43,40 +43,21 @@ const EditActivity = () => {
         // Fetch skills
         setLoadingSkills(true)
         const skillsResponse = await api.maintenance.getActiveSkills()
-        if (skillsResponse.data && skillsResponse.data.data) {
-          setAvailableSkills(skillsResponse.data.data.map(skill => skill.name))
+        if (skillsResponse.success && skillsResponse.data) {
+          setAvailableSkills(skillsResponse.data.map(skill => skill.name))
         }
 
         // Fetch services
         setLoadingServices(true)
         const servicesResponse = await api.maintenance.getActiveServices()
-        if (servicesResponse.data && servicesResponse.data.data) {
-          setAvailableServices(servicesResponse.data.data.map(service => service.name))
+        if (servicesResponse.success && servicesResponse.data) {
+          setAvailableServices(servicesResponse.data.map(service => service.name))
         }
       } catch (error) {
         console.error('Error fetching skills and services:', error)
-        // Fallback to predefined values if API fails
-        setAvailableSkills([
-          "Strong Communication skills",
-          "First Aid and CPR/BLS Certification",
-          "Swimming and Lifesaving Skills",
-          "Fire Safety Knowledge",
-          "Disaster Preparedness Training",
-          "Public Speaking and Teaching Skills",
-          "Physical Fitness",
-          "Leadership and Organizing",
-          "First Aid and Disaster Preparedness",
-          "Communication and Advocacy",
-          "Creativity and Event Planning",
-        ])
-        setAvailableServices([
-          "Welfare Services",
-          "Safety Services",
-          "Health Services",
-          "Youth Services",
-          "Blood Services",
-          "Wash Services",
-        ])
+        toast.error('Failed to load skills and services. Please try again.')
+        setAvailableSkills([])
+        setAvailableServices([])
       } finally {
         setLoadingSkills(false)
         setLoadingServices(false)
@@ -391,6 +372,11 @@ const EditActivity = () => {
                   type="date"
                   value={formData.date}
                   onChange={(e) => handleInputChange('date', e.target.value)}
+                  min={(() => {
+                    const today = new Date();
+                    today.setDate(today.getDate());
+                    return today.toISOString().split('T')[0];
+                  })()}
                   required
                 />
                 <CustomInput
