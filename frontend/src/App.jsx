@@ -36,6 +36,7 @@ import CreateLeader from "./pages/private/admin/leaders/CreateLeader";
 import EditLeader from "./pages/private/admin/leaders/EditLeader";
 import Maintenance from "./pages/private/admin/maintenance/Maintenance";
 import Settings from "./pages/private/Settings.jsx";
+import ActivityHistory from "./pages/private/volunteers/history/ActivityHistory";
 
 
 function App() {
@@ -85,6 +86,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <Activities />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/activities/history"
+              element={
+                <PrivateRoute>
+                  <ActivityHistory />
                 </PrivateRoute>
               }
             />

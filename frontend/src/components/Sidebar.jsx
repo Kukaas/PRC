@@ -107,7 +107,13 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       href: `/activities/${userId}`,
       label: "Activities",
       icon: Activity,
-      active: location.pathname.includes('/activities/')
+      active: location.pathname === `/activities/${userId}`
+    },
+    {
+      href: `/activities/history`,
+      label: "Activity History",
+      icon: FileText,
+      active: location.pathname.includes('/activities/history')
     },
     {
       href: `/member-status/${userId}`,
