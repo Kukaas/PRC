@@ -189,6 +189,18 @@ const AdminMemberStatus = () => {
                   {uniqueServices.map(s => <option key={s} value={s}>{s}</option>)}
                 </CustomInput>
               </div>
+              <div>
+                <CustomInput
+                  type="select"
+                  label={<span><Users className="w-4 h-4 inline mr-1" />Status</span>}
+                  value={status}
+                  onChange={(e)=>setStatus(e.target.value)}
+                >
+                  <option value="">All</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </CustomInput>
+              </div>
               <div className="flex items-end">
                 <button onClick={clearFilters} className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors text-sm">Clear</button>
               </div>
