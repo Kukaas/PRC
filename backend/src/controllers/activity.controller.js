@@ -1205,7 +1205,7 @@ export const getAttendanceReport = async (req, res) => {
 // Get activities for volunteers with skill matching prioritization
 export const getVolunteerActivities = async (req, res) => {
   try {
-    const { status, search } = req.query;
+    const { status, search, skillsMatch } = req.query;
     const userId = req.user.userId;
 
     // Get user profile to extract skills and services
@@ -1302,8 +1302,24 @@ export const getVolunteerActivities = async (req, res) => {
       };
     });
 
+    // Apply skills match filter if specified
+    let filteredActivities = activitiesWithScores;
+    if (skillsMatch && skillsMatch !== 'all') {
+      if (skillsMatch === 'match') {
+        // Only show activities where user has at least one matching skill
+        filteredActivities = activitiesWithScores.filter(activity =>
+          activity.skillMatchScore > 0
+        );
+      } else if (skillsMatch === 'no-match') {
+        // Only show activities where user has no matching skills
+        filteredActivities = activitiesWithScores.filter(activity =>
+          activity.skillMatchScore === 0
+        );
+      }
+    }
+
     // Sort by total score (highest first), then by date
-    activitiesWithScores.sort((a, b) => {
+    filteredActivities.sort((a, b) => {
       if (b.totalScore !== a.totalScore) {
         return b.totalScore - a.totalScore;
       }
@@ -1313,7 +1329,7 @@ export const getVolunteerActivities = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Volunteer activities retrieved successfully",
-      data: activitiesWithScores,
+      data: filteredActivities,
       userSkills,
       userServices
     });

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { api } from '@/services/api'
-import { useAuth } from '@/components/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,27 +8,24 @@ import { Calendar, Users, MapPin, Clock, Star, Search, Filter, Loader2 } from 'l
 import { toast } from 'sonner'
 
 const AvailableActivities = ({ onActivityJoin }) => {
-  const { user } = useAuth()
   const [activities, setActivities] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [skillsMatchFilter, setSkillsMatchFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [loadingActivities, setLoadingActivities] = useState(false)
   const [joiningActivities, setJoiningActivities] = useState(new Set())
 
-  useEffect(() => {
-    loadActivities()
-  }, [currentPage, searchTerm, statusFilter])
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     setLoadingActivities(true)
     try {
       const response = await api.activities.getVolunteerActivities({
         page: currentPage,
         limit: 12,
         status: statusFilter,
-        search: searchTerm
+        search: searchTerm,
+        skillsMatch: skillsMatchFilter
       })
 
       if (response?.data) {
@@ -67,7 +63,11 @@ const AvailableActivities = ({ onActivityJoin }) => {
     } finally {
       setLoadingActivities(false)
     }
-  }
+  }, [currentPage, statusFilter, searchTerm, skillsMatchFilter])
+
+  useEffect(() => {
+    loadActivities()
+  }, [loadActivities])
 
   const handleJoinActivity = async (activityId) => {
     try {
@@ -288,6 +288,17 @@ const AvailableActivities = ({ onActivityJoin }) => {
               <option value="ongoing">Ongoing (View Only)</option>
               <option value="completed">Completed (View Only)</option>
               <option value="cancelled">Cancelled (View Only)</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={skillsMatchFilter}
+              onChange={(e) => setSkillsMatchFilter(e.target.value)}
+              className="border border-gray-300 rounded-md px-2 sm:px-3 py-2 text-xs sm:text-sm"
+            >
+              <option value="all">All Skills</option>
+              <option value="match">Skills Match</option>
+              <option value="no-match">Skills Not Match</option>
             </select>
           </div>
         </div>
