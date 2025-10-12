@@ -18,15 +18,28 @@ const SkillsServicesTab = ({ user, isEditing = false, formData, setFormData }) =
         // Fetch skills
         setLoadingSkills(true);
         const skillsResponse = await api.maintenance.getActiveSkills();
-        if (skillsResponse.data && skillsResponse.data.data) {
-          setAvailableSkills(skillsResponse.data.data.map(skill => skill.name));
+        // Support multiple API shapes: { success, data } or { data: { data: [...] } }
+        if (skillsResponse) {
+          if (skillsResponse.success && Array.isArray(skillsResponse.data)) {
+            setAvailableSkills(skillsResponse.data.map((s) => s.name));
+          } else if (skillsResponse.data && Array.isArray(skillsResponse.data.data)) {
+            setAvailableSkills(skillsResponse.data.data.map((s) => s.name));
+          } else if (Array.isArray(skillsResponse.data)) {
+            setAvailableSkills(skillsResponse.data.map((s) => s.name));
+          }
         }
 
         // Fetch services
         setLoadingServices(true);
         const servicesResponse = await api.maintenance.getActiveServices();
-        if (servicesResponse.data && servicesResponse.data.data) {
-          setAvailableServices(servicesResponse.data.data.map(service => service.name));
+        if (servicesResponse) {
+          if (servicesResponse.success && Array.isArray(servicesResponse.data)) {
+            setAvailableServices(servicesResponse.data.map((s) => s.name));
+          } else if (servicesResponse.data && Array.isArray(servicesResponse.data.data)) {
+            setAvailableServices(servicesResponse.data.data.map((s) => s.name));
+          } else if (Array.isArray(servicesResponse.data)) {
+            setAvailableServices(servicesResponse.data.map((s) => s.name));
+          }
         }
       } catch (error) {
         console.error('Error fetching skills and services:', error);
@@ -92,6 +105,56 @@ const SkillsServicesTab = ({ user, isEditing = false, formData, setFormData }) =
     return 'Unknown Service';
   };
 
+  // Service recommendations map (copied/compatible with ServicesStep)
+  const serviceRecommendations = {
+    'Strong Communication skills': ['Welfare Services', 'Youth Services', 'Health Services', 'Blood Services'],
+    'First Aid and CPR/BLS Certification': ['Health Services', 'Safety Services', 'Blood Services', 'Welfare Services'],
+    'Swimming and Lifesaving Skills': ['Safety Services', 'Wash Services', 'Health Services'],
+    'Fire Safety Knowledge': ['Safety Services', 'Health Services', 'Welfare Services'],
+    'Disaster Preparedness Training': ['Safety Services', 'Welfare Services', 'Health Services', 'Wash Services'],
+    'Public Speaking and Teaching Skills': ['Youth Services', 'Health Services', 'Welfare Services', 'Blood Services'],
+    'Physical Fitness': ['Safety Services', 'Youth Services', 'Health Services'],
+    'Leadership and Organizing': ['Youth Services', 'Welfare Services', 'Health Services', 'Safety Services'],
+    'First Aid and Disaster Preparedness': ['Health Services', 'Safety Services', 'Welfare Services', 'Blood Services'],
+    'Communication and Advocacy': ['Welfare Services', 'Youth Services', 'Health Services', 'Blood Services'],
+    'Creativity and Event Planning': ['Youth Services', 'Welfare Services', 'Health Services'],
+    'Medical Knowledge': ['Health Services', 'Blood Services', 'Safety Services', 'Welfare Services'],
+    'Teaching and Training': ['Youth Services', 'Health Services', 'Welfare Services', 'Safety Services'],
+    'Counseling Skills': ['Welfare Services', 'Youth Services', 'Health Services'],
+    'Emergency Response': ['Safety Services', 'Health Services', 'Welfare Services', 'Blood Services'],
+    'Community Outreach': ['Welfare Services', 'Youth Services', 'Health Services', 'Blood Services'],
+    'Event Management': ['Youth Services', 'Welfare Services', 'Health Services', 'Blood Services'],
+    'Technical Skills': ['Safety Services', 'Health Services', 'Wash Services'],
+    'Language Skills': ['Welfare Services', 'Youth Services', 'Health Services', 'Blood Services'],
+    'Computer Skills': ['Youth Services', 'Welfare Services', 'Health Services', 'Blood Services'],
+  };
+
+  const getRecommendedServices = () => {
+    const recommended = new Set();
+    (formData?.skills || []).forEach((skill) => {
+      if (serviceRecommendations[skill]) {
+        serviceRecommendations[skill].forEach((s) => recommended.add(s));
+      }
+    });
+    return Array.from(recommended);
+  };
+
+  const recommendedServices = getRecommendedServices();
+
+  const handleServiceChange = (service, checked) => {
+    if (checked) {
+      setFormData((prev) => ({
+        ...prev,
+        services: [...(prev.services || []), service],
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        services: (prev.services || []).filter((s) => s !== service),
+      }));
+    }
+  };
+
   return (
     <div className="space-y-3 sm:space-y-4">
       <Card>
@@ -145,6 +208,29 @@ const SkillsServicesTab = ({ user, isEditing = false, formData, setFormData }) =
                   </div>
                 ) : (
                   <div className="space-y-3">
+                    { /* Recommended services block (based on selected skills) */ }
+                    {recommendedServices.length > 0 && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                        <h5 className="font-medium text-blue-800 mb-2 text-sm">Recommended Services</h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {recommendedServices.map((service) => (
+                            <label key={service} className="flex items-center space-x-3 cursor-pointer p-2 bg-white rounded border border-blue-100">
+                              <input
+                                type="checkbox"
+                                checked={(formData?.services || []).includes(service)}
+                                onChange={(e) => handleServiceChange(service, e.target.checked)}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <span className="text-blue-800 text-sm">{service}</span>
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full inline-block ml-2">Recommended</span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {availableServices.map((service) => {
                       const checked = (formData?.services || []).includes(service);
                       return (
@@ -152,13 +238,7 @@ const SkillsServicesTab = ({ user, isEditing = false, formData, setFormData }) =
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={(e) => {
-                              const isChecked = e.target.checked;
-                              setFormData((prev) => ({
-                                ...prev,
-                                services: isChecked ? [...(prev.services || []), service] : (prev.services || []).filter((s) => s !== service),
-                              }));
-                            }}
+                            onChange={(e) => handleServiceChange(service, e.target.checked)}
                             className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                           />
                           <span className="text-gray-700">{service}</span>

@@ -4,6 +4,21 @@ import CustomInput from "../../../../components/CustomInput";
 import { useAuth } from "@/components/AuthContext";
 import { PSGC_API_URL } from "@/services/api";
 
+// Zip code mapping by municipality
+const getZipCodeByMunicipality = (municipalityName) => {
+  const zipCodeMap = {
+    "Boac": "4900",
+    "Mogpog": "4901",
+    "Santa Cruz": "4902",
+    "Torrijos": "4903",
+    "Buenavista": "4904",
+    "Gasan": "4905"
+  };
+
+  // Return zip code if municipality exists in map
+  return zipCodeMap[municipalityName] || null;
+};
+
 const PersonalInfoStep = ({ formData, handleChange, errors }) => {
   const { user } = useAuth();
 
@@ -121,6 +136,21 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
     };
     handleChange(event);
 
+    // Auto-fill zip code based on selected municipality
+    const selectedMunicipalityData = municipalities.find(m => m.code === municipalityCode);
+    if (selectedMunicipalityData) {
+      const zipCode = getZipCodeByMunicipality(selectedMunicipalityData.name);
+      if (zipCode) {
+        const zipEvent = {
+          target: {
+            name: "address.zipcode",
+            value: zipCode
+          }
+        };
+        handleChange(zipEvent);
+      }
+    }
+
     if (municipalityCode) {
       fetchBarangays(municipalityCode);
     }
@@ -139,6 +169,21 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
       }
     };
     handleChange(event);
+
+    // Auto-fill zip code based on selected municipality
+    const selectedMunicipalityData = municipalities.find(m => m.code === selectedMunicipality);
+    if (selectedMunicipalityData) {
+      const zipCode = getZipCodeByMunicipality(selectedMunicipalityData.name);
+      if (zipCode) {
+        const zipEvent = {
+          target: {
+            name: "address.zipcode",
+            value: zipCode
+          }
+        };
+        handleChange(zipEvent);
+      }
+    }
   };
 
   // Load provinces on component mount
@@ -220,7 +265,7 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <CustomInput
-          label="Sex"
+          label="Gender"
           name="sex"
           type="select"
           value={formData.sex}
@@ -228,7 +273,7 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
           required
           error={errors.sex}
         >
-          <option value="">Select sex</option>
+          <option value="">Select Gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
         </CustomInput>
@@ -441,12 +486,13 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <CustomInput
-            label="Zip Code"
+            label="Postal Code"
             name="address.zipcode"
             type="text"
-            placeholder="Enter zip code"
+            placeholder="Enter postal code"
             value={formData.address.zipcode}
             onChange={handleChange}
+            disabled={true}
             required
             error={errors["address.zipcode"]}
           />

@@ -64,7 +64,22 @@ const MedicalHistoryTab = ({ user, isEditing = false, formData, handleChange }) 
                 <h4 className="font-medium mb-2 text-sm sm:text-base">Immediate Family Contact</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <CustomInput label="Name" name="medicalHistory.emergencyContact.immediateFamily.name" type="text" value={formData?.medicalHistory?.emergencyContact?.immediateFamily?.name || ''} onChange={handleChange} />
-                  <CustomInput label="Relationship" name="medicalHistory.emergencyContact.immediateFamily.relationship" type="text" value={formData?.medicalHistory?.emergencyContact?.immediateFamily?.relationship || ''} onChange={handleChange} />
+                  <CustomInput label="Relationship" name="medicalHistory.emergencyContact.immediateFamily.relationship" type="select" value={formData?.medicalHistory?.emergencyContact?.immediateFamily?.relationship || ''} onChange={handleChange}>
+                    <option value="">Select relationship</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Father">Father</option>
+                    <option value="Sister">Sister</option>
+                    <option value="Brother">Brother</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Son">Son</option>
+                    <option value="Daughter">Daughter</option>
+                    <option value="Grandmother">Grandmother</option>
+                    <option value="Grandfather">Grandfather</option>
+                    <option value="Aunt">Aunt</option>
+                    <option value="Uncle">Uncle</option>
+                    <option value="Cousin">Cousin</option>
+                    <option value="Other">Other</option>
+                  </CustomInput>
                   <CustomInput label="Mobile" name="medicalHistory.emergencyContact.immediateFamily.mobileNumber" type="tel" value={formData?.medicalHistory?.emergencyContact?.immediateFamily?.mobileNumber || ''} onChange={handleChange} />
                   <CustomInput label="Landline" name="medicalHistory.emergencyContact.immediateFamily.landlineNumber" type="tel" value={formData?.medicalHistory?.emergencyContact?.immediateFamily?.landlineNumber || ''} onChange={handleChange} />
                 </div>
@@ -73,7 +88,25 @@ const MedicalHistoryTab = ({ user, isEditing = false, formData, handleChange }) 
                 <h4 className="font-medium mb-2 text-sm sm:text-base">Other Emergency Contact</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <CustomInput label="Name" name="medicalHistory.emergencyContact.other.name" type="text" value={formData?.medicalHistory?.emergencyContact?.other?.name || ''} onChange={handleChange} />
-                  <CustomInput label="Relationship" name="medicalHistory.emergencyContact.other.relationship" type="text" value={formData?.medicalHistory?.emergencyContact?.other?.relationship || ''} onChange={handleChange} />
+                  <CustomInput label="Relationship" name="medicalHistory.emergencyContact.other.relationship" type="select" value={formData?.medicalHistory?.emergencyContact?.other?.relationship || ''} onChange={handleChange}>
+                    <option value="">Select relationship</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Father">Father</option>
+                    <option value="Sister">Sister</option>
+                    <option value="Brother">Brother</option>
+                    <option value="Spouse">Spouse</option>
+                    <option value="Son">Son</option>
+                    <option value="Daughter">Daughter</option>
+                    <option value="Grandmother">Grandmother</option>
+                    <option value="Grandfather">Grandfather</option>
+                    <option value="Aunt">Aunt</option>
+                    <option value="Uncle">Uncle</option>
+                    <option value="Cousin">Cousin</option>
+                    <option value="Friend">Friend</option>
+                    <option value="Colleague">Colleague</option>
+                    <option value="Neighbor">Neighbor</option>
+                    <option value="Other">Other</option>
+                  </CustomInput>
                   <CustomInput label="Mobile" name="medicalHistory.emergencyContact.other.mobileNumber" type="tel" value={formData?.medicalHistory?.emergencyContact?.other?.mobileNumber || ''} onChange={handleChange} />
                   <CustomInput label="Landline" name="medicalHistory.emergencyContact.other.landlineNumber" type="tel" value={formData?.medicalHistory?.emergencyContact?.other?.landlineNumber || ''} onChange={handleChange} />
                 </div>

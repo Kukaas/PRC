@@ -6,6 +6,21 @@ import CustomInput from '@/components/CustomInput';
 import axios from 'axios';
 import { PSGC_API_URL } from '@/services/api';
 
+// Zip code mapping by municipality
+const getZipCodeByMunicipality = (municipalityName) => {
+  const zipCodeMap = {
+    "Boac": "4900",
+    "Mogpog": "4901",
+    "Santa Cruz": "4902",
+    "Torrijos": "4903",
+    "Buenavista": "4904",
+    "Gasan": "4905"
+  };
+
+  // Return zip code if municipality exists in map
+  return zipCodeMap[municipalityName] || null;
+};
+
 const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange }) => {
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth) => {
@@ -160,6 +175,22 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
       }
     };
     handleChange(event);
+
+    // Auto-fill zip code based on selected municipality
+    const selectedMunicipalityData = municipalities.find(m => m.code === municipalityCode);
+    if (selectedMunicipalityData) {
+      const zipCode = getZipCodeByMunicipality(selectedMunicipalityData.name);
+      if (zipCode) {
+        const zipEvent = {
+          target: {
+            name: "address.zipcode",
+            value: zipCode
+          }
+        };
+        handleChange(zipEvent);
+      }
+    }
+
     if (municipalityCode) fetchBarangays(municipalityCode);
   };
 
@@ -173,6 +204,21 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
       }
     };
     handleChange(event);
+
+    // Auto-fill zip code based on selected municipality (as backup)
+    const selectedMunicipalityData = municipalities.find(m => m.code === selectedMunicipality);
+    if (selectedMunicipalityData) {
+      const zipCode = getZipCodeByMunicipality(selectedMunicipalityData.name);
+      if (zipCode) {
+        const zipEvent = {
+          target: {
+            name: "address.zipcode",
+            value: zipCode
+          }
+        };
+        handleChange(zipEvent);
+      }
+    }
   };
 
   if (isEditing) {
@@ -196,7 +242,15 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
               <CustomInput label="Nickname" name="nickname" type="text" value={formData.nickname} onChange={handleChange} required />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <CustomInput label="Date of Birth" name="dateOfBirth" type="date" value={defaultDate} onChange={handleChange} required />
+              <CustomInput
+                label="Date of Birth"
+                name="dateOfBirth"
+                type="date"
+                value={defaultDate}
+                onChange={handleChange}
+                max={new Date().toISOString().split('T')[0]}
+                required
+              />
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-600">Age</label>
                 <div className="h-10 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900">
@@ -263,7 +317,7 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
                 <CustomInput label="Street/Block/Lot" name="address.streetBlockLot" type="text" value={formData.address?.streetBlockLot || ''} onChange={handleChange} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <CustomInput label="Zip Code" name="address.zipcode" type="text" value={formData.address?.zipcode || ''} onChange={handleChange} required />
+                <CustomInput label="Postal Code" name="address.zipcode" type="text" value={formData.address?.zipcode || ''} onChange={handleChange} disabled={true} required />
               </div>
             </div>
           </CardContent>

@@ -7,17 +7,26 @@ const ServicesStep = ({ formData, setFormData, errors }) => {
 
   // Service recommendations based on skills
   const serviceRecommendations = {
-    "Strong Communication skills": ["Welfare Services", "Youth Services", "Health Services"],
-    "First Aid and CPR/BLS Certification": ["Health Services", "Safety Services", "Blood Services"],
-    "Swimming and Lifesaving Skills": ["Safety Services", "Wash Services"],
-    "Fire Safety Knowledge": ["Safety Services"],
-    "Disaster Preparedness Training": ["Safety Services", "Welfare Services"],
-    "Public Speaking and Teaching Skills": ["Youth Services", "Health Services", "Welfare Services"],
-    "Physical Fitness": ["Safety Services", "Youth Services"],
-    "Leadership and Organizing": ["Youth Services", "Welfare Services", "Health Services"],
-    "First Aid and Disaster Preparedness": ["Health Services", "Safety Services", "Welfare Services"],
-    "Communication and Advocacy": ["Welfare Services", "Youth Services", "Health Services"],
-    "Creativity and Event Planning": ["Youth Services", "Welfare Services"],
+    "Strong Communication skills": ["Welfare Services", "Youth Services", "Health Services", "Blood Services"],
+    "First Aid and CPR/BLS Certification": ["Health Services", "Safety Services", "Blood Services", "Welfare Services"],
+    "Swimming and Lifesaving Skills": ["Safety Services", "Wash Services", "Health Services"],
+    "Fire Safety Knowledge": ["Safety Services", "Health Services", "Welfare Services"],
+    "Disaster Preparedness Training": ["Safety Services", "Welfare Services", "Health Services", "Wash Services"],
+    "Public Speaking and Teaching Skills": ["Youth Services", "Health Services", "Welfare Services", "Blood Services"],
+    "Physical Fitness": ["Safety Services", "Youth Services", "Health Services"],
+    "Leadership and Organizing": ["Youth Services", "Welfare Services", "Health Services", "Safety Services"],
+    "First Aid and Disaster Preparedness": ["Health Services", "Safety Services", "Welfare Services", "Blood Services"],
+    "Communication and Advocacy": ["Welfare Services", "Youth Services", "Health Services", "Blood Services"],
+    "Creativity and Event Planning": ["Youth Services", "Welfare Services", "Health Services"],
+    "Medical Knowledge": ["Health Services", "Blood Services", "Safety Services", "Welfare Services"],
+    "Teaching and Training": ["Youth Services", "Health Services", "Welfare Services", "Safety Services"],
+    "Counseling Skills": ["Welfare Services", "Youth Services", "Health Services"],
+    "Emergency Response": ["Safety Services", "Health Services", "Welfare Services", "Blood Services"],
+    "Community Outreach": ["Welfare Services", "Youth Services", "Health Services", "Blood Services"],
+    "Event Management": ["Youth Services", "Welfare Services", "Health Services", "Blood Services"],
+    "Technical Skills": ["Safety Services", "Health Services", "Wash Services"],
+    "Language Skills": ["Welfare Services", "Youth Services", "Health Services", "Blood Services"],
+    "Computer Skills": ["Youth Services", "Welfare Services", "Health Services", "Blood Services"],
   };
 
   // Fetch services from maintenance API
