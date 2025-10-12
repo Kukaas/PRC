@@ -67,13 +67,27 @@ const MedicalHistoryStep = ({ formData, handleChange, errors }) => {
           <CustomInput
             label="Relationship to you"
             name="emergencyContact.immediateFamily.relationship"
-            type="text"
-            placeholder="Enter relationship"
+            type="select"
             value={formData.emergencyContact.immediateFamily.relationship}
             onChange={handleChange}
             required
             error={errors["emergencyContact.immediateFamily.relationship"]}
-          />
+          >
+            <option value="">Select relationship</option>
+            <option value="Mother">Mother</option>
+            <option value="Father">Father</option>
+            <option value="Sister">Sister</option>
+            <option value="Brother">Brother</option>
+            <option value="Spouse">Spouse</option>
+            <option value="Son">Son</option>
+            <option value="Daughter">Daughter</option>
+            <option value="Grandmother">Grandmother</option>
+            <option value="Grandfather">Grandfather</option>
+            <option value="Aunt">Aunt</option>
+            <option value="Uncle">Uncle</option>
+            <option value="Cousin">Cousin</option>
+            <option value="Other">Other</option>
+          </CustomInput>
           <CustomInput
             label="Mobile Number"
             name="emergencyContact.immediateFamily.mobileNumber"
@@ -115,12 +129,29 @@ const MedicalHistoryStep = ({ formData, handleChange, errors }) => {
           <CustomInput
             label="Relationship to you"
             name="emergencyContact.other.relationship"
-            type="text"
-            placeholder="Enter relationship"
+            type="select"
             value={formData.emergencyContact.other.relationship}
             onChange={handleChange}
             error={errors["emergencyContact.other.relationship"]}
-          />
+          >
+            <option value="">Select relationship</option>
+            <option value="Mother">Mother</option>
+            <option value="Father">Father</option>
+            <option value="Sister">Sister</option>
+            <option value="Brother">Brother</option>
+            <option value="Spouse">Spouse</option>
+            <option value="Son">Son</option>
+            <option value="Daughter">Daughter</option>
+            <option value="Grandmother">Grandmother</option>
+            <option value="Grandfather">Grandfather</option>
+            <option value="Aunt">Aunt</option>
+            <option value="Uncle">Uncle</option>
+            <option value="Cousin">Cousin</option>
+            <option value="Friend">Friend</option>
+            <option value="Colleague">Colleague</option>
+            <option value="Neighbor">Neighbor</option>
+            <option value="Other">Other</option>
+          </CustomInput>
           <CustomInput
             label="Mobile Number"
             name="emergencyContact.other.mobileNumber"
