@@ -32,7 +32,6 @@ const ActivityHistory = () => {
   const [serviceFilter, setServiceFilter] = useState('all')
   const [services, setServices] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [hasApplication, setHasApplication] = useState(false)
@@ -68,7 +67,6 @@ const ActivityHistory = () => {
         })
 
         setActivities(sortedActivities)
-        setTotalPages(Math.ceil(sortedActivities.length / 10))
       } else {
         setError(response.message || 'Failed to load activities')
         setActivities([])
@@ -118,11 +116,187 @@ const ActivityHistory = () => {
     return matchesSearch && matchesService
   })
 
+  const totalFilteredPages = Math.max(1, Math.ceil(filteredActivities.length / 10))
+
+  useEffect(() => {
+    if (currentPage > totalFilteredPages) {
+      setCurrentPage(totalFilteredPages)
+    }
+  }, [currentPage, totalFilteredPages])
+
   // Get paginated activities
   const paginatedActivities = filteredActivities.slice(
     (currentPage - 1) * 10,
     currentPage * 10
   )
+
+  const formatTimeString = (timeString) => {
+    if (!timeString) return 'Not recorded'
+    try {
+      return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+    } catch {
+      return timeString
+    }
+  }
+
+  const formatDateTime = (value) => {
+    if (!value) return 'Not recorded'
+    try {
+      return new Date(value).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+    } catch {
+      return value
+    }
+  }
+
+  const formatHoursServed = (hours) => {
+    if (typeof hours !== 'number' || Number.isNaN(hours) || hours <= 0) {
+      return null
+    }
+
+    const totalMinutes = Math.round(hours * 60)
+    const hrs = Math.floor(totalMinutes / 60)
+    const mins = totalMinutes % 60
+
+    const parts = []
+    if (hrs > 0) {
+      parts.push(`${hrs}hr${hrs === 1 ? '' : 's'}`)
+    }
+    if (mins > 0) {
+      parts.push(`${mins}min${mins === 1 ? '' : 's'}`)
+    }
+
+    return parts.length > 0 ? parts.join(', ') : '0min'
+  }
+
+  const handlePrintReport = () => {
+    const reportWindow = window.open('', '', 'width=1000,height=800')
+    if (!reportWindow) {
+      return
+    }
+
+    const totalHoursAccumulated = filteredActivities.reduce((acc, activity) => {
+      const hours = activity.userParticipant?.totalHours
+      return typeof hours === 'number' && hours > 0 ? acc + hours : acc
+    }, 0)
+
+    const reportRows = filteredActivities.map((activity, index) => {
+      const participant = activity.userParticipant
+      const totalHoursText = formatHoursServed(participant?.totalHours) ?? 'Not recorded'
+
+      return `
+        <tr>
+          <td style="padding:8px;border:1px solid #d1d5db;">${index + 1}</td>
+          <td style="padding:8px;border:1px solid #d1d5db;">
+            <strong>${activity.title}</strong><br/>
+            <small>${activity.description || 'No description provided'}</small>
+          </td>
+          <td style="padding:8px;border:1px solid #d1d5db;">
+            ${formatDate(activity.date)}<br/>
+            ${formatTimeString(activity.timeFrom)} - ${formatTimeString(activity.timeTo)}
+          </td>
+          <td style="padding:8px;border:1px solid #d1d5db;">
+            ${activity.location
+          ? [
+            activity.location.exactLocation,
+            activity.location.barangay,
+            activity.location.municipality,
+            activity.location.province
+          ]
+            .filter(Boolean)
+            .join(', ')
+          : 'No location provided'}
+          </td>
+          <td style="padding:8px;border:1px solid #d1d5db;">
+            ${participant?.status ? participant.status.charAt(0).toUpperCase() + participant.status.slice(1) : 'N/A'}
+          </td>
+          <td style="padding:8px;border:1px solid #d1d5db;">${totalHoursText}</td>
+          <td style="padding:8px;border:1px solid #d1d5db;">
+            In: ${formatDateTime(participant?.timeIn)}<br/>
+            Out: ${formatDateTime(participant?.timeOut)}
+          </td>
+        </tr>
+      `
+    })
+
+    reportWindow.document.write(`
+      <html>
+        <head>
+          <title>Volunteer Activity Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+            h1 { font-size: 20px; margin-bottom: 8px; }
+            h2 { font-size: 16px; margin: 16px 0 8px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+            thead { background: #f3f4f6; }
+            .meta { font-size: 12px; color: #4b5563; margin-bottom: 16px; }
+            .summary { margin-top: 16px; padding: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; }
+            .summary strong { display: inline-block; min-width: 140px; }
+            @media print {
+              body { padding: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="no-print" style="text-align:right;">
+            <button onclick="window.print()" style="padding:8px 16px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;">Print</button>
+          </div>
+          <h1>Volunteer Activity Report</h1>
+          <div class="meta">
+            Generated on: ${new Date().toLocaleString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    })}<br/>
+            Total activities: ${filteredActivities.length}<br/>
+            Applied filters: ${searchTerm ? `Search = "${searchTerm}"` : 'None'}; Service = ${serviceFilter}
+          </div>
+          <div class="summary">
+            <h2>Summary</h2>
+            <p><strong>Total Hours Served:</strong> ${formatHoursServed(totalHoursAccumulated) ?? '0min'}</p>
+            <p><strong>Activities Attended:</strong> ${filteredActivities.filter(act => act.userParticipant?.status === 'attended').length
+      }</p>
+            <p><strong>Activities Registered:</strong> ${filteredActivities.filter(act => act.userParticipant?.status === 'registered').length
+      }</p>
+            <p><strong>Marked Absent:</strong> ${filteredActivities.filter(act => act.userParticipant?.status === 'absent').length
+      }</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="padding:8px;border:1px solid #d1d5db;">#</th>
+                <th style="padding:8px;border:1px solid #d1d5db;text-align:left;">Activity</th>
+                <th style="padding:8px;border:1px solid #d1d5db;text-align:left;">Date & Time</th>
+                <th style="padding:8px;border:1px solid #d1d5db;text-align:left;">Location</th>
+                <th style="padding:8px;border:1px solid #d1d5db;text-align:left;">Status</th>
+                <th style="padding:8px;border:1px solid #d1d5db;text-align:left;">Hours Served</th>
+                <th style="padding:8px;border:1px solid #d1d5db;text-align:left;">Attendance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${reportRows.join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `)
+
+    reportWindow.document.close()
+    reportWindow.focus()
+  }
 
   if (loading) {
     return (
@@ -247,9 +421,19 @@ const ActivityHistory = () => {
       <div className="min-h-screen bg-blue-50">
         <div className="p-6 space-y-6">
           {/* Header */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Activity History</h2>
-            <p className="text-gray-600 mt-1">View your past and ongoing volunteer activities</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Activity History</h2>
+              <p className="text-gray-600 mt-1">View your past and ongoing volunteer activities</p>
+            </div>
+            {filteredActivities.length > 0 && (
+              <Button
+                onClick={handlePrintReport}
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                Print Report
+              </Button>
+            )}
           </div>
 
           <Card>
@@ -432,8 +616,8 @@ const ActivityHistory = () => {
               </div>
 
               {/* Pagination */}
-              {filteredActivities.length > 10 && (
-                <div className="flex items-center justify-between pt-4">
+              {filteredActivities.length > 0 && (
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-4">
                   <p className="text-sm text-gray-600">
                     Showing {Math.min(filteredActivities.length, (currentPage - 1) * 10 + 1)} to{' '}
                     {Math.min(filteredActivities.length, currentPage * 10)} of {filteredActivities.length} results
@@ -450,8 +634,8 @@ const ActivityHistory = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(p => Math.min(totalFilteredPages, p + 1))}
+                      disabled={currentPage >= totalFilteredPages}
                     >
                       Next
                     </Button>
