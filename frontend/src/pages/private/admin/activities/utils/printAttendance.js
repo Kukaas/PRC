@@ -1,4 +1,5 @@
 import logo from '../../../../../assets/logo.png'
+import { formatToPhilippinesTime } from '@/lib/utils'
 
 const formatDate = (dateString) => {
   if (!dateString) return ''
@@ -44,16 +45,8 @@ export const printAttendanceReport = (activity, attendanceData = []) => {
   })()
 
   const rowsHtml = attendanceData.map((p, index) => {
-    const timeIn = p.timeIn ? new Date(p.timeIn).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }) : ''
-    const timeOut = p.timeOut ? new Date(p.timeOut).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }) : ''
+    const timeIn = p.timeIn ? formatToPhilippinesTime(p.timeIn) : ''
+    const timeOut = p.timeOut ? formatToPhilippinesTime(p.timeOut) : ''
     return `
       <tr>
         <td>${index + 1}</td>

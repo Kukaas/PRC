@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { formatToPhilippinesTime } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
 import { Search, Clock, Calendar, MapPin, Users, FileText, Eye } from 'lucide-react'
 
@@ -222,8 +223,8 @@ const ActivityHistory = () => {
           </td>
           <td style="padding:8px;border:1px solid #d1d5db;">${totalHoursText}</td>
           <td style="padding:8px;border:1px solid #d1d5db;">
-            In: ${formatDateTime(participant?.timeIn)}<br/>
-            Out: ${formatDateTime(participant?.timeOut)}
+            In: ${participant?.timeIn ? formatToPhilippinesTime(participant.timeIn) : 'Not recorded'}<br/>
+            Out: ${participant?.timeOut ? formatToPhilippinesTime(participant.timeOut) : 'Not recorded'}
           </td>
         </tr>
       `
@@ -775,11 +776,7 @@ const ActivityHistory = () => {
                             <Clock className="w-4 h-4 text-green-600" />
                             <span>
                               Time In: {selectedActivity.userParticipant.timeIn
-                                ? new Date(selectedActivity.userParticipant.timeIn).toLocaleTimeString('en-US', {
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })
+                                ? formatToPhilippinesTime(selectedActivity.userParticipant.timeIn)
                                 : 'Not recorded yet'
                               }
                             </span>
@@ -788,11 +785,7 @@ const ActivityHistory = () => {
                             <Clock className="w-4 h-4 text-blue-600" />
                             <span>
                               Time Out: {selectedActivity.userParticipant.timeOut
-                                ? new Date(selectedActivity.userParticipant.timeOut).toLocaleTimeString('en-US', {
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })
+                                ? formatToPhilippinesTime(selectedActivity.userParticipant.timeOut)
                                 : 'Not recorded yet'
                               }
                             </span>

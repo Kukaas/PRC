@@ -255,11 +255,11 @@ activitySchema.methods.recordTimeIn = function (userId, customTime = null) {
     throw new Error('Time in already recorded for this participant');
   }
 
-  // Use custom time if provided, otherwise use current time
+  // Use custom time if provided, otherwise use current UTC time
   if (customTime) {
     participant.timeIn = new Date(customTime);
   } else {
-    // Store current time as-is
+    // Store current UTC time (MongoDB standard)
     participant.timeIn = new Date();
   }
   participant.status = 'attended';
@@ -284,11 +284,11 @@ activitySchema.methods.recordTimeOut = function (userId, customTime = null) {
     throw new Error('Time out already recorded for this participant');
   }
 
-  // Use custom time if provided, otherwise use current time
+  // Use custom time if provided, otherwise use current UTC time
   if (customTime) {
     participant.timeOut = new Date(customTime);
   } else {
-    // Store current time as-is
+    // Store current UTC time (MongoDB standard)
     participant.timeOut = new Date();
   }
 

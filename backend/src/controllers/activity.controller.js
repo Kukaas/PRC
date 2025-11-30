@@ -1013,28 +1013,29 @@ export const recordAttendance = async (req, res) => {
       });
     }
 
-    // Calculate event start and end times for the activity date in Philippines timezone
-    // Convert stored UTC date to Philippines timezone
-    const activityDate = new Date(activity.date.getTime() + (8 * 60 * 60 * 1000));
+    // Calculate event start and end times in UTC that represent Philippines local time
+    // The activity.date is stored in UTC, representing the date in Philippines
+    const activityDate = new Date(activity.date);
     const [startHours, startMinutes] = activity.timeFrom.split(':').map(Number);
     const [endHours, endMinutes] = activity.timeTo.split(':').map(Number);
 
-    // Create event start time in Philippines timezone
+    // Create event start time: set Philippines local time (using UTC methods), then convert to Actual UTC
     const eventStartTime = new Date(activityDate);
-    eventStartTime.setHours(startHours, startMinutes, 0, 0);
+    eventStartTime.setUTCHours(startHours, startMinutes, 0, 0);
+    eventStartTime.setUTCHours(eventStartTime.getUTCHours() - 8); // Convert PH time to UTC
 
-    // Create event end time in Philippines timezone
+    // Create event end time
     const eventEndTime = new Date(activityDate);
-    eventEndTime.setHours(endHours, endMinutes, 0, 0);
+    eventEndTime.setUTCHours(endHours, endMinutes, 0, 0);
 
     // Handle case where end time is on the next day (e.g., 4:00 AM)
     if (endHours < startHours) {
-      eventEndTime.setDate(eventEndTime.getDate() + 1);
+      eventEndTime.setUTCDate(eventEndTime.getUTCDate() + 1);
     }
+    eventEndTime.setUTCHours(eventEndTime.getUTCHours() - 8); // Convert PH time to UTC
 
-    // Get current time
+    // Get current UTC time (no conversion needed)
     const now = new Date();
-    const philippinesTime = now;
 
     let result;
     let automaticAdjustment = false;
@@ -1042,7 +1043,7 @@ export const recordAttendance = async (req, res) => {
 
     if (action === "timeIn") {
       // If timing in before event starts, use event start time
-      if (philippinesTime < eventStartTime) {
+      if (now < eventStartTime) {
         result = await activity.recordTimeIn(userId, eventStartTime);
         automaticAdjustment = true;
         adjustedTime = eventStartTime;
@@ -1051,7 +1052,7 @@ export const recordAttendance = async (req, res) => {
       }
     } else if (action === "timeOut") {
       // If timing out after event end time, use event end time
-      if (philippinesTime > eventEndTime) {
+      if (now > eventEndTime) {
         result = await activity.recordTimeOut(userId, eventEndTime);
         automaticAdjustment = true;
         adjustedTime = eventEndTime;

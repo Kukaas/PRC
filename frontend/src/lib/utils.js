@@ -29,3 +29,14 @@ export function formatTime(timeString) {
     return timeString; // Return original if parsing fails
   }
 }
+
+export function formatToPhilippinesTime(dateInput) {
+  if (!dateInput) return '--';
+  const date = new Date(dateInput);
+  return date.toLocaleTimeString('en-US', {
+    timeZone: 'Asia/Manila',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+}

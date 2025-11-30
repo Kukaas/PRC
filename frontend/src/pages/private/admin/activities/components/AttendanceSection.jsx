@@ -2,6 +2,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Users, Scan, Printer } from 'lucide-react'
 import { printAttendanceReport } from '../utils/printAttendance'
+import { formatToPhilippinesTime } from '@/lib/utils'
 
 const AttendanceSection = ({
   selectedActivity,
@@ -115,11 +116,7 @@ const AttendanceSection = ({
                       <div className="text-gray-600">
                         {participant.timeIn ? (
                           <div>
-                            <div>{new Date(participant.timeIn).toLocaleTimeString('en-US', {
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true
-                            })}</div>
+                            <div>{formatToPhilippinesTime(participant.timeIn)}</div>
                             {participant.automaticAdjustment && participant.action === 'timeIn' && (
                               <div className="text-xs text-blue-600">(Auto-adjusted)</div>
                             )}
@@ -129,11 +126,7 @@ const AttendanceSection = ({
                       <div className="text-gray-600">
                         {participant.timeOut ? (
                           <div>
-                            <div>{new Date(participant.timeOut).toLocaleTimeString('en-US', {
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true
-                            })}</div>
+                            <div>{formatToPhilippinesTime(participant.timeOut)}</div>
                             {participant.automaticAdjustment && participant.action === 'timeOut' && (
                               <div className="text-xs text-blue-600">(Auto-adjusted)</div>
                             )}
