@@ -173,9 +173,9 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       return;
     }
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image size must be less than 5MB');
+    // Validate file size (3MB)
+    if (file.size > 3 * 1024 * 1024) {
+      alert('File size exceeds 3MB');
       return;
     }
 

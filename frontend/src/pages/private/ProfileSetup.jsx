@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../components/AuthContext";
+import { api } from "../../services/api";
 import logo from "../../assets/logo.png";
 import StepRenderer from "./components/profile-setup/StepRenderer";
 import ProgressBar from "./components/profile-setup/ProgressBar";
@@ -18,6 +19,7 @@ const ProfileSetup = () => {
     givenName: "",
     familyName: "",
     middleName: "",
+    photo: "",
     // Personal Information
     nickname: "",
     sex: "",
@@ -120,6 +122,7 @@ const ProfileSetup = () => {
         givenName: user.givenName || "",
         familyName: user.familyName || "",
         middleName: user.middleName || "",
+        photo: user.photo || "",
         // Personal info from profile
         nickname: user.personalInfo?.nickname || "",
         sex: user.personalInfo?.sex || "",
@@ -368,6 +371,17 @@ const ProfileSetup = () => {
         services: formData.services,
       };
 
+
+      // Update photo if changed
+      if (formData.photo && formData.photo !== user.photo) {
+        try {
+          await api.profile.updatePhoto({ photo: formData.photo });
+        } catch (photoError) {
+          console.error("Photo update error:", photoError);
+          // Continue with profile update even if photo fails, but maybe warn user?
+          // For now we just log it.
+        }
+      }
 
       const result = await updateProfile(structuredData);
       if (result.success) {

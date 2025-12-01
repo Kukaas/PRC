@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Camera } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import axios from "axios";
 import CustomInput from "../../../../components/CustomInput";
 import { useAuth } from "@/components/AuthContext";
@@ -191,45 +193,137 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
     fetchProvinces();
   }, []);
 
+  const fileInputRef = useRef(null);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (3MB)
+    if (file.size > 3 * 1024 * 1024) {
+      alert('File size exceeds 3MB');
+      return;
+    }
+
+    try {
+      const base64Photo = await convertToBase64(file);
+
+      // Update form data
+      handleChange({
+        target: {
+          name: 'photo',
+          value: base64Photo
+        }
+      });
+    } catch (error) {
+      console.error('Error processing photo:', error);
+      alert('Failed to process photo. Please try again.');
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800 mb-6">
         Personal Information
       </h3>
 
+      {/* Profile Photo Section */}
+      <div className="flex justify-center mb-8">
+        <div className="relative group">
+          <button
+            onClick={handleAvatarClick}
+            className="relative cursor-pointer transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 rounded-full"
+            type="button"
+          >
+            <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
+              <AvatarImage
+                src={formData.photo}
+                alt="Profile Photo"
+                className="object-cover"
+              />
+              <AvatarFallback className="text-2xl bg-gray-100 text-gray-400">
+                {(formData.givenName?.charAt(0) || "") + (formData.familyName?.charAt(0) || "")}
+              </AvatarFallback>
+            </Avatar>
+
+            {/* Upload overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <Camera className="w-8 h-8 text-white" />
+            </div>
+          </button>
+
+          {/* File input (hidden) */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            className="hidden"
+          />
+
+          <p className="text-xs text-center text-gray-500 mt-2">
+            Click to upload photo (Max 3MB)
+          </p>
+        </div>
+      </div>
+
       {/* Name Fields */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <CustomInput
-           label="First Name"
-           name="givenName"
-           type="text"
-           placeholder="Enter your first name"
-           value={formData.givenName || ""}
-           onChange={handleChange}
-           required
-           error={errors.givenName}
-         />
-                   <CustomInput
-            label="Last Name"
-            name="familyName"
-            type="text"
-            placeholder="Enter your last name"
-            value={formData.familyName || ""}
-            onChange={handleChange}
-            required
-            error={errors.familyName}
-          />
-       </div>
-       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-         <CustomInput
-           label="Middle Name"
-           name="middleName"
-           type="text"
-           placeholder="Enter your middle name (optional)"
-           value={formData.middleName || ""}
-           onChange={handleChange}
-           error={errors.middleName}
-         />
+        <CustomInput
+          label="First Name"
+          name="givenName"
+          type="text"
+          placeholder="Enter your first name"
+          value={formData.givenName || ""}
+          onChange={handleChange}
+          required
+          error={errors.givenName}
+        />
+        <CustomInput
+          label="Last Name"
+          name="familyName"
+          type="text"
+          placeholder="Enter your last name"
+          value={formData.familyName || ""}
+          onChange={handleChange}
+          required
+          error={errors.familyName}
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <CustomInput
+          label="Middle Name"
+          name="middleName"
+          type="text"
+          placeholder="Enter your middle name (optional)"
+          value={formData.middleName || ""}
+          onChange={handleChange}
+          error={errors.middleName}
+        />
         <CustomInput
           label="Nickname"
           name="nickname"
