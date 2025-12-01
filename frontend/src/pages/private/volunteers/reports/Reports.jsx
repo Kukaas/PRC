@@ -18,6 +18,20 @@ const Reports = () => {
     const [activities, setActivities] = useState([])
     const [searchTerm, setSearchTerm] = useState('')
     const [serviceFilter, setServiceFilter] = useState('all')
+    const [startDate, setStartDate] = useState(() => {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        return `${year}-${month}-01`
+    })
+    const [endDate, setEndDate] = useState(() => {
+        const now = new Date()
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        const year = lastDay.getFullYear()
+        const month = String(lastDay.getMonth() + 1).padStart(2, '0')
+        const day = String(lastDay.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+    })
     const [services, setServices] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -77,7 +91,11 @@ const Reports = () => {
         const matchesService = serviceFilter === 'all' ||
             (activity.service && activity.service === serviceFilter)
 
-        return matchesSearch && matchesService
+        const activityDate = new Date(activity.date)
+        const matchesDateRange = (!startDate || activityDate >= new Date(startDate)) &&
+            (!endDate || activityDate <= new Date(endDate))
+
+        return matchesSearch && matchesService && matchesDateRange
     })
 
     const formatTimeString = (timeString) => {
@@ -196,7 +214,7 @@ const Reports = () => {
             minute: '2-digit'
         })}<br/>
             Total activities: ${filteredActivities.length}<br/>
-            Applied filters: ${searchTerm ? `Search = "${searchTerm}"` : 'None'}; Service = ${serviceFilter}
+            Applied filters: ${searchTerm ? `Search = "${searchTerm}"` : 'None'}; Date Range = ${startDate || 'Start'} to ${endDate || 'End'}
           </div>
           <div class="summary">
             <h2>Summary</h2>
@@ -278,19 +296,22 @@ const Reports = () => {
                                         className="pl-9"
                                     />
                                 </div>
-                                <Select value={serviceFilter} onValueChange={setServiceFilter}>
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Filter by service" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Services</SelectItem>
-                                        {services.map(service => (
-                                            <SelectItem key={service._id} value={service.name}>
-                                                {service.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="w-[150px]">
+                                    <Input
+                                        type="date"
+                                        placeholder="Start Date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                    />
+                                </div>
+                                <div className="w-[150px]">
+                                    <Input
+                                        type="date"
+                                        placeholder="End Date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                    />
+                                </div>
                             </div>
 
                             {/* Activities List (Table View for Report) */}
