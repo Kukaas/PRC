@@ -37,6 +37,7 @@ import EditLeader from "./pages/private/admin/leaders/EditLeader";
 import Maintenance from "./pages/private/admin/maintenance/Maintenance";
 import Settings from "./pages/private/Settings.jsx";
 import ActivityHistory from "./pages/private/volunteers/history/ActivityHistory";
+import VolunteerReports from "./pages/private/volunteers/reports/Reports";
 
 
 function App() {
@@ -94,6 +95,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <ActivityHistory />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/reports/:id"
+              element={
+                <PrivateRoute>
+                  <VolunteerReports />
                 </PrivateRoute>
               }
             />

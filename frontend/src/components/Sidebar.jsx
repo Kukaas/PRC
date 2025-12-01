@@ -116,6 +116,12 @@ const Sidebar = ({ isMobile = false, onClose }) => {
       active: location.pathname.includes('/activities/history')
     },
     {
+      href: `/reports/${userId}`,
+      label: "Reports",
+      icon: FileText,
+      active: location.pathname.includes('/reports/')
+    },
+    {
       href: `/member-status/${userId}`,
       label: "Members Status",
       icon: Users,
