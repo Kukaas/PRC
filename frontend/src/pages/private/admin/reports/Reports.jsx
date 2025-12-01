@@ -17,6 +17,7 @@ const Reports = () => {
   const [municipality, setMunicipality] = useState('')
   const [service, setService] = useState('')
   const [status, setStatus] = useState('')
+  const [show80HoursOnly, setShow80HoursOnly] = useState(false)
 
   // Pagination state
   const PAGE_SIZE = 15
@@ -54,7 +55,7 @@ const Reports = () => {
   const handleClear = () => {
     const y = new Date().getFullYear()
     setYear(y)
-    setSearch(''); setBarangay(''); setMunicipality(''); setService(''); setStatus('')
+    setSearch(''); setBarangay(''); setMunicipality(''); setService(''); setStatus(''); setShow80HoursOnly(false)
   }
 
   const handlePrint = () => {
@@ -93,13 +94,16 @@ const Reports = () => {
       const st = norm(status)
       list = list.filter(m => norm(m.status) === st)
     }
+    if (show80HoursOnly) {
+      list = list.filter(m => (Number(m.hours) || 0) >= 80)
+    }
     return list
-  }, [data, search, barangay, municipality, service, status])
+  }, [data, search, barangay, municipality, service, status, show80HoursOnly])
 
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [search, barangay, municipality, service, status, year])
+  }, [search, barangay, municipality, service, status, year, show80HoursOnly])
 
   const totalPages = useMemo(() => {
     const pages = Math.ceil((filteredData?.length || 0) / PAGE_SIZE)
@@ -124,8 +128,8 @@ const Reports = () => {
         <div className="px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6">
           <div className="flex items-center justify-between">
             <div>
-            <h1 className="text-2xl font-bold text-gray-900">Volunteer Hours Report</h1>
-            <p className="text-gray-600 mt-1">View hours served of each volunteers</p>
+              <h1 className="text-2xl font-bold text-gray-900">Volunteer Hours Report</h1>
+              <p className="text-gray-600 mt-1">View hours served of each volunteers</p>
             </div>
             <button onClick={handlePrint} className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2">
               <Printer className="w-4 h-4" /> Print
@@ -140,7 +144,7 @@ const Reports = () => {
                   label={<span><Search className="w-4 h-4 inline mr-1" />Search</span>}
                   placeholder="Search name"
                   value={search}
-                  onChange={(e)=>setSearch(e.target.value)}
+                  onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               <div>
@@ -148,7 +152,7 @@ const Reports = () => {
                   type="select"
                   label={<span><MapPin className="w-4 h-4 inline mr-1" />Barangay</span>}
                   value={barangay}
-                  onChange={(e)=>setBarangay(e.target.value)}
+                  onChange={(e) => setBarangay(e.target.value)}
                 >
                   <option value="">All</option>
                   {uniqueBarangays.map(b => <option key={b} value={b}>{b}</option>)}
@@ -159,7 +163,7 @@ const Reports = () => {
                   type="select"
                   label={<span><MapPin className="w-4 h-4 inline mr-1" />Municipality</span>}
                   value={municipality}
-                  onChange={(e)=>setMunicipality(e.target.value)}
+                  onChange={(e) => setMunicipality(e.target.value)}
                 >
                   <option value="">All</option>
                   {uniqueMunicipalities.map(m => <option key={m} value={m}>{m}</option>)}
@@ -170,7 +174,7 @@ const Reports = () => {
                   type="select"
                   label={<span><Filter className="w-4 h-4 inline mr-1" />Service</span>}
                   value={service}
-                  onChange={(e)=>setService(e.target.value)}
+                  onChange={(e) => setService(e.target.value)}
                 >
                   <option value="">All</option>
                   {uniqueServices.map(s => <option key={s} value={s}>{s}</option>)}
@@ -181,7 +185,7 @@ const Reports = () => {
                   type="select"
                   label={<span>Status</span>}
                   value={status}
-                  onChange={(e)=>setStatus(e.target.value)}
+                  onChange={(e) => setStatus(e.target.value)}
                 >
                   <option value="">All</option>
                   <option value="Active">Active</option>
@@ -193,10 +197,21 @@ const Reports = () => {
                   type="select"
                   label={<span><Calendar className="w-4 h-4 inline mr-1" />Year</span>}
                   value={year}
-                  onChange={(e)=>setYear(Number(e.target.value))}
+                  onChange={(e) => setYear(Number(e.target.value))}
                 >
                   {years.map(y => <option key={y} value={y}>{y}</option>)}
                 </CustomInput>
+              </div>
+              <div className="flex items-end pb-2">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={show80HoursOnly}
+                    onChange={(e) => setShow80HoursOnly(e.target.checked)}
+                    className="form-checkbox h-4 w-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Show 80+ Hours Only</span>
+                </label>
               </div>
               <div className="flex items-end">
                 <button onClick={handleClear} className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors text-sm">Clear</button>
@@ -232,8 +247,8 @@ const Reports = () => {
                     <div className="grid grid-cols-6 gap-4 text-sm items-center">
                       <div className="font-medium text-gray-900">{m.name}</div>
                       <div className="text-gray-700">{m.address?.barangay || '-'}, {m.address?.municipality || '-'}</div>
-                      <div className="text-gray-700 truncate" title={(m.services||[]).join(', ')}>
-                        {(m.services||[]).length ? (m.services||[]).join(', ') : '—'}
+                      <div className="text-gray-700 truncate" title={(m.services || []).join(', ')}>
+                        {(m.services || []).length ? (m.services || []).join(', ') : '—'}
                       </div>
                       <div className="text-gray-700">{(m.hours || 0).toFixed(2)}</div>
                       <div className="text-gray-700">{m.contactNumber || '—'}</div>
@@ -292,7 +307,7 @@ const Reports = () => {
           </div>
         </div>
       </div>
-    </PrivateLayout>
+    </PrivateLayout >
   )
 }
 
