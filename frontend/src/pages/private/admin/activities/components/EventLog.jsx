@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Edit, Trash2, Search, Calendar, MapPin, Filter, Printer } from 'lucide-react'
+import { Edit, Trash2, Search, Calendar, MapPin, Filter, Printer, Star } from 'lucide-react'
+import EvaluationModal from './EvaluationModal'
 
 const EventLog = ({
   activities,
@@ -16,6 +17,8 @@ const EventLog = ({
   const [selectedMunicipality, setSelectedMunicipality] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [evaluationModalOpen, setEvaluationModalOpen] = useState(false)
+  const [activityToEvaluate, setActivityToEvaluate] = useState(null)
 
   // Pagination
   const PAGE_SIZE = 15
@@ -56,11 +59,11 @@ const EventLog = ({
         const matchesDateTo = !toDate || activityDate <= toDate
 
         return matchesSearch && matchesStatus && matchesBarangay &&
-               matchesMunicipality && matchesDateFrom && matchesDateTo
+          matchesMunicipality && matchesDateFrom && matchesDateTo
       })
       .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort by date descending (newest first)
   }, [activities.archived, searchTerm, selectedStatus, selectedBarangay,
-      selectedMunicipality, dateFrom, dateTo])
+    selectedMunicipality, dateFrom, dateTo])
 
   // Reset to first page on filter changes
   useEffect(() => {
@@ -257,7 +260,7 @@ const EventLog = ({
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           {/* Table Header */}
           <div className="bg-cyan-500 text-white px-6 py-4">
-            <div className="grid grid-cols-6 gap-4 font-medium text-sm">
+            <div className="grid grid-cols-[1.5fr_1fr_1.2fr_1.5fr_0.8fr_1.8fr] gap-4 font-medium text-sm">
               <div>Event Title</div>
               <div>Date</div>
               <div>Time</div>
@@ -271,7 +274,7 @@ const EventLog = ({
           <div className="divide-y divide-gray-200">
             {paginatedFilteredActivities.map((activity) => (
               <div key={activity._id} className="px-6 py-4 hover:bg-gray-50">
-                <div className="grid grid-cols-6 gap-4 text-sm items-center">
+                <div className="grid grid-cols-[1.5fr_1fr_1.2fr_1.5fr_0.8fr_1.8fr] gap-4 text-sm items-center">
                   <div className="font-medium text-gray-900 truncate" title={activity.title}>
                     {activity.title}
                   </div>
@@ -285,11 +288,10 @@ const EventLog = ({
                     {activity.location?.barangay}, {activity.location?.municipality}
                   </div>
                   <div>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      activity.status === 'completed' ? 'bg-purple-100 text-purple-800' :
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${activity.status === 'completed' ? 'bg-purple-100 text-purple-800' :
                       activity.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                        'bg-gray-100 text-gray-800'
+                      }`}>
                       {activity.status}
                     </span>
                   </div>
@@ -303,13 +305,25 @@ const EventLog = ({
                       </Button>
                     )}
                     {activity.status === 'completed' && (
-                      <Button
-                        onClick={() => onPrint?.(activity)}
-                        className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs"
-                      >
-                        <Printer className="w-3 h-3 mr-1" />
-                        Print
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => onPrint?.(activity)}
+                          className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 text-xs"
+                        >
+                          <Printer className="w-3 h-3 mr-1" />
+                          Print
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setActivityToEvaluate(activity)
+                            setEvaluationModalOpen(true)
+                          }}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-xs"
+                        >
+                          <Star className="w-3 h-3 mr-1" />
+                          Evaluate
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -365,6 +379,14 @@ const EventLog = ({
           </div>
         </div>
       )}
+      <EvaluationModal
+        isOpen={evaluationModalOpen}
+        onClose={() => {
+          setEvaluationModalOpen(false)
+          setActivityToEvaluate(null)
+        }}
+        activity={activityToEvaluate}
+      />
     </div>
   )
 }

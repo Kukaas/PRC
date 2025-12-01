@@ -144,4 +144,9 @@ export const api = {
     updateService: (id, data) => apiClient.put(`/maintenance/services/${id}`, data),
     deleteService: (id) => apiClient.delete(`/maintenance/services/${id}`),
   },
+  evaluations: {
+    create: (data) => apiClient.post('/evaluations', data),
+    getByActivity: (activityId) => apiClient.get(`/evaluations/activity/${activityId}`),
+    getByVolunteer: (volunteerId) => apiClient.get(`/evaluations/volunteer/${volunteerId}`),
+  },
 };
