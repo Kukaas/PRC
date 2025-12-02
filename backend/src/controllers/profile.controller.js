@@ -38,6 +38,9 @@ export const updateProfile = async (req, res) => {
         setNestedField("personalInfo.age", age);
       }
     }
+    if (req.body.photo !== undefined) {
+      updateData.photo = req.body.photo;
+    }
     if (req.body.idPhoto !== undefined) {
       updateData.idPhoto = req.body.idPhoto;
     }
