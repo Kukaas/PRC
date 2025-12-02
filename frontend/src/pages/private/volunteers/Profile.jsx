@@ -34,6 +34,8 @@ const Profile = () => {
     familyName: user?.familyName || '',
     middleName: user?.middleName || '',
     dateOfBirth: user?.dateOfBirth || '',
+    photo: user?.photo || '',
+    idPhoto: user?.idPhoto || '',
     // Personal info
     nickname: user?.personalInfo?.nickname || '',
     sex: user?.personalInfo?.sex || '',
@@ -174,6 +176,8 @@ const Profile = () => {
         familyName: formData.familyName,
         middleName: formData.middleName,
         dateOfBirth: formData.dateOfBirth,
+        photo: formData.photo,
+        idPhoto: formData.idPhoto,
         personalInfo: {
           nickname: formData.nickname,
           sex: formData.sex,

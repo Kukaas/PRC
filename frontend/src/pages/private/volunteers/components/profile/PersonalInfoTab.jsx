@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { User, Phone, Home } from 'lucide-react';
+import { User, Phone, Home, Camera } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDate } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CustomInput from '@/components/CustomInput';
@@ -48,6 +49,10 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(false);
   const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
   const [isLoadingBarangays, setIsLoadingBarangays] = useState(false);
+
+  // Photo upload refs (must be at component level for React Hooks rules)
+  const fileInputRef = React.useRef(null);
+  const idPhotoInputRef = React.useRef(null);
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -223,6 +228,80 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
 
   if (isEditing) {
     const defaultDate = formatDateForInput(formData?.dateOfBirth || user?.dateOfBirth);
+
+    const convertToBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    };
+
+    const handlePhotoUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      if (file.size > 3 * 1024 * 1024) {
+        alert('File size exceeds 3MB');
+        return;
+      }
+
+      try {
+        const base64Photo = await convertToBase64(file);
+        handleChange({
+          target: {
+            name: 'photo',
+            value: base64Photo
+          }
+        });
+      } catch (error) {
+        console.error('Error processing photo:', error);
+        alert('Failed to process photo. Please try again.');
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    };
+
+    const handleIdPhotoUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      if (file.size > 3 * 1024 * 1024) {
+        alert('File size exceeds 3MB');
+        return;
+      }
+
+      try {
+        const base64Photo = await convertToBase64(file);
+        handleChange({
+          target: {
+            name: 'idPhoto',
+            value: base64Photo
+          }
+        });
+      } catch (error) {
+        console.error('Error processing ID photo:', error);
+        alert('Failed to process ID photo. Please try again.');
+      } finally {
+        if (idPhotoInputRef.current) {
+          idPhotoInputRef.current.value = '';
+        }
+      }
+    };
+
     return (
       <div className="space-y-4 sm:space-y-6">
         <Card>
@@ -233,6 +312,76 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Photo Upload Section */}
+            <div className="flex justify-center gap-6 pb-4 border-b">
+              {/* Profile Photo */}
+              <div className="text-center">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="relative cursor-pointer transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 rounded-full"
+                  type="button"
+                >
+                  <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-white shadow-lg">
+                    <AvatarImage
+                      src={formData.photo}
+                      alt="Profile Photo"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-2xl sm:text-3xl bg-gray-100 text-gray-400">
+                      {(formData.givenName?.charAt(0) || "") + (formData.familyName?.charAt(0) || "")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
+                    <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  </div>
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+                <p className="text-xs text-gray-500 mt-2">Click to upload (Max 3MB)</p>
+              </div>
+
+              {/* 2x2 ID Photo */}
+              <div className="text-center">
+                <button
+                  onClick={() => idPhotoInputRef.current?.click()}
+                  className="relative cursor-pointer transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-md overflow-hidden"
+                  type="button"
+                >
+                  <div className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-white shadow-lg bg-gray-50 flex items-center justify-center">
+                    {formData.idPhoto ? (
+                      <img
+                        src={formData.idPhoto}
+                        alt="2x2 ID"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center p-2">
+                        <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300 mx-auto mb-1" />
+                        <p className="text-xs text-gray-400">2x2 ID</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
+                    <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  </div>
+                </button>
+                <input
+                  ref={idPhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleIdPhotoUpload}
+                  className="hidden"
+                />
+                <p className="text-xs text-gray-500 mt-2">Click to upload (Max 3MB)</p>
+              </div>
+            </div>
+
+            {/* Name Fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <CustomInput label="First Name" name="givenName" type="text" value={formData.givenName} onChange={handleChange} required />
               <CustomInput label="Last Name" name="familyName" type="text" value={formData.familyName} onChange={handleChange} required />
@@ -331,6 +480,7 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
       {/* Full Name Display */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 sm:p-6 border border-blue-200">
         <div className="text-center">
+          {/* Name and Info */}
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
             {user?.givenName} {user?.middleName} {user?.familyName}
           </h2>
@@ -342,6 +492,43 @@ const PersonalInfoTab = ({ user, age, isEditing = false, formData, handleChange 
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">Age:</span>
               <span>{userAge ? `${userAge} years old` : 'Not provided'}</span>
+            </div>
+          </div>
+
+          {/* Photos Section */}
+          <div className="flex justify-center gap-6 mb-4 mt-10">
+            {/* Profile Photo */}
+            <div className="text-center">
+              <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-white shadow-lg">
+                <AvatarImage
+                  src={user?.photo}
+                  alt="Profile Photo"
+                  className="object-cover"
+                />
+                <AvatarFallback className="text-2xl sm:text-3xl bg-gray-100 text-gray-400">
+                  {(user?.givenName?.charAt(0) || "") + (user?.familyName?.charAt(0) || "")}
+                </AvatarFallback>
+              </Avatar>
+              <p className="text-xs text-gray-500 mt-1.5 font-medium">Profile</p>
+            </div>
+
+            {/* 2x2 ID Photo */}
+            <div className="text-center">
+              <div className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-white shadow-lg rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
+                {user?.idPhoto ? (
+                  <img
+                    src={user.idPhoto}
+                    alt="2x2 ID Photo"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="text-center p-2">
+                    <Camera className="w-6 h-6 sm:w-7 sm:h-7 text-gray-300 mx-auto mb-0.5" />
+                    <p className="text-xs text-gray-400">No ID</p>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1.5 font-medium">2x2 ID</p>
             </div>
           </div>
         </div>
