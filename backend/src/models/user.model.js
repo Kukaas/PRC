@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
       type: String, // Base64 encoded image
       default: null,
     },
+    idPhoto: {
+      type: String, // Base64 encoded 2x2 ID photo
+      default: null,
+    },
 
     // Email verification
     isEmailVerified: {
@@ -326,7 +330,7 @@ userSchema.methods.generatePasswordResetToken = function () {
 };
 
 // Method to check if user's skills match activity requirements
-userSchema.methods.hasMatchingSkills = function(requiredSkills) {
+userSchema.methods.hasMatchingSkills = function (requiredSkills) {
   if (!this.skills || this.skills.length === 0) return false;
   if (!requiredSkills || requiredSkills.length === 0) return false;
 
@@ -335,7 +339,7 @@ userSchema.methods.hasMatchingSkills = function(requiredSkills) {
 };
 
 // Method to check if user's services match activity requirements
-userSchema.methods.hasMatchingServices = function(requiredServices) {
+userSchema.methods.hasMatchingServices = function (requiredServices) {
   if (!this.services || this.services.length === 0) return false;
   if (!requiredServices || requiredServices.length === 0) return false;
 
@@ -347,7 +351,7 @@ userSchema.methods.hasMatchingServices = function(requiredServices) {
 };
 
 // Method to check if user is eligible for an activity based on skills and services
-userSchema.methods.isEligibleForActivity = function(requiredSkills, requiredServices) {
+userSchema.methods.isEligibleForActivity = function (requiredSkills, requiredServices) {
   const hasSkills = this.hasMatchingSkills(requiredSkills);
   const hasServices = this.hasMatchingServices(requiredServices);
 
@@ -357,7 +361,7 @@ userSchema.methods.isEligibleForActivity = function(requiredSkills, requiredServ
 };
 
 // Method to get matching percentage for an activity
-userSchema.methods.getActivityMatchPercentage = function(requiredSkills, requiredServices) {
+userSchema.methods.getActivityMatchPercentage = function (requiredSkills, requiredServices) {
   let skillMatch = 0;
   let serviceMatch = 0;
 
@@ -385,7 +389,7 @@ userSchema.methods.getActivityMatchPercentage = function(requiredSkills, require
 };
 
 // Method to update notification preferences
-userSchema.methods.updateNotificationPreferences = function(preferences) {
+userSchema.methods.updateNotificationPreferences = function (preferences) {
   this.notificationPreferences = {
     ...this.notificationPreferences,
     ...preferences
@@ -394,7 +398,7 @@ userSchema.methods.updateNotificationPreferences = function(preferences) {
 };
 
 // Method to check if user should receive a specific type of notification
-userSchema.methods.shouldReceiveNotification = function(notificationType) {
+userSchema.methods.shouldReceiveNotification = function (notificationType) {
   switch (notificationType) {
     case 'activity_match':
       return this.notificationPreferences.activityMatches && this.notificationPreferences.emailNotifications;

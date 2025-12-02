@@ -20,6 +20,7 @@ const ProfileSetup = () => {
     familyName: "",
     middleName: "",
     photo: "",
+    idPhoto: "",
     // Personal Information
     nickname: "",
     sex: "",
@@ -123,6 +124,7 @@ const ProfileSetup = () => {
         familyName: user.familyName || "",
         middleName: user.middleName || "",
         photo: user.photo || "",
+        idPhoto: user.idPhoto || "",
         // Personal info from profile
         nickname: user.personalInfo?.nickname || "",
         sex: user.personalInfo?.sex || "",
@@ -369,6 +371,7 @@ const ProfileSetup = () => {
         socioCivicInvolvements: formData.socioCivicInvolvements,
         workExperience: formData.workExperience,
         services: formData.services,
+        idPhoto: formData.idPhoto,
       };
 
 
@@ -378,8 +381,7 @@ const ProfileSetup = () => {
           await api.profile.updatePhoto({ photo: formData.photo });
         } catch (photoError) {
           console.error("Photo update error:", photoError);
-          // Continue with profile update even if photo fails, but maybe warn user?
-          // For now we just log it.
+          // Continue with profile update even if photo fails
         }
       }
 

@@ -194,9 +194,14 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
   }, []);
 
   const fileInputRef = useRef(null);
+  const idPhotoInputRef = useRef(null);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleIdPhotoClick = () => {
+    idPhotoInputRef.current?.click();
   };
 
   const convertToBase64 = (file) => {
@@ -245,14 +250,52 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
     }
   };
 
+  const handleIdPhotoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (3MB)
+    if (file.size > 3 * 1024 * 1024) {
+      alert('File size exceeds 3MB');
+      return;
+    }
+
+    try {
+      const base64Photo = await convertToBase64(file);
+
+      // Update form data
+      handleChange({
+        target: {
+          name: 'idPhoto',
+          value: base64Photo
+        }
+      });
+    } catch (error) {
+      console.error('Error processing ID photo:', error);
+      alert('Failed to process ID photo. Please try again.');
+    } finally {
+      // Reset file input
+      if (idPhotoInputRef.current) {
+        idPhotoInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800 mb-6">
         Personal Information
       </h3>
 
-      {/* Profile Photo Section */}
-      <div className="flex justify-center mb-8">
+      {/* Photo Upload Section */}
+      <div className="flex justify-center gap-8 mb-8">
+        {/* Profile Photo */}
         <div className="relative group">
           <button
             onClick={handleAvatarClick}
@@ -285,8 +328,56 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
             className="hidden"
           />
 
-          <p className="text-xs text-center text-gray-500 mt-2">
-            Click to upload photo (Max 3MB)
+          <p className="text-xs text-center text-gray-500 mt-2 font-medium">
+            Profile Photo
+          </p>
+          <p className="text-xs text-center text-gray-400 mt-1">
+            (Max 3MB)
+          </p>
+        </div>
+
+        {/* 2x2 ID Photo */}
+        <div className="relative group">
+          <button
+            onClick={handleIdPhotoClick}
+            className="relative cursor-pointer transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-md overflow-hidden"
+            type="button"
+          >
+            <div className="h-32 w-32 border-4 border-white shadow-lg bg-gray-50 flex items-center justify-center">
+              {formData.idPhoto ? (
+                <img
+                  src={formData.idPhoto}
+                  alt="2x2 ID Photo"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="text-center p-2">
+                  <Camera className="w-8 h-8 text-gray-300 mx-auto mb-1" />
+                  <p className="text-xs text-gray-400">2x2 ID</p>
+                </div>
+              )}
+            </div>
+
+            {/* Upload overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <Camera className="w-8 h-8 text-white" />
+            </div>
+          </button>
+
+          {/* File input (hidden) */}
+          <input
+            ref={idPhotoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleIdPhotoUpload}
+            className="hidden"
+          />
+
+          <p className="text-xs text-center text-gray-500 mt-2 font-medium">
+            2x2 ID Photo
+          </p>
+          <p className="text-xs text-center text-gray-400 mt-1">
+            (Max 3MB)
           </p>
         </div>
       </div>

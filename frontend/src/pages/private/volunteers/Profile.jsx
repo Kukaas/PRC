@@ -246,7 +246,7 @@ const Profile = () => {
     : (user?.personalInfo?.age || calculateAge(user?.dateOfBirth));
 
   if (!isOwnProfile) {
-  return (
+    return (
       <PrivateLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -262,12 +262,12 @@ const Profile = () => {
     <PrivateLayout>
       <style>{scrollbarHideStyles}</style>
       <div className="min-h-screen bg-blue-50">
-      <div className="px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6">
-      <div className='flex flex-row justify-between'>
-      <div>
-      <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-      <p className="text-gray-600 mt-1">View and manage your profile</p>
-        </div>
+        <div className="px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6">
+          <div className='flex flex-row justify-between'>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+              <p className="text-gray-600 mt-1">View and manage your profile</p>
+            </div>
             <div className="flex gap-2">
               {isEditing ? (
                 <>
@@ -276,52 +276,52 @@ const Profile = () => {
                 </>
               ) : (
                 <Button onClick={handleEdit} className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md text-sm flex items-center gap-2">
-              <Edit className="w-4 h-4" /> Edit Profile
-            </Button>
-            )}
+                  <Edit className="w-4 h-4" /> Edit Profile
+                </Button>
+              )}
             </div>
-      </div>
+          </div>
 
 
 
-        {/* Tabs Section */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Profile Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 bg-transparent h-auto p-0 gap-1">
-                <TabsTrigger value="personal" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Personal Info</TabsTrigger>
-                <TabsTrigger value="medical" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Medical History</TabsTrigger>
-                <TabsTrigger value="family" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Family Background</TabsTrigger>
-                <TabsTrigger value="education" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Education</TabsTrigger>
-                <TabsTrigger value="skills" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Skills & Services</TabsTrigger>
-              </TabsList>
+          {/* Tabs Section */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Profile Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 bg-transparent h-auto p-0 gap-1">
+                  <TabsTrigger value="personal" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Personal Info</TabsTrigger>
+                  <TabsTrigger value="medical" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Medical History</TabsTrigger>
+                  <TabsTrigger value="family" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Family Background</TabsTrigger>
+                  <TabsTrigger value="education" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Education</TabsTrigger>
+                  <TabsTrigger value="skills" className="data-[state=active]:bg-cyan-300 data-[state=active]:text-black py-2 px-3 text-xs sm:text-sm font-medium rounded-xl transition-all hover:bg-cyan-50 hover:text-cyan-700">Skills & Services</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="personal">
-                <TabRenderer activeTab="personal" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
-              </TabsContent>
+                <TabsContent value="personal">
+                  <TabRenderer activeTab="personal" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
+                </TabsContent>
 
-              <TabsContent value="medical">
-                <TabRenderer activeTab="medical" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
-              </TabsContent>
+                <TabsContent value="medical">
+                  <TabRenderer activeTab="medical" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
+                </TabsContent>
 
-              <TabsContent value="family">
-                <TabRenderer activeTab="family" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
-              </TabsContent>
+                <TabsContent value="family">
+                  <TabRenderer activeTab="family" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
+                </TabsContent>
 
-              <TabsContent value="education">
-                <TabRenderer activeTab="education" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
-              </TabsContent>
+                <TabsContent value="education">
+                  <TabRenderer activeTab="education" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
+                </TabsContent>
 
-              <TabsContent value="skills">
-                <TabRenderer activeTab="skills" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
+                <TabsContent value="skills">
+                  <TabRenderer activeTab="skills" user={user} age={age} isEditing={isEditing} formData={formData} handleChange={handleChange} setFormData={setFormData} />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </PrivateLayout>
   );

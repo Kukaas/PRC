@@ -38,6 +38,9 @@ export const updateProfile = async (req, res) => {
         setNestedField("personalInfo.age", age);
       }
     }
+    if (req.body.idPhoto !== undefined) {
+      updateData.idPhoto = req.body.idPhoto;
+    }
 
     // Personal Information
     if (req.body.personalInfo) {
@@ -360,7 +363,7 @@ export const getProfileCompletionStatus = async (req, res) => {
 
     const overallCompletion = Math.round(
       Object.values(sections).reduce((sum, val) => sum + val, 0) /
-        Object.keys(sections).length
+      Object.keys(sections).length
     );
 
     res.json({
@@ -426,7 +429,7 @@ export const getProfileSetupStatus = async (req, res) => {
 
     const overallCompletion = Math.round(
       Object.values(sections).reduce((sum, val) => sum + val, 0) /
-        Object.keys(sections).length
+      Object.keys(sections).length
     );
 
     // Determine if profile setup is required

@@ -99,40 +99,40 @@ const VolunteerProfileDialog = ({ open, volunteer, onClose }) => {
                   <div className="space-y-1">
                     <div className="text-gray-600">Red Cross Volunteer</div>
                     <div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes','true','1'].includes(String(volunteer.isRedCrossVolunteer).toLowerCase()) || volunteer.isRedCrossVolunteer === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {(['yes','true','1'].includes(String(volunteer.isRedCrossVolunteer).toLowerCase()) || volunteer.isRedCrossVolunteer === true) ? 'Yes' : 'No'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes', 'true', '1'].includes(String(volunteer.isRedCrossVolunteer).toLowerCase()) || volunteer.isRedCrossVolunteer === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {(['yes', 'true', '1'].includes(String(volunteer.isRedCrossVolunteer).toLowerCase()) || volunteer.isRedCrossVolunteer === true) ? 'Yes' : 'No'}
                       </span>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-gray-600">Accident Assistance Benefits</div>
                     <div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes','true','1'].includes(String(volunteer.hasMembershipWithAccidentAssistanceBenefits).toLowerCase()) || volunteer.hasMembershipWithAccidentAssistanceBenefits === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {(['yes','true','1'].includes(String(volunteer.hasMembershipWithAccidentAssistanceBenefits).toLowerCase()) || volunteer.hasMembershipWithAccidentAssistanceBenefits === true) ? 'Yes' : 'No'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes', 'true', '1'].includes(String(volunteer.hasMembershipWithAccidentAssistanceBenefits).toLowerCase()) || volunteer.hasMembershipWithAccidentAssistanceBenefits === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {(['yes', 'true', '1'].includes(String(volunteer.hasMembershipWithAccidentAssistanceBenefits).toLowerCase()) || volunteer.hasMembershipWithAccidentAssistanceBenefits === true) ? 'Yes' : 'No'}
                       </span>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-gray-600">Basic Volunteer Orientation</div>
                     <div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes','true','1'].includes(String(volunteer.underwentBasicVolunteerOrientation).toLowerCase()) || volunteer.underwentBasicVolunteerOrientation === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {(['yes','true','1'].includes(String(volunteer.underwentBasicVolunteerOrientation).toLowerCase()) || volunteer.underwentBasicVolunteerOrientation === true) ? 'Yes' : 'No'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes', 'true', '1'].includes(String(volunteer.underwentBasicVolunteerOrientation).toLowerCase()) || volunteer.underwentBasicVolunteerOrientation === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {(['yes', 'true', '1'].includes(String(volunteer.underwentBasicVolunteerOrientation).toLowerCase()) || volunteer.underwentBasicVolunteerOrientation === true) ? 'Yes' : 'No'}
                       </span>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-gray-600">RC143 Orientation Training</div>
                     <div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes','true','1'].includes(String(volunteer.underwentBasicRC143OrientationTraining).toLowerCase()) || volunteer.underwentBasicRC143OrientationTraining === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {(['yes','true','1'].includes(String(volunteer.underwentBasicRC143OrientationTraining).toLowerCase()) || volunteer.underwentBasicRC143OrientationTraining === true) ? 'Yes' : 'No'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes', 'true', '1'].includes(String(volunteer.underwentBasicRC143OrientationTraining).toLowerCase()) || volunteer.underwentBasicRC143OrientationTraining === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {(['yes', 'true', '1'].includes(String(volunteer.underwentBasicRC143OrientationTraining).toLowerCase()) || volunteer.underwentBasicRC143OrientationTraining === true) ? 'Yes' : 'No'}
                       </span>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-gray-600">Signup Agreement</div>
                     <div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes','true','1','agree','agreed','i agree', 'yes_i_agree'].includes(String(volunteer.signupAgreement).toLowerCase()) || volunteer.signupAgreement === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {(['yes','true','1','agree','agreed','i agree', 'yes_i_agree'].includes(String(volunteer.signupAgreement).toLowerCase()) || volunteer.signupAgreement === true) ? 'Yes' : 'No'}
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(['yes', 'true', '1', 'agree', 'agreed', 'i agree', 'yes_i_agree'].includes(String(volunteer.signupAgreement).toLowerCase()) || volunteer.signupAgreement === true) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {(['yes', 'true', '1', 'agree', 'agreed', 'i agree', 'yes_i_agree'].includes(String(volunteer.signupAgreement).toLowerCase()) || volunteer.signupAgreement === true) ? 'Yes' : 'No'}
                       </span>
                     </div>
                   </div>
@@ -234,23 +234,6 @@ const VolunteerProfileDialog = ({ open, volunteer, onClose }) => {
             className={`max-h-[80vh] overflow-y-auto space-y-6 p-2 sm:p-4 transition-all duration-300 ${showFullProfile ? 'opacity-100 relative' : 'opacity-0 pointer-events-none absolute'}`}
             style={{ display: showFullProfile ? 'block' : 'none' }}
           >
-            <div className="grid grid-cols-3 items-center mb-4">
-              <div />
-              <div className="flex justify-center">
-                <Avatar className="h-24 w-24 sm:h-28 sm:w-28">
-                  <AvatarImage
-                    src={volunteer?.applicant?.photo || volunteer?.photo || volunteer?.applicant?.avatarUrl || volunteer?.avatarUrl}
-                    alt="Volunteer Avatar"
-                  />
-                  <AvatarFallback>
-                    {(volunteer?.applicant?.givenName || volunteer?.givenName || 'V')
-                      .toString()
-                      .charAt(0)
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            </div>
             <div className="space-y-4">
               <PersonalInfoTab user={volunteer.applicant || volunteer} />
               <EducationTab user={volunteer.applicant || volunteer} />
