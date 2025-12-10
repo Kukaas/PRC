@@ -515,31 +515,18 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <CustomInput
-          label="Mobile Number"
-          name="mobileNumber"
-          type="tel"
-          placeholder="Enter your mobile number (11 digits)"
-          value={formData.mobileNumber}
-          onChange={handleChange}
-          required
-          error={errors.mobileNumber}
-          maxLength={11}
-          pattern="[0-9]{11}"
-        />
-        <CustomInput
-          label="Contact Number"
-          name="contactNumber"
-          type="tel"
-          placeholder="Enter contact number (11 digits, optional)"
-          value={formData.contactNumber}
-          onChange={handleChange}
-          error={errors.contactNumber}
-          maxLength={11}
-          pattern="[0-9]{11}"
-        />
-      </div>
+      <CustomInput
+        label="Mobile Number"
+        name="mobileNumber"
+        type="tel"
+        placeholder="Enter your mobile number (11 digits)"
+        value={formData.mobileNumber}
+        onChange={handleChange}
+        required
+        error={errors.mobileNumber}
+        maxLength={11}
+        pattern="[0-9]{11}"
+      />
 
       <CustomInput
         label="Landline Number"
@@ -551,26 +538,44 @@ const PersonalInfoStep = ({ formData, handleChange, errors }) => {
         error={errors.landlineNumber}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <CustomInput
-          label="Spouse Name"
-          name="spouseName"
-          type="text"
-          placeholder="Enter spouse name (if applicable)"
-          value={formData.spouseName}
-          onChange={handleChange}
-          error={errors.spouseName}
-        />
-        <CustomInput
-          label="Number of Children"
-          name="numberOfChildren"
-          type="number"
-          placeholder="Enter number of children"
-          value={formData.numberOfChildren}
-          onChange={handleChange}
-          error={errors.numberOfChildren}
-        />
-      </div>
+      {formData.civilStatus === "Married" && (
+        <div className="space-y-4 border-t pt-4 mt-4">
+          <h4 className="font-medium text-gray-700">Spouse Information</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <CustomInput
+              label="Spouse Name"
+              name="spouseName"
+              type="text"
+              placeholder="Enter spouse name"
+              value={formData.spouseName}
+              onChange={handleChange}
+              required
+              error={errors.spouseName}
+            />
+            <CustomInput
+              label="Contact Number (Spouse)"
+              name="contactNumber"
+              type="tel"
+              placeholder="Enter spouse contact number (11 digits)"
+              value={formData.contactNumber}
+              onChange={handleChange}
+              required
+              error={errors.contactNumber}
+              maxLength={11}
+              pattern="[0-9]{11}"
+            />
+          </div>
+          <CustomInput
+            label="Number of Children"
+            name="numberOfChildren"
+            type="number"
+            placeholder="Enter number of children"
+            value={formData.numberOfChildren}
+            onChange={handleChange}
+            error={errors.numberOfChildren}
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <h4 className="font-medium text-gray-700">Address</h4>

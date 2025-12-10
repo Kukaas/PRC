@@ -268,6 +268,8 @@ const ProfileSetup = () => {
 
     switch (step) {
       case 1: // Personal Information
+        if (!formData.photo) newErrors.photo = "Profile photo is required";
+        if (!formData.idPhoto) newErrors.idPhoto = "2x2 ID photo is required";
         if (!formData.nickname) newErrors.nickname = "Nickname is required";
         if (!formData.sex) newErrors.sex = "Sex is required";
         if (!formData.birthPlace)
@@ -281,8 +283,17 @@ const ProfileSetup = () => {
         } else if (!/^[0-9]{11}$/.test(formData.mobileNumber)) {
           newErrors.mobileNumber = "Mobile number must be exactly 11 digits";
         }
-        // Validate contact number if provided
-        if (formData.contactNumber && !/^[0-9]{11}$/.test(formData.contactNumber)) {
+        // Validate contact number if provided or if married
+        if (formData.civilStatus === "Married") {
+          if (!formData.contactNumber) {
+            newErrors.contactNumber = "Contact number is required when married";
+          } else if (!/^[0-9]{11}$/.test(formData.contactNumber)) {
+            newErrors.contactNumber = "Contact number must be exactly 11 digits";
+          }
+          if (!formData.spouseName) {
+            newErrors.spouseName = "Spouse name is required when married";
+          }
+        } else if (formData.contactNumber && !/^[0-9]{11}$/.test(formData.contactNumber)) {
           newErrors.contactNumber = "Contact number must be exactly 11 digits";
         }
         // Address fields - only required fields
@@ -423,6 +434,9 @@ const ProfileSetup = () => {
           </h1>
           <p className="text-gray-600">
             Step {currentStep} of {steps.length}: {steps[currentStep - 1].title}
+          </p>
+          <p className="text-base font-semibold text-gray-700 mt-3 bg-yellow-50 border border-yellow-200 rounded-md py-2 px-4 inline-block">
+            <span className="text-red-600 text-lg">*</span> All fields with asterisk are required
           </p>
         </div>
 

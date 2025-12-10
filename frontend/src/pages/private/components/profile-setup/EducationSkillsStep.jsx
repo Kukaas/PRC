@@ -152,6 +152,48 @@ const EducationSkillsStep = ({ formData, handleChange, errors, setFormData }) =>
           </div>
         </div>
 
+        {/* College */}
+        <div className="space-y-3">
+          <h5 className="font-medium text-gray-600">College</h5>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <CustomInput
+              label="School"
+              name="educationalBackground.college.school"
+              type="text"
+              placeholder="Enter college/university name"
+              value={formData.educationalBackground.college.school}
+              onChange={handleChange}
+            />
+            <CustomInput
+              label="Course"
+              name="educationalBackground.college.course"
+              type="text"
+              placeholder="Enter course/degree"
+              value={formData.educationalBackground.college.course}
+              onChange={handleChange}
+            />
+            <CustomInput
+              label="Year Graduated"
+              name="educationalBackground.college.yearGraduated"
+              type="number"
+              placeholder="Enter year graduated"
+              value={
+                formData.educationalBackground.college.yearGraduated
+              }
+              onChange={handleChange}
+            />
+            <CustomInput
+              label="Honors/Awards"
+              name="educationalBackground.college.honorsAwards"
+              type="text"
+              placeholder="Enter honors/awards (optional)"
+              value={formData.educationalBackground.college.honorsAwards}
+              onChange={handleChange}
+              error={errors["educationalBackground.college.honorsAwards"]}
+            />
+          </div>
+        </div>
+
         {/* Vocational */}
         <div className="space-y-3">
           <h5 className="font-medium text-gray-600">Vocational</h5>
@@ -216,48 +258,6 @@ const EducationSkillsStep = ({ formData, handleChange, errors, setFormData }) =>
               value={formData.educationalBackground.higherStudies.honorsAwards}
               onChange={handleChange}
               error={errors["educationalBackground.higherStudies.honorsAwards"]}
-            />
-          </div>
-        </div>
-
-        {/* College */}
-        <div className="space-y-3">
-          <h5 className="font-medium text-gray-600">College</h5>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <CustomInput
-              label="School"
-              name="educationalBackground.college.school"
-              type="text"
-              placeholder="Enter college/university name"
-              value={formData.educationalBackground.college.school}
-              onChange={handleChange}
-            />
-            <CustomInput
-              label="Course"
-              name="educationalBackground.college.course"
-              type="text"
-              placeholder="Enter course/degree"
-              value={formData.educationalBackground.college.course}
-              onChange={handleChange}
-            />
-            <CustomInput
-              label="Year Graduated"
-              name="educationalBackground.college.yearGraduated"
-              type="number"
-              placeholder="Enter year graduated"
-              value={
-                formData.educationalBackground.college.yearGraduated
-              }
-              onChange={handleChange}
-            />
-            <CustomInput
-              label="Honors/Awards"
-              name="educationalBackground.college.honorsAwards"
-              type="text"
-              placeholder="Enter honors/awards (optional)"
-              value={formData.educationalBackground.college.honorsAwards}
-              onChange={handleChange}
-              error={errors["educationalBackground.college.honorsAwards"]}
             />
           </div>
         </div>

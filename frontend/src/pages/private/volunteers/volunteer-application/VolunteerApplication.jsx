@@ -46,15 +46,15 @@ const VolunteerApplication = () => {
     references: [{ completeName: '', contactNumber: '', companyInstitution: '', position: '' }],
     signupAgreement: '',
     signupAgreementReason: '',
-          volunteerWaiver: {
-        completeName: `${user.givenName} ${user.familyName}`,
-        signature: `${user.givenName} ${user.familyName}`.toUpperCase(),
-        dateAndPlace: getCurrentDateAndPlace()
-      },
-      certificationAndConfidentiality: {
-        signature: `${user.givenName} ${user.familyName}`.toUpperCase(),
-        dateAndPlace: getCurrentDateAndPlace()
-      }
+    volunteerWaiver: {
+      completeName: `${user.givenName} ${user.familyName}`,
+      signature: `${user.givenName} ${user.familyName}`.toUpperCase(),
+      dateAndPlace: getCurrentDateAndPlace()
+    },
+    certificationAndConfidentiality: {
+      signature: `${user.givenName} ${user.familyName}`.toUpperCase(),
+      dateAndPlace: getCurrentDateAndPlace()
+    }
   })
 
   // Check for existing application and load data on component mount
@@ -87,11 +87,11 @@ const VolunteerApplication = () => {
               exclusiveDates: existingApp.exclusiveDates || '',
               references: existingApp.references && existingApp.references.length > 0
                 ? existingApp.references.map(ref => ({
-                    completeName: ref.completeName || '',
-                    contactNumber: ref.contactNumber || '',
-                    companyInstitution: ref.companyInstitution || '',
-                    position: ref.position || ''
-                  }))
+                  completeName: ref.completeName || '',
+                  contactNumber: ref.contactNumber || '',
+                  companyInstitution: ref.companyInstitution || '',
+                  position: ref.position || ''
+                }))
                 : [{ completeName: '', contactNumber: '', companyInstitution: '', position: '' }],
               signupAgreement: existingApp.signupAgreement || '',
               signupAgreementReason: existingApp.signupAgreementReason || '',
@@ -110,9 +110,9 @@ const VolunteerApplication = () => {
             navigate('/activities')
           }
         }
-              } catch {
-          // If no application found, it's a new application
-        }
+      } catch {
+        // If no application found, it's a new application
+      }
     }
 
     loadExistingApplication()
@@ -165,6 +165,81 @@ const VolunteerApplication = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Validate all required fields
+    const errors = []
+
+    // Basic Information
+    if (!formData.isRedCrossVolunteer) {
+      errors.push('Please answer if you are a Red Cross volunteer')
+    }
+    if (!formData.hasMembershipWithAccidentAssistanceBenefits) {
+      errors.push('Please answer if you have membership with accident assistance benefits')
+    }
+
+    // Training Information
+    if (!formData.underwentBasicVolunteerOrientation) {
+      errors.push('Please answer if you underwent Basic Volunteer Orientation')
+    }
+    if (!formData.underwentBasicRC143OrientationTraining) {
+      errors.push('Please answer if you underwent Basic RC143 Orientation Training')
+    }
+
+    // References - check all reference fields
+    formData.references.forEach((ref, index) => {
+      if (!ref.completeName) {
+        errors.push(`Reference ${index + 1}: Complete Name is required`)
+      }
+      if (!ref.contactNumber) {
+        errors.push(`Reference ${index + 1}: Contact Number is required`)
+      } else if (!/^[0-9]{11}$/.test(ref.contactNumber)) {
+        errors.push(`Reference ${index + 1}: Contact Number must be exactly 11 digits`)
+      }
+      if (!ref.companyInstitution) {
+        errors.push(`Reference ${index + 1}: Company/Institution is required`)
+      }
+      if (!ref.position) {
+        errors.push(`Reference ${index + 1}: Position is required`)
+      }
+    })
+
+    // Sign Up Agreement
+    if (formData.signupAgreement !== 'yes_i_agree') {
+      errors.push('Please agree to the Sign Up Agreement')
+    }
+
+    // Volunteer Waiver
+    if (!formData.volunteerWaiver.completeName) {
+      errors.push('Volunteer Waiver: Complete Name is required')
+    }
+    if (!formData.volunteerWaiver.signature) {
+      errors.push('Volunteer Waiver: Signature is required')
+    }
+    if (!formData.volunteerWaiver.dateAndPlace) {
+      errors.push('Volunteer Waiver: Date and Place is required')
+    }
+
+    // Certification & Confidentiality
+    if (!formData.certificationAndConfidentiality.signature) {
+      errors.push('Certification: Signature is required')
+    }
+    if (!formData.certificationAndConfidentiality.dateAndPlace) {
+      errors.push('Certification: Date/Place is required')
+    }
+
+    // If there are errors, show them and don't submit
+    if (errors.length > 0) {
+      const errorMessage = `Please complete the following required fields:\n\n${errors.map((err, i) => `${i + 1}. ${err}`).join('\n')}`
+      toast.error(errorMessage, {
+        duration: 8000,
+        style: {
+          maxWidth: '500px',
+        }
+      })
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -205,6 +280,9 @@ const VolunteerApplication = () => {
                   Resubmitting your application
                 </p>
               )}
+              <p className="text-sm font-semibold text-gray-700 mt-2 bg-yellow-50 border border-yellow-200 rounded-md py-1 px-3 inline-block">
+                <span className="text-red-600 text-base">*</span> All fields with asterisk are required
+              </p>
             </div>
           </div>
         </div>
@@ -382,6 +460,7 @@ const VolunteerApplication = () => {
                           placeholder="Enter complete name"
                           value={reference.completeName}
                           onChange={(e) => handleReferenceChange(index, 'completeName', e.target.value)}
+                          required
                         />
                       </div>
                       <div>
@@ -393,6 +472,7 @@ const VolunteerApplication = () => {
                           onChange={(e) => handleReferenceChange(index, 'contactNumber', e.target.value)}
                           maxLength={11}
                           pattern="[0-9]{11}"
+                          required
                         />
                       </div>
                       <div>
@@ -402,6 +482,7 @@ const VolunteerApplication = () => {
                           placeholder="Enter company/institution"
                           value={reference.companyInstitution}
                           onChange={(e) => handleReferenceChange(index, 'companyInstitution', e.target.value)}
+                          required
                         />
                       </div>
                       <div>
@@ -411,6 +492,7 @@ const VolunteerApplication = () => {
                           placeholder="Enter position"
                           value={reference.position}
                           onChange={(e) => handleReferenceChange(index, 'position', e.target.value)}
+                          required
                         />
                       </div>
                     </div>
@@ -429,48 +511,19 @@ const VolunteerApplication = () => {
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="radio"
-                    id="signup_yes"
-                    name="signupAgreement"
-                    value="yes_i_agree"
-                    checked={formData.signupAgreement === 'yes_i_agree'}
-                    onChange={(e) => handleInputChange('signupAgreement', e.target.value)}
-                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
-                  />
-                  <label htmlFor="signup_yes" className="font-medium cursor-pointer">
-                    YES, I Agree Please Sign Me Up
-                  </label>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="radio"
-                    id="signup_no"
-                    name="signupAgreement"
-                    value="no_i_dont_agree"
-                    checked={formData.signupAgreement === 'no_i_dont_agree'}
-                    onChange={(e) => handleInputChange('signupAgreement', e.target.value)}
-                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
-                  />
-                  <label htmlFor="signup_no" className="font-medium cursor-pointer">
-                    NO, I Don't Agree
-                  </label>
-                </div>
-
-                {formData.signupAgreement === 'no_i_dont_agree' && (
-                  <div>
-                    <CustomInput
-                      label="Why?"
-                      type="textarea"
-                      placeholder="Please explain why you don't agree..."
-                      value={formData.signupAgreementReason}
-                      onChange={(e) => handleInputChange('signupAgreementReason', e.target.value)}
-                    />
-                  </div>
-                )}
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="signup_agreement"
+                  name="signupAgreement"
+                  checked={formData.signupAgreement === 'yes_i_agree'}
+                  onChange={(e) => handleInputChange('signupAgreement', e.target.checked ? 'yes_i_agree' : '')}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  required
+                />
+                <label htmlFor="signup_agreement" className="font-medium cursor-pointer">
+                  <span className="text-red-500">*</span> YES, I Agree Please Sign Me Up
+                </label>
               </div>
             </div>
 
@@ -504,6 +557,7 @@ const VolunteerApplication = () => {
                     placeholder="Enter your complete name"
                     value={formData.volunteerWaiver.completeName}
                     onChange={(e) => handleNestedChange('volunteerWaiver', 'completeName', e.target.value)}
+                    required
                   />
                 </div>
                 <div>
@@ -513,6 +567,7 @@ const VolunteerApplication = () => {
                     placeholder="Enter your name in CAPITAL letters"
                     value={formData.volunteerWaiver.signature}
                     onChange={(e) => handleNestedChange('volunteerWaiver', 'signature', e.target.value)}
+                    required
                   />
                 </div>
                 <div>
@@ -522,6 +577,7 @@ const VolunteerApplication = () => {
                     placeholder="e.g., January 1, 2025, Manila"
                     value={formData.volunteerWaiver.dateAndPlace}
                     onChange={(e) => handleNestedChange('volunteerWaiver', 'dateAndPlace', e.target.value)}
+                    required
                   />
                 </div>
               </div>
@@ -548,6 +604,7 @@ const VolunteerApplication = () => {
                     placeholder="Enter your signature"
                     value={formData.certificationAndConfidentiality.signature}
                     onChange={(e) => handleNestedChange('certificationAndConfidentiality', 'signature', e.target.value)}
+                    required
                   />
                 </div>
                 <div>
@@ -557,6 +614,7 @@ const VolunteerApplication = () => {
                     placeholder="e.g., January 1, 2025, Manila"
                     value={formData.certificationAndConfidentiality.dateAndPlace}
                     onChange={(e) => handleNestedChange('certificationAndConfidentiality', 'dateAndPlace', e.target.value)}
+                    required
                   />
                 </div>
               </div>
