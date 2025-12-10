@@ -160,7 +160,7 @@ const Calendar = () => {
     }
   }
 
-  // Get status color
+  // Get status color for badges
   const getStatusColor = (status) => {
     switch (status) {
       case 'published': return 'bg-green-100 text-green-800'
@@ -168,6 +168,28 @@ const Calendar = () => {
       case 'completed': return 'bg-purple-100 text-purple-800'
       case 'cancelled': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  // Get status background color for calendar events
+  const getStatusBgColor = (status) => {
+    switch (status) {
+      case 'published': return 'bg-green-100 border-green-700'
+      case 'ongoing': return 'bg-blue-100 border-blue-700'
+      case 'completed': return 'bg-purple-100 border-purple-700'
+      case 'cancelled': return 'bg-red-100 border-red-700'
+      default: return 'bg-gray-100 border-gray-700'
+    }
+  }
+
+  // Get status text color for calendar events
+  const getStatusTextColor = (status) => {
+    switch (status) {
+      case 'published': return 'text-green-900'
+      case 'ongoing': return 'text-blue-900'
+      case 'completed': return 'text-purple-900'
+      case 'cancelled': return 'text-red-900'
+      default: return 'text-gray-900'
     }
   }
 
@@ -308,73 +330,96 @@ const Calendar = () => {
                   <CalendarIcon className="w-5 h-5" />
                   {format(currentDate, 'MMMM yyyy')}
                 </CardTitle>
-                                 <div className="flex items-center gap-3">
-                   {/* Year Selector */}
-                   <div className="w-32">
-                     <CustomInput
-                       type="select"
-                       value={currentDate.getFullYear()}
-                       onChange={handleYearChange}
-                       className="mb-0"
-                     >
-                       {Array.from({ length: 10 }, (_, i) => {
-                         const year = new Date().getFullYear() - 5 + i
-                         return (
-                           <option key={year} value={year}>
-                             {year}
-                           </option>
-                         )
-                       })}
-                     </CustomInput>
-                   </div>
+                <div className="flex items-center gap-3">
+                  {/* Year Selector */}
+                  <div className="w-32">
+                    <CustomInput
+                      type="select"
+                      value={currentDate.getFullYear()}
+                      onChange={handleYearChange}
+                      className="mb-0"
+                    >
+                      {Array.from({ length: 10 }, (_, i) => {
+                        const year = new Date().getFullYear() - 5 + i
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        )
+                      })}
+                    </CustomInput>
+                  </div>
 
-                   {/* Month Selector */}
-                   <div className="w-40">
-                     <CustomInput
-                       type="select"
-                       value={currentDate.getMonth()}
-                       onChange={handleMonthChange}
-                       className="mb-0"
-                     >
-                       {[
-                         'January', 'February', 'March', 'April', 'May', 'June',
-                         'July', 'August', 'September', 'October', 'November', 'December'
-                       ].map((month, index) => (
-                         <option key={index} value={index}>
-                           {month}
-                         </option>
-                       ))}
-                     </CustomInput>
-                   </div>
+                  {/* Month Selector */}
+                  <div className="w-40">
+                    <CustomInput
+                      type="select"
+                      value={currentDate.getMonth()}
+                      onChange={handleMonthChange}
+                      className="mb-0"
+                    >
+                      {[
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                      ].map((month, index) => (
+                        <option key={index} value={index}>
+                          {month}
+                        </option>
+                      ))}
+                    </CustomInput>
+                  </div>
 
-                   {/* Navigation Buttons */}
-                   <div className="flex items-center gap-1">
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={goToPreviousMonth}
-                       className="px-2"
-                     >
-                       <ChevronLeft className="w-4 h-4" />
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={goToToday}
-                       className="px-3"
-                     >
-                       Today
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={goToNextMonth}
-                       className="px-2"
-                     >
-                       <ChevronRight className="w-4 h-4" />
-                     </Button>
-                   </div>
-                 </div>
+                  {/* Navigation Buttons */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToPreviousMonth}
+                      className="px-2"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToToday}
+                      className="px-3"
+                    >
+                      Today
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToNextMonth}
+                      className="px-2"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legend - Moved to top */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-3">Event Status Legend</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-gray-700">Published</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span className="text-sm text-gray-700">Ongoing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                    <span className="text-sm text-gray-700">Completed</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span className="text-sm text-gray-700">Cancelled</span>
+                  </div>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -404,53 +449,38 @@ const Calendar = () => {
                       return (
                         <div
                           key={index}
-                          className={`min-h-[120px] p-2 border border-gray-200 rounded-lg cursor-pointer transition-all hover:bg-gray-50 ${
-                            !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
-                          } ${isToday ? 'ring-2 ring-cyan-500' : ''}`}
+                          className={`min-h-[120px] p-2 border border-gray-200 rounded-lg cursor-pointer transition-all hover:bg-gray-50 ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                            } ${isToday ? 'ring-2 ring-cyan-500' : ''}`}
                           onClick={() => handleDateClick(day)}
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className={`text-sm font-medium ${isToday ? 'text-cyan-600' : ''}`}>
                               {format(day, 'd')}
                             </span>
-                            {hasEvents && (
-                              <div className="flex gap-1">
-                                {activitiesForDay.slice(0, 3).map((activity) => (
-                                  <div
-                                    key={activity._id}
-                                    className={`w-2 h-2 rounded-full ${getStatusDotColor(activity.status)}`}
-                                    title={`${activity.title} (${activity.status})`}
-                                  />
-                                ))}
-                                {activitiesForDay.length > 3 && (
-                                  <div className="w-2 h-2 rounded-full bg-gray-400" title={`+${activitiesForDay.length - 3} more events`} />
-                                )}
-                              </div>
-                            )}
                           </div>
 
-                                                     {/* Event List */}
-                           <div className="space-y-1 max-h-16 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                             {activitiesForDay
-                               .sort((a, b) => {
-                                 // Sort by start time (earliest first)
-                                 const timeA = a.timeFrom || '00:00'
-                                 const timeB = b.timeFrom || '00:00'
-                                 return timeA.localeCompare(timeB)
-                               })
-                               .map((activity) => (
-                                 <div
-                                   key={activity._id}
-                                   className="text-xs p-1 rounded bg-gray-100 hover:bg-gray-200 transition-colors"
-                                   title={activity.title}
-                                 >
-                                   <div className="font-medium truncate">{activity.title}</div>
-                                   <div className="text-gray-500 truncate">
-                                     {formatTime(activity.timeFrom)} - {formatTime(activity.timeTo)}
-                                   </div>
-                                 </div>
-                               ))}
-                           </div>
+                          {/* Event List */}
+                          <div className="space-y-1 max-h-16 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            {activitiesForDay
+                              .sort((a, b) => {
+                                // Sort by start time (earliest first)
+                                const timeA = a.timeFrom || '00:00'
+                                const timeB = b.timeFrom || '00:00'
+                                return timeA.localeCompare(timeB)
+                              })
+                              .map((activity) => (
+                                <div
+                                  key={activity._id}
+                                  className={`text-xs p-1.5 rounded border transition-colors ${getStatusBgColor(activity.status)} hover:opacity-80`}
+                                  title={`${activity.title} (${activity.status})`}
+                                >
+                                  <div className={`font-semibold truncate ${getStatusTextColor(activity.status)}`}>{activity.title}</div>
+                                  <div className={`truncate text-xs ${getStatusTextColor(activity.status)} opacity-75`}>
+                                    {formatTime(activity.timeFrom)} - {formatTime(activity.timeTo)}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
                         </div>
                       )
                     })}
@@ -460,213 +490,188 @@ const Calendar = () => {
             </CardContent>
           </Card>
 
-          {/* Legend */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Event Status Legend</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm">Published</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  <span className="text-sm">Ongoing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                  <span className="text-sm">Completed</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span className="text-sm">Cancelled</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
 
-                 {/* Event Details Dialog */}
-         <AlertDialog open={showEventDialog} onOpenChange={setShowEventDialog}>
-           <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-             {selectedActivity && (
-               <div className="flex flex-col h-full">
-                 {/* Header */}
-                 <AlertDialogHeader className="pb-4 border-b border-gray-200">
-                   <div className="flex items-start justify-between">
-                     <div className="flex-1">
-                       <AlertDialogTitle className="text-2xl font-bold text-gray-900 mb-2">
-                         {selectedActivity.title}
-                       </AlertDialogTitle>
-                       <div className="flex items-center gap-4 flex-wrap">
-                         <Badge className={`${getStatusColor(selectedActivity.status)} text-xs font-medium px-3 py-1`}>
-                           {selectedActivity.status.charAt(0).toUpperCase() + selectedActivity.status.slice(1)}
-                         </Badge>
-                         <div className="flex items-center gap-1 text-sm text-gray-600">
-                           <Users className="w-4 h-4" />
-                           <span>{selectedActivity.currentParticipants || 0} / {selectedActivity.maxParticipants} participants</span>
-                         </div>
-                       </div>
-                     </div>
-                     <AlertDialogCancel className="h-8 w-8 p-0 rounded-full hover:bg-gray-100">
-                       <span className="sr-only">Close</span>
-                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                       </svg>
-                     </AlertDialogCancel>
-                   </div>
-                 </AlertDialogHeader>
-
-                  {/* Content */}
-                  <div className="flex-1 overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 200px)' }}>
-                    <div className="space-y-6">
-                     {/* Description */}
-                     <div>
-                       <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                       <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">
-                         {selectedActivity.description}
-                       </p>
-                     </div>
-
-                                           {/* Event Details in Rows */}
-                      <div className="space-y-4">
-                        {/* Date */}
-                        <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                          <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                            <CalendarIcon className="w-6 h-6 text-blue-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">Event Date</p>
-                            <p className="text-lg text-gray-700 font-semibold">{formatDate(selectedActivity.date)}</p>
-                          </div>
+        {/* Event Details Dialog */}
+        <AlertDialog open={showEventDialog} onOpenChange={setShowEventDialog}>
+          <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+            {selectedActivity && (
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <AlertDialogHeader className="pb-4 border-b border-gray-200">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <AlertDialogTitle className="text-2xl font-bold text-gray-900 mb-2">
+                        {selectedActivity.title}
+                      </AlertDialogTitle>
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <Badge className={`${getStatusColor(selectedActivity.status)} text-xs font-medium px-3 py-1`}>
+                          {selectedActivity.status.charAt(0).toUpperCase() + selectedActivity.status.slice(1)}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <Users className="w-4 h-4" />
+                          <span>{selectedActivity.currentParticipants || 0} / {selectedActivity.maxParticipants} participants</span>
                         </div>
-
-                        {/* Time */}
-                        <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                          <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                            <Clock className="w-6 h-6 text-green-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">Event Time</p>
-                            <p className="text-lg text-gray-700 font-semibold">
-                              {formatTime(selectedActivity.timeFrom)} - {formatTime(selectedActivity.timeTo)}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Location */}
-                        {selectedActivity.location && (
-                          <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg">
-                            <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mt-1">
-                              <MapPin className="w-6 h-6 text-purple-600" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">Event Location</p>
-                              <div className="text-lg text-gray-700 font-semibold space-y-1">
-                                {selectedActivity.location.exactLocation && (
-                                  <p className="font-medium">{selectedActivity.location.exactLocation}</p>
-                                )}
-                                <p>
-                                  {selectedActivity.location.barangay}, {selectedActivity.location.municipality}, {selectedActivity.location.province}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Required Skills */}
-                        {selectedActivity.requiredSkills && selectedActivity.requiredSkills.length > 0 && (
-                          <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-lg">
-                            <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mt-1">
-                              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900 mb-2">Required Skills</p>
-                              <div className="flex flex-wrap gap-2">
-                                {selectedActivity.requiredSkills.map((skill, index) => (
-                                  <Badge key={index} variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200 px-3 py-1">
-                                    {skill}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Required Services */}
-                        {selectedActivity.requiredServices && selectedActivity.requiredServices.length > 0 && (
-                          <div className="flex items-start gap-3 p-4 bg-indigo-50 rounded-lg">
-                            <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mt-1">
-                              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900 mb-2">Required Services</p>
-                              <div className="flex flex-wrap gap-2">
-                                {selectedActivity.requiredServices.map((service, index) => (
-                                  <Badge key={index} variant="outline" className="bg-indigo-100 text-indigo-700 border-indigo-300 hover:bg-indigo-200 px-3 py-1">
-                                    {service}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Additional Notes */}
-                        {selectedActivity.notes && (
-                          <div className="flex items-start gap-3 p-4 bg-yellow-50 rounded-lg">
-                            <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mt-1">
-                              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900 mb-2">Additional Notes</p>
-                              <p className="text-gray-700 leading-relaxed">{selectedActivity.notes}</p>
-                            </div>
-                          </div>
-                        )}
                       </div>
-                   </div>
-                 </div>
+                    </div>
+                    <AlertDialogCancel className="h-8 w-8 p-0 rounded-full hover:bg-gray-100">
+                      <span className="sr-only">Close</span>
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </AlertDialogCancel>
+                  </div>
+                </AlertDialogHeader>
 
-                 {/* Footer */}
-                 <AlertDialogFooter className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-200 bg-gray-50">
-                   <div className="flex gap-3 w-full sm:w-auto">
-                     <Button
-                       variant="outline"
-                       onClick={() => handleViewActivity(selectedActivity._id)}
-                       className="flex-1 sm:flex-none"
-                     >
-                       View Full Details
-                     </Button>
-                     {['draft', 'published'].includes(selectedActivity.status) && (
-                       <Button
-                         onClick={() => handleEditActivity(selectedActivity._id)}
-                         className="flex-1 sm:flex-none bg-cyan-500 hover:bg-cyan-600"
-                       >
-                         Edit Event
-                       </Button>
-                     )}
-                   </div>
-                   <Button
-                     variant="outline"
-                     onClick={() => setShowEventDialog(false)}
-                     className="w-full sm:w-auto"
-                   >
-                     Close
-                   </Button>
-                 </AlertDialogFooter>
-               </div>
-             )}
-           </AlertDialogContent>
-         </AlertDialog>
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+                  <div className="space-y-6">
+                    {/* Description */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                      <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg">
+                        {selectedActivity.description}
+                      </p>
+                    </div>
+
+                    {/* Event Details in Rows */}
+                    <div className="space-y-4">
+                      {/* Date */}
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                        <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                          <CalendarIcon className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">Event Date</p>
+                          <p className="text-lg text-gray-700 font-semibold">{formatDate(selectedActivity.date)}</p>
+                        </div>
+                      </div>
+
+                      {/* Time */}
+                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+                        <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                          <Clock className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">Event Time</p>
+                          <p className="text-lg text-gray-700 font-semibold">
+                            {formatTime(selectedActivity.timeFrom)} - {formatTime(selectedActivity.timeTo)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      {selectedActivity.location && (
+                        <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg">
+                          <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mt-1">
+                            <MapPin className="w-6 h-6 text-purple-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">Event Location</p>
+                            <div className="text-lg text-gray-700 font-semibold space-y-1">
+                              {selectedActivity.location.exactLocation && (
+                                <p className="font-medium">{selectedActivity.location.exactLocation}</p>
+                              )}
+                              <p>
+                                {selectedActivity.location.barangay}, {selectedActivity.location.municipality}, {selectedActivity.location.province}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Required Skills */}
+                      {selectedActivity.requiredSkills && selectedActivity.requiredSkills.length > 0 && (
+                        <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-lg">
+                          <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mt-1">
+                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900 mb-2">Required Skills</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedActivity.requiredSkills.map((skill, index) => (
+                                <Badge key={index} variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200 px-3 py-1">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Required Services */}
+                      {selectedActivity.requiredServices && selectedActivity.requiredServices.length > 0 && (
+                        <div className="flex items-start gap-3 p-4 bg-indigo-50 rounded-lg">
+                          <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mt-1">
+                            <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900 mb-2">Required Services</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedActivity.requiredServices.map((service, index) => (
+                                <Badge key={index} variant="outline" className="bg-indigo-100 text-indigo-700 border-indigo-300 hover:bg-indigo-200 px-3 py-1">
+                                  {service}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Additional Notes */}
+                      {selectedActivity.notes && (
+                        <div className="flex items-start gap-3 p-4 bg-yellow-50 rounded-lg">
+                          <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mt-1">
+                            <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900 mb-2">Additional Notes</p>
+                            <p className="text-gray-700 leading-relaxed">{selectedActivity.notes}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <AlertDialogFooter className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-200 bg-gray-50">
+                  <div className="flex gap-3 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleViewActivity(selectedActivity._id)}
+                      className="flex-1 sm:flex-none"
+                    >
+                      View Full Details
+                    </Button>
+                    {['draft', 'published'].includes(selectedActivity.status) && (
+                      <Button
+                        onClick={() => handleEditActivity(selectedActivity._id)}
+                        className="flex-1 sm:flex-none bg-cyan-500 hover:bg-cyan-600"
+                      >
+                        Edit Event
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEventDialog(false)}
+                    className="w-full sm:w-auto"
+                  >
+                    Close
+                  </Button>
+                </AlertDialogFooter>
+              </div>
+            )}
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </PrivateLayout>
   )
