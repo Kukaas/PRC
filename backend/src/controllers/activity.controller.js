@@ -112,6 +112,9 @@ export const createActivity = async (req, res) => {
 // Get all activities with filtering and pagination
 export const getAllActivities = async (req, res) => {
   try {
+    // Auto-update activity statuses before querying
+    await Activity.updateActivityStatuses();
+
     const {
       status,
       location,
@@ -885,6 +888,9 @@ export const updateActivityStatus = async (req, res) => {
 // Get activities by creator (Admin/Staff only)
 export const getActivitiesByCreator = async (req, res) => {
   try {
+    // Auto-update activity statuses before querying
+    await Activity.updateActivityStatuses();
+
     const { status } = req.query;
 
     // Check if user has permission
@@ -1206,6 +1212,9 @@ export const getAttendanceReport = async (req, res) => {
 // Get activities for volunteers with skill matching prioritization
 export const getVolunteerActivities = async (req, res) => {
   try {
+    // Auto-update activity statuses before querying
+    await Activity.updateActivityStatuses();
+
     const { status, search, skillsMatch } = req.query;
     const userId = req.user.userId;
 

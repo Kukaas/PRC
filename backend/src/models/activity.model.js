@@ -361,6 +361,34 @@ activitySchema.methods.finalizeAttendance = function () {
   return this.save();
 };
 
+// Static method to auto-update activity statuses based on current time
+activitySchema.statics.updateActivityStatuses = async function () {
+  try {
+    const now = new Date();
+
+    // Find all published activities
+    const publishedActivities = await this.find({ status: 'published' });
+
+    for (const activity of publishedActivities) {
+      // Parse the start time from timeFrom (format: "HH:MM")
+      const [hours, minutes] = activity.timeFrom.split(':').map(Number);
+
+      // Create a Date object for the activity start time
+      const activityStartTime = new Date(activity.date);
+      activityStartTime.setHours(hours, minutes, 0, 0);
+
+      // If current time is at or past the start time, change to ongoing
+      if (now >= activityStartTime) {
+        activity.status = 'ongoing';
+        await activity.save();
+        console.log(`Auto-updated activity ${activity._id} (${activity.title}) to ongoing - Start time: ${activityStartTime.toISOString()}, Current time: ${now.toISOString()}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error in auto-status update:', error);
+  }
+};
+
 // Utility function to get current time in Philippines timezone
 activitySchema.statics.getPhilippinesTime = function () {
   const now = new Date();
